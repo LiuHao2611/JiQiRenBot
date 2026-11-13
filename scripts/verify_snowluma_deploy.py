@@ -74,6 +74,12 @@ def read_env(path: Path) -> dict[str, str]:
 # ---------------------------------------------------------------------------
 # 纯函数：便于 --selftest 注入反例
 # ---------------------------------------------------------------------------
+#: 2026-11-14 用户显式授权用于群聊测试的群号。GROUP_WHITELIST 为空仍是
+#: fail-closed 默认；一旦非空，就只能包含这里显式列出的群，防止新号被悄悄
+#: 放行到别的群（旧规则「必须为空」在用户放行测试群后已过时，改为更强白名单校验）。
+AUTHORIZED_GROUP_WHITELIST = frozenset({"1075851417"})
+
+
 def check_env_isolation(env: dict[str, str], src_env: dict[str, str]) -> list[str]:
     problems = []
     if env.get("OFFICIAL_ENABLE", "").lower() not in {"false", "0", "no"}:
@@ -84,8 +90,11 @@ def check_env_isolation(env: dict[str, str], src_env: dict[str, str]) -> list[st
         problems.append("副本仍携带官方凭据")
     if env.get("BOT_UIN"):
         problems.append("BOT_UIN 未清空（登录号应由 SnowLuma 扫码决定）")
-    if env.get("GROUP_WHITELIST"):
-        problems.append("GROUP_WHITELIST 非空（新号不应自动向旧群发消息）")
+    wl = {p.strip() for p in (env.get("GROUP_WHITELIST") or "")
+          .replace("，", ",").split(",") if p.strip()}
+    extra = wl - AUTHORIZED_GROUP_WHITELIST
+    if extra:
+        problems.append("GROUP_WHITELIST 含未显式授权的群号: " + ",".join(sorted(extra)))
     if not env.get("ONEBOT_V11_ACCESS_TOKEN"):
         problems.append("OneBot token 为空")
     elif env.get("ONEBOT_V11_ACCESS_TOKEN") == src_env.get("ONEBOT_V11_ACCESS_TOKEN"):
@@ -389,6 +398,8 @@ def selftest() -> None:
         ("env 反例: 官方通道未关", check_env_isolation({**good_env, "OFFICIAL_ENABLE": "true"}, good_src)),
         ("env 反例: 端口撞旧仓", check_env_isolation({**good_env, "PORT": "8080"}, good_src)),
         ("env 反例: 群白名单沿用", check_env_isolation({**good_env, "GROUP_WHITELIST": "12345"}, good_src)),
+        ("env 反例: 白名单混入未授权群", check_env_isolation(
+            {**good_env, "GROUP_WHITELIST": "1075851417,999999999"}, good_src)),
         ("env 反例: token 与旧仓相同", check_env_isolation({**good_env, "ONEBOT_V11_ACCESS_TOKEN": "zzz"}, good_src)),
         ("compose 反例: 协议端自动重启", check_compose_contract(
             COMPOSE.read_text(encoding="utf-8").replace('restart: "no"', 'restart: unless-stopped'))),

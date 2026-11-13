@@ -39,6 +39,15 @@ class VisionError(Exception):
     """显式化的视觉理解失败。"""
 
 
+class VisionNotConfigured(VisionError):
+    """视觉模型根本没配置（``AI_VISION_MODEL`` 为空）。
+
+    2026-11-14 用户指令：单独发图片时不要再回「没配视觉模型」那张提示卡。
+    用独立异常把「能力没开」与「调用失败」分开：调用方对前者只记日志、不回消息；
+    后者仍必须如实报错（禁止静默吞异常）。禁止用文案字符串做脆弱匹配。
+    """
+
+
 def _resolve_ffmpeg() -> str:
     """ffmpeg 可执行文件（build/ffmpeg.exe 优先，回落 PATH）。"""
     # 本文件在 multimodal/ 子目录下，比 qq_bridge/ 直接文件深一层，故 parents[4] = 项目根。
@@ -84,7 +93,7 @@ class VisionClient:
         m = self._model if self._model is not None else str(
             getattr(Config, "AI_VISION_MODEL", "") or "").strip()
         if not m:
-            raise VisionError(
+            raise VisionNotConfigured(
                 "没配视觉模型喵——去「机器人配置 → 常规·AI 模式 → AI_VISION_MODEL」"
                 "填一个支持图片的模型（图理解必须走视觉模型，不能拿文本模型凑）")
         return m

@@ -3081,13 +3081,15 @@
     }
   },
   "local_fixes": {
-    "src\\plugins\\qq_bridge\\__init__.py": "5d1b02e6a422bfd90c0a1e49b36383daf6361f15331f204fc830ed9ffbb5d793",
+    "src\\plugins\\qq_bridge\\__init__.py": "955a3d89b850b22643bec10b4f0a18c0c2c0ecbd02343a3fb8e7e4dbfea7f559",
     "src\\plugins\\qq_bridge\\game_tools\\riven.py": "487431ab494abe0d899ca2d25e83f467546d55c6a5f2a52c285b61caa94031c8",
     "src\\plugins\\qq_bridge\\game_tools\\riven_trend.py": "76bdbd1c8c0087e3e6cfb59de670bbf2f3981e47cf66c637373e5e7eb64c75a6",
     "src\\plugins\\qq_bridge\\multimodal\\audio.py": "ad56b0235e12e26544eccba9200d5844e8947f9ba1747b5baaedbc7cd4716cc0",
-    "src\\plugins\\qq_bridge\\multimodal\\vision.py": "1f7f514ca7081c692a03813bb0a5d4e9d4e201bad19050dbabcd608ad6681181",
+    "src\\plugins\\qq_bridge\\multimodal\\vision.py": "85e6b6da0017bb2fe7c0b72963cfd0fbbf1b3f5bdf330746f38306934267aa28",
     "src\\plugins\\qq_bridge\\pic\\cache.py": "1bfac387a38d659b419c3a8651e9367ed5faa97d86b107b57316e1822c2fe184",
     "src\\plugins\\qq_bridge\\queue\\__init__.py": "3b5c76d4cdedda4af4129a50b27daa0c590ce6bded168c838e8033d372e31dd7",
-    "src\\plugins\\qq_bridge\\task_subscribe\\__init__.py": "a8f051ad46c5fff2d45dbdc1cb038e319836f6e28cbfc48d0e54745af91e062b"
+    "src\\plugins\\qq_bridge\\task_subscribe\\__init__.py": "a8f051ad46c5fff2d45dbdc1cb038e319836f6e28cbfc48d0e54745af91e062b",
+    "src\\plugins\\qq_bridge\\game_tools\\__init__.py": "3157b9bac45f85190e480f95de5363caa31054dc96c1fee54c79a0ebfd5faa67",
+    "src\\plugins\\qq_bridge\\multimodal\\__init__.py": "1d83eb2a0ef19a7d6daf7b48d68410c39b97a87ff9d600cb9a9e8f2124261e89"
   }
 }

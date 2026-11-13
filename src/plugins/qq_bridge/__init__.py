@@ -143,7 +143,8 @@ from .checkin import (CheckinError, checkin_manager, checkin_store)  # noqa: F40
 # M4 多模态 + 语音（2026-10-20）：图理解/视频抽帧/历史图召回 + ASR/TTS。
 # 独立成包不挂 media/ 下（media 是发送层且 import nonebot）。
 from .multimodal import (AlbumError, AudioError, MediaManager,  # noqa: F401
-                         VisionError, media_album, media_manager)
+                         VisionError, VisionNotConfigured, media_album,
+                         media_manager)
 # M8 智能家居中枢（2026-10-21，HAQBot 同构）：HA REST 桥接 + 设备白名单 +
 # 场景映射 + webhook 反向告警 + 摄像头。纯模块不 import nonebot，可裸单测；
 # 发送出口（QQ）由 _ha_webhook_send 在运行时注入。
@@ -5725,6 +5726,13 @@ async def _handle_image_message(ev, trace_id: str) -> None:
         desc = await media_manager.look(
             ref, "用一句话描述这张图，像跟朋友吐槽一样自然",
             scope=ev.scope_key, user_id=ev.user_id, ref=str(imgs[0]))
+    except VisionNotConfigured as e:
+        # 2026-11-14 用户指令：单独发图片（无文字、无口令）时，不要回
+        # 「没配视觉模型」这张提示卡。能力没开不是运行故障，日志留痕即可；
+        # 用户主动发 /看图 命令仍走下面的 VisionError 分支如实告知缺什么。
+        log.info(jlog("mm_auto_look_skipped_no_vision", scope=ev.scope_key,
+                      detail=str(e)[:160], trace_id=trace_id))
+        return
     except (VisionError, AlbumError) as e:
         log.info(jlog("mm_look_failed", scope=ev.scope_key,
                       detail=str(e)[:160], trace_id=trace_id))

@@ -277,7 +277,7 @@ powershell -File stop_snowluma.ps1       # docker compose down，卷保留
 | 状态 | 项 |
 |---|---|
 | ✅ 已验证 | 部署四层隔离（进程/容器/数据/编排）、WS 握手成功、bridge `Bot 2193813501 connected`、19/19 验收全 PASS、凭据零明文 + 0600 + gitignore、旧仓零改动、镜像 digest 与源一致、**aria2 下载链路修复并端到端验证（RPC_OK v1.37.0）** |
-| 🟡 待你验证 | **真实收发端到端**：私聊 @ 机器人发「赏金」「紫卡」等，确认能收到并回卡；**群白名单**：当前 `GROUP_WHITELIST` 为空（出站闸 fail-closed），要往群发消息需先在 `.env` 填群号；**长期稳定性**：刚登录，未观察过挂机 24h+ / 掉线重连行为 |
+| 🟡 待你验证 | **真实收发端到端**：私聊 @ 机器人发「赏金」「紫卡」等确认能收到并回卡；**群聊**：2026-11-14 已在 `.env::GROUP_WHITELIST` 显式放行测试群 `1075851417`，群内「签到」/紫卡分析均已实测回卡，换群需追加群号且只能含授权群（验收脚本会拦未授权群号）；**长期稳定性**：未观察过挂机 24h+ / 掉线重连行为 |
 | 🔴 固有风险 | SnowLuma 是第三方 `ptrace` 注入、非商业许可，**换平台不消除封号/风控**；同一 QQ 号不能 NapCat 与 SnowLuma 同时在线；`restart:"no"` 意味着被踢后要人工确认再起 |
 
 > 🔧 **2026-11-13 16:5x 追加修复**：aria2 下载链路（`/dl` 命令族 / M7 下载媒体中心）此前其实**一直不通**，根因两层——① `DL_ARIA2_RPC` 原用服务名 `aria2`，bridge 容器重建后 Docker 内嵌 DNS 的服务名别名注册失同步（`gethostbyname('aria2')` 报 `Name or service not known`）；② bridge 容器环境缺 `DL_ARIA2_SECRET`，而 aria2 sidecar 启用了 `--rpc-secret`，鉴权必败。已改为容器名 `qq-bridge-snowluma-aria2`（实测稳定解析 172.31.90.3）+ 显式注入 secret，端到端 `aria2.getVersion` 返回 `v1.37.0`。容器名与 DNS 失同步的坑在 `docker-compose.snowluma.yml` 的 `DL_ARIA2_RPC` 注释里已写明。

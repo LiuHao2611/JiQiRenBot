@@ -29,7 +29,8 @@ connector；本包是媒体**理解**层，必须保持「不 import nonebot、�
 显式（VisionError / AudioError / AlbumError）；不 import nonebot /
 不 import 主包：可裸单测。
 """
-from .vision import VisionClient, VisionError, image_to_data_uri, vision_client
+from .vision import (VisionClient, VisionError, VisionNotConfigured,
+                     image_to_data_uri, vision_client)
 from .audio import AudioClient, AudioError, audio_client
 from .audio_seed import (DEFAULT_VOICE_DESC as SEED_DEFAULT_VOICE_DESC,
                          SeedAudioClient, decode_audio_field, seed_audio_client)
@@ -37,7 +38,8 @@ from .album import AlbumError, MediaAlbum, media_album
 from .manager import MediaManager, media_manager
 
 __all__ = [
-    "VisionClient", "VisionError", "vision_client", "image_to_data_uri",
+    "VisionClient", "VisionError", "VisionNotConfigured", "vision_client",
+    "image_to_data_uri",
     "AudioClient", "AudioError", "audio_client",
     "SeedAudioClient", "seed_audio_client", "decode_audio_field",
     "SEED_DEFAULT_VOICE_DESC",

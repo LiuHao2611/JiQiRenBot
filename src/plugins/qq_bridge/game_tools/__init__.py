@@ -426,6 +426,89 @@ def _riven_cache_get(event: MessageEvent) -> bytes | None:
         return None
 
 
+# ---------------------------------------------------------------------------
+# 「先发紫卡截图 → 再回复/引用这条截图并写『紫卡分析』」直接触发分析
+# 2026-11-14 用户指令：机器人要识别被引用消息里有没有紫卡截图，且文字带口令。
+# ---------------------------------------------------------------------------
+_RIVEN_REPLY_TAG = "riven_reply_img"
+_RIVEN_ANALYZE_RE = re.compile(
+    r"紫卡分析|裂罅分析|紫卡图|riven\s*分析|riven\s*analyze", re.I)
+
+
+def _riven_reply_key(scope: str, message_id: str) -> tuple:
+    """引用图缓存 key：按「会话 + 被引用消息 id」隔离，跨群/跨人绝不串图。"""
+    return (_RIVEN_REPLY_TAG, scope, str(message_id))
+
+
+def _riven_reply_cache_put(event: MessageEvent, data: bytes) -> None:
+    """消息带图时按 message_id 存原图 bytes，供后续「回复此图 + 口令」复用。
+
+    存 bytes 而非 URL：QQ CDN 的图片直链是带 rkey 的临时签名地址，用户隔几十秒
+    再引用时可能已失效；缓存真实字节才能做到「不要让用户重发截图」。
+    """
+    mid = str(getattr(event, "message_id", "") or "").strip()
+    if not mid or not data:
+        return
+    try:
+        from ..channel import riven_cache
+        ok = riven_cache.put(_riven_reply_key(_riven_scope_key(event), mid), data)
+        _flog.info(_jlog("gt_riven_reply_cached", message_id=mid,
+                         bytes=len(data), ok=ok))
+    except Exception as e:  # noqa: BLE001 — 缓存失败只记日志，不冒充成功、不阻断消息
+        logger.warning(f"gt_riven_reply_cache_put_failed: {type(e).__name__}: {e}")
+
+
+def _riven_reply_cache_get(event: MessageEvent, reply_id: str) -> bytes | None:
+    """按被引用消息 id 取图（只读不消费，允许同一张图被多次引用）。"""
+    if not reply_id:
+        return None
+    try:
+        from ..channel import riven_cache
+        return riven_cache.peek(_riven_reply_key(_riven_scope_key(event), reply_id))
+    except Exception as e:  # noqa: BLE001
+        logger.warning(f"gt_riven_reply_cache_get_failed: {type(e).__name__}: {e}")
+        return None
+
+
+def _extract_reply_id(event: MessageEvent) -> str:
+    """OneBot v11 ``reply`` 段 → 被引用消息 id；无引用段返回空串。"""
+    try:
+        for seg in _event_segments(event):
+            if seg.type == "reply":
+                rid = seg.data.get("id")
+                if rid not in (None, ""):
+                    return str(rid).strip()
+    except Exception as e:  # noqa: BLE001 — 解析失败如实留痕，不静默吞
+        logger.warning(f"gt_reply_id_failed: {type(e).__name__}: {e}")
+    return ""
+
+
+async def _run_riven_analysis(bot: Bot, event: MessageEvent, data: bytes) -> None:
+    """紫卡原图 → 真实 OCR 分析卡（图+口令同条 / 引用图两条路径共用一处）。"""
+    try:
+        _qr = await bot.send(event, "已加入分析队列，里面正噼里啪啦算数值，稍等！")
+        _qmid = int((_qr or {}).get("message_id") or 0) if isinstance(_qr, dict) else 0
+        if _qmid:
+            _riven_queue_ids.setdefault(_riven_scope_key(event), []).append(_qmid)
+    except Exception as _e:  # noqa: BLE001 — 排队话术失败不阻断出卡
+        logger.warning(f"game_tools_riven_queue_msg_failed: {type(_e).__name__}: {_e}")
+    try:
+        rv, _card = await riven.riven_img_analyze_full(data)
+        if _card:
+            _riven_cache_put(event, data)
+        await _send_guide(bot, event, "星际战甲·紫卡评估", rv, card_data=_card)
+    except Exception as _e:  # noqa: BLE001 — 显式报错，绝不静默
+        logger.warning(f"game_tools_riven_analyze_failed: {type(_e).__name__}: {_e}")
+        await bot.send(event, "紫卡分析出错了：%s: %s"
+                       % (type(_e).__name__, str(_e)[:120]))
+    finally:
+        await _riven_recall_queue(bot, event)
+    try:
+        event.get_matcher().stop_propagation()  # 防主流程当图生图
+    except Exception:
+        pass
+
+
 def _split_game(arg: str) -> tuple[str, str]:
     for kw, g in _GAME_ALIAS.items():
         if kw in arg:
@@ -1857,60 +1940,42 @@ async def _handle(bot: Bot, event: MessageEvent) -> None:
             # 「全面分析」口令 + 图片 走与「紫卡分析」+ 图片完全相同的入口：
             # 关键字命中（带前缀排除，避免与 #紫卡全面 <武器> 文本命令重复触发）
             # 即直接进入 OCR 全量分析，而不是落到下面 1788 行的「等图预约」。
-            if (_at_bot(event, bot) or _pending or _full_pending
-                    or (_kw and not _raw.startswith(PREFIXES))
-                    or (_full_kw and not _raw.startswith(PREFIXES))):
-                data = await _download_riven_image(imgs[0])
-                if data and (_full_kw or _full_pending):
-                    # 「紫卡全面」+ 截图 → 真实 OCR 全量分析卡（像素级复刻版式）
-                    try:
-                        _parsed = await asyncio.wait_for(
-                            riven.riven_img_parse(data), timeout=60.0)
-                        if _parsed:
-                            await _send_riven_full_parsed(bot, event, _parsed)
-                        else:
-                            await bot.send(event,
-                                           "没识别出紫卡内容，换张清晰点的截图试试～"
-                                           "（本卡不编造词条数值）")
-                    except Exception as _e:  # noqa: BLE001 — 显式报错，绝不静默
-                        logger.warning(f"gt_riven_full_ocr_failed: {type(_e).__name__}: {_e}")
-                        await bot.send(event, "紫卡全面分析失败：%s: %s"
-                                       % (type(_e).__name__, _e))
-                    await _riven_recall_queue(bot, event)
-                    return
-                if data:
-                    # 排队话术（对齐 Warframe Rabbit：先回一句再算，覆盖模拟耗时）。
-                    # 记下 message_id，待结果（成败皆可）发出后自动撤回，保持聊天整洁。
-                    try:
-                        _qr = await bot.send(event, "已加入分析队列，里面正噼里啪啦算数值，稍等！")
-                        _qmid = int((_qr or {}).get("message_id") or 0) if isinstance(_qr, dict) else 0
-                        if _qmid:
-                            _riven_queue_ids.setdefault(_riven_scope_key(event), []).append(_qmid)
-                    except Exception as _e:  # noqa: BLE001 — 排队话术失败不阻断出卡
-                        logger.warning(f"game_tools_riven_queue_msg_failed: {type(_e).__name__}: {_e}")
-                    try:
-                        rv, _card = await riven.riven_img_analyze_full(data)
-                        # 2026-11-11 第 7 次修改：分析卡成功产出后，缓存当前紫卡原图，
-                        # 供结果图「全面分析」按钮点击时服务端直接复用出全面分析卡。
-                        # 必须在 _send_guide(发分析卡+挂按钮) 之前写好，确保用户一点按钮
-                        # 缓存已就绪；解析失败(_card=None)不缓存，避免脏数据。写入全兜底。
-                        if _card:
-                            _riven_cache_put(event, data)
-                        await _send_guide(bot, event, "星际战甲·紫卡评估", rv,
-                                          card_data=_card)
-                    except Exception as _e:  # noqa: BLE001 — 显式报错，绝不静默
-                        logger.warning(f"game_tools_riven_analyze_failed: "
-                                       f"{type(_e).__name__}: {_e}")
-                        await bot.send(event, "紫卡分析出错了：%s: %s"
-                                       % (type(_e).__name__, str(_e)[:120]))
-                    finally:
-                        # 结果已出 → 撤回排队占位消息，避免聊天记录里留过期提示
-                        await _riven_recall_queue(bot, event)
-                    try:
-                        event.get_matcher().stop_propagation()  # 防主流程当图生图
-                    except Exception:
-                        pass
-                    return
+            _trigger = (_at_bot(event, bot) or _pending or _full_pending
+                        or (_kw and not _raw.startswith(PREFIXES))
+                        or (_full_kw and not _raw.startswith(PREFIXES)))
+            # 只要这条消息带图，就按 message_id 缓存原图：用户随后「回复该图 +
+            # 紫卡分析」时可精确复用，不必重发截图。触发分析时复用同一次下载。
+            try:
+                data = await asyncio.wait_for(
+                    _download_riven_image(imgs[0]), timeout=25.0)
+            except Exception as _e:  # noqa: BLE001 — 下载失败如实留痕，不伪装可用
+                data = None
+                logger.warning(f"gt_riven_img_download_failed: "
+                               f"{type(_e).__name__}: {_e}")
+            if data:
+                _riven_reply_cache_put(event, data)
+            if _trigger and data and (_full_kw or _full_pending):
+                # 「紫卡全面」+ 截图 → 真实 OCR 全量分析卡（像素级复刻版式）
+                try:
+                    _parsed = await asyncio.wait_for(
+                        riven.riven_img_parse(data), timeout=60.0)
+                    if _parsed:
+                        await _send_riven_full_parsed(bot, event, _parsed)
+                    else:
+                        await bot.send(event,
+                                       "没识别出紫卡内容，换张清晰点的截图试试～"
+                                       "（本卡不编造词条数值）")
+                except Exception as _e:  # noqa: BLE001 — 显式报错，绝不静默
+                    logger.warning(f"gt_riven_full_ocr_failed: {type(_e).__name__}: {_e}")
+                    await bot.send(event, "紫卡全面分析失败：%s: %s"
+                                   % (type(_e).__name__, _e))
+                await _riven_recall_queue(bot, event)
+                return
+            if _trigger and data:
+                await _run_riven_analysis(bot, event, data)
+                return
+            # 未触发分析（纯图 / 无口令）：不回任何消息，图片已按 message_id
+            # 缓存，等用户「回复这条截图 + 紫卡分析」时精确复用。
     except Exception as e:  # noqa: BLE001 — 图片旁路，绝不拖垮消息循环
         logger.warning(f"game_tools_riven_img_failed: {type(e).__name__}: {e}")
 
@@ -1966,6 +2031,25 @@ async def _handle(bot: Bot, event: MessageEvent) -> None:
             logger.warning(f"gt_riven_full_wait_msg_failed: {type(_e).__name__}: {_e}")
         _flog.info(_jlog("gt_riven_full_wait_set",
                          user_id=getattr(event, "user_id", 0)))
+        return
+
+    # 2026-11-14 用户指令：先发紫卡截图 → 回复/引用那条截图并写「紫卡分析」→
+    # 直接复用被引用图出分析卡，不要让用户重发截图。
+    # 只认 OneBot v11 的 reply 段（真正「识别被引用消息里有没有图」）；协议端
+    # 若不上报引用段，就保持下面的原预约流程，gt_msg 的 segs 会留证，绝不拿
+    # 「最近一张图」冒充引用内容（禁止降级/伪造可用性）。
+    _reply_id = _extract_reply_id(event)
+    if _reply_id and _RIVEN_ANALYZE_RE.search(text):
+        _rdata = _riven_reply_cache_get(event, _reply_id)
+        if _rdata:
+            _flog.info(_jlog("gt_riven_reply_trigger", message_id=_reply_id,
+                             bytes=len(_rdata), text_len=len(text)))
+            await _run_riven_analysis(bot, event, _rdata)
+            return
+        _flog.warning(_jlog("gt_riven_reply_miss", message_id=_reply_id,
+                            text_len=len(text)))
+        await bot.send(event, "引用的消息里没找到可用的紫卡截图（可能不是图片消息、"
+                              "或已超过 10 分钟缓存期）。请把截图和「紫卡分析」放在同一条消息发给我。")
         return
 
     # 紫卡截图分析预约：先说「紫卡分析」（不带图、无参数），下一张图自动进入 OCR。
