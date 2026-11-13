@@ -289,9 +289,9 @@ def describe_task(f: dict) -> dict:
 def _store_path() -> Path:
     """订阅文件路径：环境变量 > 容器卷内 /app/data > 项目 DATA_DIR。
 
-    坑：容器里 ``queue.DATA_DIR`` 算出来是 ``/app/src/data``（镜像层），
-    而 compose 的 bind mount 是 ``./data:/app/data``。订阅必须跨容器重建存活，
-    所以容器部署时优先写卷内目录；本机运行时 /app/data 不存在，走 DATA_DIR。
+    历史坑（已修）：旧版 ``queue.DATA_DIR`` 用 parents[3] 在容器算出 ``/app/src/data``
+    （镜像层），订阅随镜像重建丢失。现已统一为 parents[4]（见 queue/__init__.py），
+    默认即解析到 bind 挂载的 /app/data；此处仍优先探测 /app/data 作为兜底。
     """
     override = os.environ.get("WF_TASK_SUB_FILE")
     if override:

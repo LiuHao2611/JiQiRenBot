@@ -62,10 +62,14 @@ def _log():
     return log
 
 
-# qq_bridge/ 根目录（与 config_api.ROOT_DIR 算法一致：parents[3]）
-ROOT_DIR = Path(__file__).resolve().parents[3]
-# 数据目录：默认 qq_bridge/data。可用 QQ_DATA_DIR 覆盖 —— e2e 测试起独立 bridge 进程时
-# 指向临时目录，避免把测试任务写进用户真实队列/计划（2026-09-13 为定时执行 e2e 加）。
+# 项目根（qq_bridge_snowluma/）。本文件在 queue/ 子目录下，比 config.py /
+# config_api.py / persona.py（直接在 qq_bridge/ 下，parents[3] 即根）深一层，
+# 故用 parents[4]。旧版误用 parents[3] 会算成 /app/src（镜像层），容器重建即丢数据；
+# 容器内 bind mount 是 ./data:/app/data，默认 DATA_DIR 必须解析到 /app/data。
+ROOT_DIR = Path(__file__).resolve().parents[4]
+# 数据目录：默认 qq_bridge_snowluma/data（容器里即 bind 挂载的 /app/data）。
+# 可用 QQ_DATA_DIR 覆盖 —— e2e 测试起独立 bridge 进程时指向临时目录，
+# 避免把测试任务写进用户真实队列/计划（2026-09-13 为定时执行 e2e 加）。
 DATA_DIR = (Path(os.environ["QQ_DATA_DIR"]).resolve()
             if os.environ.get("QQ_DATA_DIR") else (ROOT_DIR / "data"))
 QUEUE_PATH = DATA_DIR / "queue.json"

@@ -71,6 +71,11 @@ services:
       # 在 SnowLuma 完成扫码前它会一直误报 ws_not_connected 并尝试发通知。
       # 官方副本已用同一招关掉（§23:43 遗留噪音），这里一并关闭。
       OPS_CONN_WATCH_ENABLE: "false"
+      # ★ 数据持久化铁律：用户动态数据（队列/计划/提醒/人设/订阅/相册等）必须落在
+      # bind 挂载的 /app/data 卷，绝不能落到镜像层 /app/src/data。docker compose up -d
+      # --build 重建镜像层会清空镜像层，导致已生成的新数据丢失。QQ_DATA_DIR 是
+      # queue.DATA_DIR 的官方覆盖入口，这里显式钉死到卷根（与代码默认值一致）。
+      QQ_DATA_DIR: "/app/data"
       TZ: "Asia/Shanghai"
     extra_hosts:
       - "host.docker.internal:host-gateway"

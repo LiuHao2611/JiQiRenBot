@@ -1,7 +1,7 @@
 {
   "source": "D:\\AI\\manju_agent\\qq_bridge_official",
   "dest": "D:\\AI\\manju_agent\\qq_bridge_snowluma",
-  "note": "2026-11-13 起业务代码源切换为 qq_bridge_official（最新 working tree）；snowluma 专属文件（.env/compose/scripts/tools/docker/运行期卷）保留不动。",
+  "note": "2026-11-13 起业务代码源切换为 qq_bridge_official（最新 working tree）；snowluma 专属文件（.env/compose/scripts/tools/docker/运行期卷）保留不动。 local_fixes: 副本内有意修复的文件（sha256 为副本当前值；源仓仍按 files 里的初始快照校验）。",
   "file_count": 615,
   "files": {
     "bot.py": {
@@ -3079,5 +3079,15 @@
       "size": 3771,
       "sha256": "f08ede63db3189716eb36a9da25a191d23bf617b5e9833b2dbac47fc5890d4fb"
     }
+  },
+  "local_fixes": {
+    "src\\plugins\\qq_bridge\\__init__.py": "5d1b02e6a422bfd90c0a1e49b36383daf6361f15331f204fc830ed9ffbb5d793",
+    "src\\plugins\\qq_bridge\\game_tools\\riven.py": "487431ab494abe0d899ca2d25e83f467546d55c6a5f2a52c285b61caa94031c8",
+    "src\\plugins\\qq_bridge\\game_tools\\riven_trend.py": "76bdbd1c8c0087e3e6cfb59de670bbf2f3981e47cf66c637373e5e7eb64c75a6",
+    "src\\plugins\\qq_bridge\\multimodal\\audio.py": "ad56b0235e12e26544eccba9200d5844e8947f9ba1747b5baaedbc7cd4716cc0",
+    "src\\plugins\\qq_bridge\\multimodal\\vision.py": "1f7f514ca7081c692a03813bb0a5d4e9d4e201bad19050dbabcd608ad6681181",
+    "src\\plugins\\qq_bridge\\pic\\cache.py": "1bfac387a38d659b419c3a8651e9367ed5faa97d86b107b57316e1822c2fe184",
+    "src\\plugins\\qq_bridge\\queue\\__init__.py": "3b5c76d4cdedda4af4129a50b27daa0c590ce6bded168c838e8033d372e31dd7",
+    "src\\plugins\\qq_bridge\\task_subscribe\\__init__.py": "a8f051ad46c5fff2d45dbdc1cb038e319836f6e28cbfc48d0e54745af91e062b"
   }
 }

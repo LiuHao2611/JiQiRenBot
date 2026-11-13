@@ -491,14 +491,19 @@ async def _on_startup() -> None:
     # 下载媒体中心（2026-10-20 M7）：aria2 完成轮询 + 订阅监控。aria2 RPC 未开
     # 不阻塞启动——用户下发 /dl 时会得到显式开启指引（探测在命令里做）。
     try:
-        download_manager.on_complete = _dl_notify
-        await download_manager.start()
-        subscription_monitor.submit = _dl_sub_submit
-        subscription_monitor.on_new = _dl_sub_notify
-        if Config.DL_SUB_ENABLE:
-            await subscription_monitor.start()
-        log.info(jlog("download_manager_started",
-                      subs=len(subscription_store.list("")) ))
+        if not Config.DL_ENABLE:
+            # 下载媒体中心总开关关闭：不启动 aria2 轮询、不注入完成回调，
+            # 避免在 aria2 不可达时每数秒刷一条 download_tick_failed 警告。
+            log.info(jlog("download_manager_disabled", reason="DL_ENABLE=false"))
+        else:
+            download_manager.on_complete = _dl_notify
+            await download_manager.start()
+            subscription_monitor.submit = _dl_sub_submit
+            subscription_monitor.on_new = _dl_sub_notify
+            if Config.DL_SUB_ENABLE:
+                await subscription_monitor.start()
+            log.info(jlog("download_manager_started",
+                          subs=len(subscription_store.list("")) ))
     except Exception as e:  # noqa: BLE001
         log.error(jlog("download_manager_start_failed", error=type(e).__name__,
                        detail=str(e)[:200]))

@@ -33,6 +33,11 @@ import re as _re
 from pathlib import Path
 from PIL import Image
 from nonebot.log import logger
+# 文件日志：nonebot.log.logger 只进容器 stdout，排查时 ./logs/qq_bridge.log 里
+# 一条 OCR 记录都没有（2026-11-13 实测）。关键链路改用项目 logger 落盘。
+from ..config import get_logger as _get_qq_logger, jlog as _jlog
+
+_FLOG = _get_qq_logger()
 
 from . import ocr as ocr_mod
 from . import warframe
@@ -88,26 +93,74 @@ _FACTION = {"Damage to Grineer", "Damage vs Grineer",
             "Damage to Corpus", "Damage vs Corpus",
             "Damage to Infested", "Damage vs Infested"}
 
-_RIVEN: dict = {"disp": None, "base": None, "zh": None, "en_keys": None, "zh_flat": []}
+_RIVEN: dict = {"disp": None, "base": None, "zh": None,
+                "en_keys": None, "zh_flat": [], "load_errors": []}
+
+#: 紫卡解析必需的三张派生表（与 scripts/prepare_warframe_data.py 的 REQUIRED_FILES 一致）。
+RIVEN_REQUIRED_FILES = ("riven_disp.json", "riven_stat_base.json", "riven_stat_zh.json")
 
 
-def _load_riven_data() -> None:
-    """懒加载紫卡数据（幂等）。"""
-    if _RIVEN["disp"] is not None:
+class RivenDataUnavailable(RuntimeError):
+    """紫卡静态词库未就绪：禁止用空表冒充成功，必须显式上抛。"""
+
+
+def riven_data_status() -> tuple[bool, list[str]]:
+    """检查三张派生表是否真实存在、可解析且非空（供入口与验收脚本判定）。"""
+    missing: list[str] = []
+    for name in RIVEN_REQUIRED_FILES:
+        p = _DATA_DIR / name
+        try:
+            if not p.is_file():
+                missing.append(f"{name}(文件不存在)")
+                continue
+            if not json.loads(p.read_text(encoding="utf-8")):
+                missing.append(f"{name}(内容为空)")
+        except Exception as e:  # noqa: BLE001 — 状态检查要把失败原因报全
+            missing.append(f"{name}({type(e).__name__}: {e})")
+    return (not missing), missing
+
+
+def ensure_riven_data() -> None:
+    """紫卡分析入口的硬前置：词库不齐就抛错，绝不继续用空词库解析。
+
+    2026-11-13 事故：OCR 四条词条全读对，但词库三张表从未落地，
+    _load_riven_data 静默降级成空字典 → _find_stat 零匹配 → 解析返回 None
+    → 用户拿到「图可能太小、被裁切」的误导诊断。按最高声明，这里必须
+    如实报错，不回退、不编造、不静默。
+    """
+    ok, missing = riven_data_status()
+    if not ok:
+        raise RivenDataUnavailable(
+            "紫卡词库未就绪：" + "；".join(missing)
+            + "。请在部署副本运行 python scripts/prepare_warframe_data.py 补齐静态数据"
+              "（本功能不会用空词库编造词条，也不会回退旧版评估）")
+    # 文件齐全后强制重载：上次加载失败时 _RIVEN 里留的是空字典，补齐数据后
+    # 同进程立即恢复，不必重启容器。
+    _load_riven_data(force=True)
+
+
+def _load_riven_data(force: bool = False) -> None:
+    """懒加载紫卡数据（幂等；空表视为未加载，下次调用会重试）。
+
+    这里保留「不抛异常」是因为 riven_alias_patch / riven_full 会在**插件启动
+    阶段**调用它，词库缺失不应让整个 bot 起不来；但失败原因必须同时写进
+    stdout 与文件日志，且紫卡分析入口由 ensure_riven_data() 显式拦截。
+    """
+    if not force and _RIVEN["disp"]:
         return
-    _RIVEN["disp"] = _RIVEN["base"] = _RIVEN["zh"] = {}
-    try:
-        _RIVEN["disp"] = json.loads((_DATA_DIR / "riven_disp.json").read_text(encoding="utf-8"))
-    except Exception as e:  # noqa: BLE001
-        logger.warning(f"wf_riven_disp_load_failed: {type(e).__name__}: {e}")
-    try:
-        _RIVEN["base"] = json.loads((_DATA_DIR / "riven_stat_base.json").read_text(encoding="utf-8"))
-    except Exception as e:  # noqa: BLE001
-        logger.warning(f"wf_riven_base_load_failed: {type(e).__name__}: {e}")
-    try:
-        _RIVEN["zh"] = json.loads((_DATA_DIR / "riven_stat_zh.json").read_text(encoding="utf-8"))
-    except Exception as e:  # noqa: BLE001
-        logger.warning(f"wf_riven_zh_load_failed: {type(e).__name__}: {e}")
+    errors: list[str] = []
+    for key, name in (("disp", "riven_disp.json"),
+                      ("base", "riven_stat_base.json"),
+                      ("zh", "riven_stat_zh.json")):
+        try:
+            _RIVEN[key] = json.loads((_DATA_DIR / name).read_text(encoding="utf-8"))
+        except Exception as e:  # noqa: BLE001
+            _RIVEN[key] = {}
+            errors.append(f"{name}: {type(e).__name__}: {e}")
+            logger.warning(f"wf_riven_{key}_load_failed: {type(e).__name__}: {e}")
+            _FLOG.error(_jlog("wf_riven_data_load_failed", file=name,
+                              err=type(e).__name__, detail=str(e)[:160]))
+    _RIVEN["load_errors"] = errors
     keys = set()
     for attrs in (_RIVEN["base"] or {}).values():
         keys.update(attrs.keys())
@@ -1231,14 +1284,17 @@ def help_line() -> str:
     return "  #wf 紫卡图（发紫卡截图+@机器人：OCR 识别词条并评级）"
 
 
-def _ocr_diagnose(text: str, boxes: list | None) -> str:
+def _ocr_diagnose(text: str, boxes: list | None,
+                  backend: str = "", img_size: str = "") -> str:
     """解析失败时的**可读诊断**（替代整段 OCR 原文倾倒）。
 
     分别回答三件事：读到了哪些词条？疑似标题行是什么？下一步能怎么办。
     旧实现直接回贴 OCR 原文（`+ 10L4 ％ * 冰 冻 伤 害` 这种），用户看不懂也不知道下一步
     （实测 2026-11-02 用户反馈「识别结果完全没法看」）。
+    2026-11-13 修订：删掉「图可能太小、被裁切」这类甩锅截图的主观猜测 ——
+    实测事故里 OCR 四条词条全读对，真正原因是词库没落地。诊断只报客观事实。
     """
-    _load_riven_data()  # 幂等；独立调用（非 _parse_ocr 之后）时也必须可用
+    ensure_riven_data()  # 词库不齐时显式上抛，绝不用空表继续编诊断
     units = _group_rows(boxes) if boxes else [
         {"text": ln, "texts": [ln], "box": None, "y": None}
         for ln in (text or "").splitlines() if ln.strip()]
@@ -1263,7 +1319,11 @@ def _ocr_diagnose(text: str, boxes: list | None) -> str:
     if stats:
         lines.append("读到词条：" + " / ".join(stats[:4]))
     else:
-        lines.append("没读完整词条（图可能太小、被裁切或词条行被遮挡）。")
+        lines.append(f"OCR 读到 {len(units)} 行文字，但没匹配到任何「词条名 + 数值」。")
+        if backend or img_size:
+            lines.append(f"识别后端：{backend or '未知'}；图片尺寸：{img_size}。")
+        lines.append("常见原因是词条行被拆散或数值没提取到，不是「图太小」能概括的；"
+                     "请把日志里的 wf_riven_ocr_raw 发给维护者定位。")
     if titles:
         lines.append("标题行读到：" + " / ".join(titles[:2]))
     if stats and not titles:
@@ -1317,9 +1377,20 @@ async def riven_img_analyze_full(data: bytes) -> tuple[str, dict | None]:
     成功态与失败态都必须显式进卡面；失败时错误原因同时写进日志与文字卡，
     不回退旧评估、不写「暂无」冒充成功。
     """
+    # 硬前置：词库不齐就如实报错，绝不用空词库继续解析（2026-11-13 事故）。
+    try:
+        ensure_riven_data()
+    except RivenDataUnavailable as e:
+        _FLOG.error(_jlog("wf_riven_data_unavailable", detail=str(e)[:300]))
+        return (f"紫卡分析暂不可用：{e}", None)
     if not ocr_mod.available():
-        return ("本机 OCR 引擎不可用（需 Windows 10/11 自带 OCR），\n"
+        return ("OCR 引擎不可用（RapidOCR 未安装或后端未就绪），\n"
                 "可先发「#wf 紫卡分析 <武器>」看面板+倾向+洗卡建议。", None)
+    try:
+        _im = Image.open(io.BytesIO(data))
+        _img_size = f"{_im.width}x{_im.height}"
+    except Exception:  # noqa: BLE001 — 尺寸只是诊断信息，取不到就如实标未知
+        _img_size = "unknown"
     text = await ocr_mod.ocr_image(data)
     if not text:
         return "没识别出内容，换张清晰点的紫卡截图试试～", None
@@ -1332,6 +1403,12 @@ async def riven_img_analyze_full(data: bytes) -> tuple[str, dict | None]:
     except Exception as e:  # noqa: BLE001 — 等级补读失败不影响主流程
         logger.warning(f"wf_riven_rank_ocr_failed: {type(e).__name__}: {e}")
     logger.info(f"wf_riven_ocr_raw: len={len(text)} text={text[:1200]!r}")
+    # 落盘：nonebot logger 只进容器 stdout，容器重建就没了；项目日志必须能看到
+    # OCR 原文、后端、图片字节数/尺寸，才能区分「OCR 漏检」与「拿到缩略图」。
+    _FLOG.info(_jlog("wf_riven_ocr_raw", backend=ocr_mod.backend(),
+                     img_bytes=len(data), img_size=_img_size,
+                     lines=len((text or "").splitlines()),
+                     text=repr(text[:1200])))
     # 布局感知：拿行级包围盒，供 _parse_ocr 做"红字诅咒"颜色判定
     boxes = []
     try:
@@ -1351,12 +1428,20 @@ async def riven_img_analyze_full(data: bytes) -> tuple[str, dict | None]:
         else:
             logger.info(f"wf_riven_rank_badge_ignored: raw={_rk!r}")
     if not parsed:
-        return ("识别到了内容，但没凑齐「武器名 + 词条」：\n"
-                + _ocr_diagnose(text, boxes)), None
+        _FLOG.warning(_jlog("wf_riven_parse_failed", backend=ocr_mod.backend(),
+                            img_size=_img_size, ocr_lines=len((text or "").splitlines()),
+                            boxes=len(boxes), text=repr(text[:400])))
+        return ("识别到了文字，但没解析出完整卡面：\n"
+                + _ocr_diagnose(text, boxes, backend=ocr_mod.backend(),
+                                img_size=_img_size)), None
     logger.info(f"wf_riven_parsed: weapon={parsed['weapon']!r} zh={parsed.get('weapon_zh')!r} "
                 f"rname={parsed.get('riven_name')!r} rank={parsed.get('rank')} "
                 f"mr={parsed.get('mr')} disp={parsed.get('disp')} type={parsed.get('type')} "
                 f"stats={[(s['en'], s['value'], s['unit'], s['sign']) for s in parsed['stats']]}")
+    _FLOG.info(_jlog("wf_riven_parsed", weapon=parsed["weapon"],
+                     stats_n=len(parsed["stats"]), rank=parsed.get("rank"),
+                     disp=parsed.get("disp"), backend=ocr_mod.backend(),
+                     img_size=_img_size))
     # 2026-11-04 22:25：市场数据**只抓一次**，同一份快照同时给文字卡和图片卡。
     # 旧版图片卡 build_card_data(parsed, weapon_image=img) 完全不传市场数据，
     # 于是 PNG 卡底部永远「WM 拍卖样本不足，暂无」，且整块推荐词条缺失
@@ -1392,7 +1477,9 @@ async def riven_img_parse(data: bytes) -> dict | None:
 
     与 :func:`riven_img_analyze_full` 同源同口径（全图 OCR + 等级徽章补读 + 行级
     boxes 颜色判定），只把中间的 parsed 直接返回；失败返回 None，绝不编造词条。
+    词库缺失时显式上抛 RivenDataUnavailable（上层会如实回报失败原因）。
     """
+    ensure_riven_data()
     if not ocr_mod.available():
         return None
     text = await ocr_mod.ocr_image(data)

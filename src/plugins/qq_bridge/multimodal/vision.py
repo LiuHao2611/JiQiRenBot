@@ -41,7 +41,9 @@ class VisionError(Exception):
 
 def _resolve_ffmpeg() -> str:
     """ffmpeg 可执行文件（build/ffmpeg.exe 优先，回落 PATH）。"""
-    here = Path(__file__).resolve().parents[3]  # qq_bridge 根
+    # 本文件在 multimodal/ 子目录下，比 qq_bridge/ 直接文件深一层，故 parents[4] = 项目根。
+    # 旧写 parents[3] 会算成 /app/src，找不到 build/ffmpeg.exe（仅影响优先路径，找不到会回落 PATH）。
+    here = Path(__file__).resolve().parents[4]  # qq_bridge_snowluma 根
     cand = here / "build" / "ffmpeg.exe"
     if cand.exists():
         return str(cand)

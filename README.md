@@ -64,6 +64,26 @@ QQ 客户端(容器内真实 Linux QQ)  ←ptrace←  SnowLuma
 > 长期运行的容器由 Docker daemon 托管；本环境的会话结束不会带走它们。
 > 但**扫码登录、WebUI 首次引导必须你本人操作**，脚本不会代你同意 EULA。
 
+### 3.0 补齐 Warframe 静态词库（紫卡分析前置，必做）
+
+`data/` 被 `.gitignore` 排除、也不在镜像里（Dockerfile 明确不 COPY data/），
+而运行时 `wf_sync` 依赖 DE 官方 Public Export 联网，容器出网受限时同步会失败
+（`_sync_state.json` 记「快照落盘失败」）。**2026-11-13 19:43 实测事故**：OCR 把
+紫卡四条词条全部读对（`wf_riven_ocr_raw len=91`），但 `data/warframe_items/` 只有
+`_sync_state.json`，`riven_disp.json` / `riven_stat_base.json` / `riven_stat_zh.json`
+三张派生表从未落地 → `_find_stat` 零匹配 → 解析返回 None → 用户拿到
+「图可能太小、被裁切」的误导诊断卡。
+
+```powershell
+python scripts/prepare_warframe_data.py           # 从 qq_bridge_official 只读复制静态快照（幂等）
+python scripts/prepare_warframe_data.py --check   # 只检查必需 7 个文件是否齐全可解析
+python scripts/verify_snowluma_deploy.py          # 全量验收已包含词库检查
+```
+
+补齐后 bind mount 立即生效，无需重建镜像；但 `data/` 被清空（如 `down -v`）后必须重跑。
+词库缺失时紫卡分析会**显式报错并给出修复命令**（`RivenDataUnavailable`），
+绝不用空词库编造词条、不回退旧版评估、不把失败甩锅给截图。
+
 ### 3.1 起容器
 
 ```powershell
@@ -190,6 +210,11 @@ powershell -File stop_snowluma.ps1       # docker compose down，卷保留
 ```
 旧仓 `qq_bridge/` 与 `qq_bridge_official/` 的容器、配置、数据**完全不受影响**。
 
+> 📌 用户动态数据（队列/计划/提醒/人设/订阅/相册/卡图缓存）现落在 bind 挂载的
+> `./data`（容器内 `/app/data`），`docker compose up -d --build` 重建镜像**不会**再清掉它们；
+> 但 `docker compose down -v` 的 `-v` 会删卷，慎用。老容器若曾把数据写进镜像层
+> `/app/src/data`，先按 §7 的「重建前抢救旧数据」拷出再重建。
+
 ---
 
 ## 4. `.env` 派生清单（只列键名，值一律不进文档）
@@ -221,7 +246,7 @@ powershell -File stop_snowluma.ps1       # docker compose down，卷保留
 |---|---|
 | 镜像版本 | `motricseven7/snowluma:v2.2.0`，linux/amd64，1.89GB，构建于 2026-10-24。拉取后 digest = `sha256:34b4ec03738a…`，与 Docker Hub 原始 digest 一致（加速源未篡改）。**不追 latest** |
 | 必需参数 | `cap_add: SYS_PTRACE`、`seccomp=unconfined`、`shm_size: 1gb`、`SNOWLUMA_HOOK_AUTOLOAD=1`；缺前两个 QQ 在跑但收不到消息，缺 shm QQ 随机崩 |
-| 卷 | `/app/data`（含 `config/onebot*.json`）、`/app/.config`、`/app/.local/share`（**QQ 登录态，删了要重扫**）——三个都 bind mount |
+| 卷 | 协议端：`/app/data`（含 `config/onebot*.json`）、`/app/.config`、`/app/.local/share`（**QQ 登录态，删了要重扫**）——三个都 bind mount。业务端 bridge：`./data:/app/data`（用户动态数据：队列/计划/提醒/人设/订阅/相册/卡图缓存等）、`./logs:/app/logs`、`./tmp:/app/tmp`、`./downloads:/downloads`——均 bind mount，**重建镜像不再丢数据** |
 | 版本钉死 | 与 NapCat 仓的教训一致：浮动 tag 意味着某次 pull 就可能换掉 QQ 内核 |
 | 设备身份 | 沿用 NapCat 仓 2026-10-28 的教训：`hostname: snowluma-home` + 固定 MAC + 固定内网 IP（`172.31.90.0/24`），第四项 `/app/data/config/machine-id` 由 bind mount 持久化。容器重建不再触发「登录新设备」；**已在扫码前设置**，之后不要改 |
 | 待实测 | 登录与 WS 握手已完成（bridge `Bot 2193813501 connected`）。剩真实群/私聊收发、@ 判定、发图发语音端到端验收：由你本人发一条测试消息确认能收到并回卡；SnowLuma 部分能力（撤回 / 合并转发 / 临时签名 URL 图片）与 NapCat 不等价，实测后按需适配 |
@@ -237,7 +262,8 @@ powershell -File stop_snowluma.ps1       # docker compose down，卷保留
 | `docker-compose.snowluma.yml` | 新部署唯一编排（bridge + snowluma + aria2，同项目共享网络） |
 | `start_snowluma.ps1` / `stop_snowluma.ps1` | 起停包装（不含任何凭据） |
 | `scripts/setup_snowluma_ws.py` | 幂等注入 `wsClients`，容器内改文件、token 只走 stdin |
-| `scripts/verify_snowluma_deploy.py` | 隔离 / 契约 / 凭据 / 运行时验收 + 15 类反例自测 |
+| `scripts/prepare_warframe_data.py` | 从 `qq_bridge_official` 只读复制紫卡/Warframe 静态词库，`--check` 自检（见 §3.0） |
+| `scripts/verify_snowluma_deploy.py` | 隔离 / 契约 / 凭据 / 静态词库 / 运行时验收 + 反例自测 |
 | `tools/bootstrap_snowluma_copy.py` | 副本生成脚本（**只读源仓** `qq_bridge_official`），`--force` 才会覆盖 |
 | `tools/copy_manifest.json` | 615 文件 sha256 快照（源指向 `qq_bridge_official`），证明副本完整且源仓未被改写 |
 
@@ -255,6 +281,18 @@ powershell -File stop_snowluma.ps1       # docker compose down，卷保留
 | 🔴 固有风险 | SnowLuma 是第三方 `ptrace` 注入、非商业许可，**换平台不消除封号/风控**；同一 QQ 号不能 NapCat 与 SnowLuma 同时在线；`restart:"no"` 意味着被踢后要人工确认再起 |
 
 > 🔧 **2026-11-13 16:5x 追加修复**：aria2 下载链路（`/dl` 命令族 / M7 下载媒体中心）此前其实**一直不通**，根因两层——① `DL_ARIA2_RPC` 原用服务名 `aria2`，bridge 容器重建后 Docker 内嵌 DNS 的服务名别名注册失同步（`gethostbyname('aria2')` 报 `Name or service not known`）；② bridge 容器环境缺 `DL_ARIA2_SECRET`，而 aria2 sidecar 启用了 `--rpc-secret`，鉴权必败。已改为容器名 `qq-bridge-snowluma-aria2`（实测稳定解析 172.31.90.3）+ 显式注入 secret，端到端 `aria2.getVersion` 返回 `v1.37.0`。容器名与 DNS 失同步的坑在 `docker-compose.snowluma.yml` 的 `DL_ARIA2_RPC` 注释里已写明。
+
+> 🔧 **2026-11-13 追加修复（数据持久化）**：用户动态数据（队列/计划/提醒/人设/订阅/相册/卡图缓存）此前会**随镜像重建被清空**。根因：`src/plugins/qq_bridge/queue/__init__.py` 用 `parents[3]` 推算项目根，但该文件在 `queue/` 子目录下、比 `config.py` 等深一层，实际算成 `/app/src`，`DATA_DIR` 落到镜像层 `/app/src/data`；而 compose 的 bind mount 是 `./data:/app/data`，二者不重合，`docker compose up -d --build` 重建镜像层即抹掉该目录。同类 `parents[3]` 误用在 `pic/cache.py`、`multimodal/audio.py`、`multimodal/vision.py` 一并修正为 `parents[4]`（统一解析到 bind 挂载的 `/app/data`，即宿主 `./data`）。并在 compose `bridge.environment` 显式钉死 `QQ_DATA_DIR: "/app/data"`（与代码默认值一致，双保险）。验证：路径推演证明容器内 `parents[4]/'data' = /app/data`（挂载根），旧 `parents[3] = /app/src`（镜像层）；4 个改动文件 `py_compile` 全通过。
+>
+> **重建前抢救旧数据（只需做一次）**：若当前有仍在运行的容器、且里面 `/app/src/data` 还有你生成的未备份数据，先把它拷到宿主的 `./data`（bind 挂载根）再重建，否则会被新镜像层「盖掉」看不见（旧数据本就不持久，新数据此后落在持久卷）：
+> ```powershell
+> # 在宿主（你自己的终端）跑，确认容器内确有旧数据再拷
+> docker exec qq-bridge-snowluma-bridge sh -c "ls -la /app/src/data 2>/dev/null || echo NO_OLD_DATA"
+> # 有则抢救（注意末尾的点，表示拷目录内容）
+> docker cp qq-bridge-snowluma-bridge:/app/src/data/. ./data/
+> # 之后正常重建
+> docker compose -f docker-compose.snowluma.yml up -d --build
+> ```
 
 **灰度试运行建议**：小号先用私聊跑 1–2 天真实指令，确认功能与稳定后再考虑接群；
 群功能上线前先填 `GROUP_WHITELIST` 并在小群试发。投产决策由你本人做。

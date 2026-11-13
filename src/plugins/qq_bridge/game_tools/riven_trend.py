@@ -66,9 +66,9 @@ class RivenTrendError(RuntimeError):
 def _data_dir() -> Path:
     """数据目录：宿主与容器统一指向项目根 ``data/``（容器里它是 bind mount）。
 
-    坑：``queue.DATA_DIR`` 用 parents[3]，在容器算出 ``/app/src/data``（镜像层，
-    recreate 即丢），在宿主算出 ``src/data``。这里改用 parents[4]（项目根），
-    与 ``warframe.py`` 的 ``_DATA_DIR`` 同源；仍支持 QQ_DATA_DIR 覆盖供测试隔离。
+    历史坑（已修）：``queue.DATA_DIR`` 曾用 parents[3] 在容器算出 ``/app/src/data``
+    （镜像层，recreate 即丢）。现已统一为 parents[4]（项目根），与 ``warframe.py``
+    的 ``_DATA_DIR`` 同源；此处保留 /app/data 探测 + QQ_DATA_DIR 覆盖供测试隔离。
     """
     override = os.environ.get("QQ_DATA_DIR")
     if override:

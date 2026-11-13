@@ -14,6 +14,7 @@ import hashlib
 import json
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -140,21 +141,34 @@ def check_manifest() -> None:
         return
     data = json.loads(MANIFEST.read_text(encoding="utf-8"))
     files = data["files"]
+    # 副本「可改」：本地修复过的文件在 manifest.local_fixes 里登记当前 sha256，
+    # 副本侧按登记值校验，源仓侧仍按初始快照校验 —— 两边都诚实，不伪造一致。
+    local_fixes: dict[str, str] = data.get("local_fixes") or {}
     # 业务代码源以清单里的 source 字段为准：最初来自 NapCat，2026-11-13 起
     # 切到官方 qq_bridge_official（最新 working tree）。不要再硬编码 NapCat。
     src_root = Path(data.get("source") or str(SOURCE))
-    bad_dst, bad_src = [], []
+    bad_dst, bad_src, bad_fix = [], [], []
     for rel, meta in files.items():
         dst = ROOT / rel
-        if not dst.is_file() or sha256(dst) != meta["sha256"]:
+        expected = local_fixes.get(rel, meta["sha256"])
+        if not dst.is_file() or sha256(dst) != expected:
             bad_dst.append(rel)
+        if rel in local_fixes and not (ROOT / rel).is_file():
+            bad_fix.append(rel)
         src = src_root / meta["source"]
         if not src.is_file() or sha256(src) != meta["sha256"]:
             bad_src.append(rel)
-    if bad_dst:
-        record("FAIL", "副本文件完整性", f"{len(bad_dst)} 个文件与清单不符，例: {bad_dst[:3]}")
+    if bad_dst or bad_fix:
+        record("FAIL", "副本文件完整性",
+               f"{len(bad_dst)} 个文件 sha256 与登记不符，例: {bad_dst[:3]}")
     else:
-        record("PASS", "副本文件完整性", f"{len(files)} 个文件 sha256 全等")
+        record("PASS", "副本文件完整性",
+               f"{len(files) - len(local_fixes)} 个与初始快照一致 + "
+               f"{len(local_fixes)} 个已登记本地修复 sha 校验通过")
+    if local_fixes:
+        record("WARN", "副本本地修复",
+               f"{len(local_fixes)} 个文件有意偏离源仓快照（manifest.local_fixes 已登记）；"
+               f"源仓仍逐字节未改")
     if bad_src:
         record("WARN", "源仓未被改写", f"{len(bad_src)} 个源文件与复制时快照不同（可能是其它会话改动）: {bad_src[:3]}")
     else:
@@ -251,6 +265,37 @@ def check_vnc_password_length(value: str) -> list[str]:
     return []
 
 
+def check_warframe_data(dest: Path) -> list[str]:
+    """纯函数：紫卡分析必需的三张派生表必须存在、非空且可解析。
+
+    2026-11-13 事故：data/ 被 gitignore 且不在镜像里，全新部署只有
+    _sync_state.json，OCR 读对全部词条却解析失败。部署验收必须拦住它。
+    """
+    problems = []
+    for name in ("riven_disp.json", "riven_stat_base.json", "riven_stat_zh.json"):
+        p = dest / name
+        if not p.is_file():
+            problems.append(f"缺 {name}")
+            continue
+        try:
+            if not json.loads(p.read_text(encoding="utf-8")):
+                problems.append(f"{name} 为空")
+        except Exception as e:  # noqa: BLE001 — 验收要把原因报全
+            problems.append(f"{name} 不可解析: {type(e).__name__}")
+    return problems
+
+
+def check_warframe_static_data() -> None:
+    """实际检查：直接跑 prepare 脚本的 --check（覆盖全部 7 个必需文件）。"""
+    rc, out = run([sys.executable, str(ROOT / "scripts" / "prepare_warframe_data.py"), "--check"])
+    lines = [ln.strip() for ln in out.strip().splitlines()
+             if ln.strip() and "Could not find platform" not in ln]
+    detail = next((ln for ln in reversed(lines) if ln.startswith("check:")),
+                  lines[-1] if lines else "无输出")
+    record("PASS" if rc == 0 else "FAIL", "紫卡静态词库",
+           detail if rc == 0 else f"{detail}（修复：python scripts/prepare_warframe_data.py）")
+
+
 def check_runtime_credentials() -> None:
     cfg = ROOT / "snowluma" / "data" / "config"
     files = sorted(cfg.glob("onebot*.json")) if cfg.is_dir() else []
@@ -334,7 +379,13 @@ def selftest() -> None:
         "ONEBOT_V11_ACCESS_TOKEN": "aaa", "VNC_PASSWD": "bbb",
     }
     good_src = {"ONEBOT_V11_ACCESS_TOKEN": "zzz"}
+    wf_missing = Path(tempfile.mkdtemp(prefix="wfdata_missing_"))
+    wf_blank = Path(tempfile.mkdtemp(prefix="wfdata_blank_"))
+    for name in ("riven_disp.json", "riven_stat_base.json", "riven_stat_zh.json"):
+        (wf_blank / name).write_text("{}", encoding="utf-8")
     cases = [
+        ("词库反例: 三张派生表全缺", check_warframe_data(wf_missing)),
+        ("词库反例: 派生表内容为空", check_warframe_data(wf_blank)),
         ("env 反例: 官方通道未关", check_env_isolation({**good_env, "OFFICIAL_ENABLE": "true"}, good_src)),
         ("env 反例: 端口撞旧仓", check_env_isolation({**good_env, "PORT": "8080"}, good_src)),
         ("env 反例: 群白名单沿用", check_env_isolation({**good_env, "GROUP_WHITELIST": "12345"}, good_src)),
@@ -377,6 +428,7 @@ def main() -> int:
         selftest()
     check_manifest()
     check_isolation()
+    check_warframe_static_data()
     check_secret_leak()
     check_runtime_credentials()
     if not args.skip_containers:
