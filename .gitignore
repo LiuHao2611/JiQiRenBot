@@ -1,0 +1,38 @@
+# 凭据：只落 .env，绝不入库（主仓根 .gitignore 也已忽略，这里是副本内的双保险）
+.env
+.env.*
+!.env.example
+
+# 运行态：新部署的数据必须独立生成，不与旧仓共享
+data/
+logs/
+tmp/
+downloads/
+outputs/
+snowluma/data/
+snowluma/qq-config/
+snowluma/qq-share/
+
+# 缓存
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.pytest_tmp/
+
+# 非源码（仅本地保留，不入库）：vendored 依赖 / 二进制 / 字体 / 图片资源 / 归档 / 本地备份
+docker/wheels/
+docker/bin/
+_backup_*/
+*.whl
+*.ttc
+*.ttf
+*.webp
+*.png
+*.jpg
+*.jpeg
+*.zip
+*.so
+*.exe
+*.dll
+*.gz
+*.tar

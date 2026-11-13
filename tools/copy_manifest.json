@@ -1,0 +1,3083 @@
+{
+  "source": "D:\\AI\\manju_agent\\qq_bridge_official",
+  "dest": "D:\\AI\\manju_agent\\qq_bridge_snowluma",
+  "note": "2026-11-13 起业务代码源切换为 qq_bridge_official（最新 working tree）；snowluma 专属文件（.env/compose/scripts/tools/docker/运行期卷）保留不动。",
+  "file_count": 615,
+  "files": {
+    "bot.py": {
+      "source": "bot.py",
+      "size": 13980,
+      "sha256": "8c0496aa08f0783953826cad5ffe3d2a55b244491cdd41860e376ec441b09462"
+    },
+    "pyproject.toml": {
+      "source": "pyproject.toml",
+      "size": 1235,
+      "sha256": "73b9ff498ff6f7f11760a2e6a54106453fe30d1ab58e31cd0d6aededea51dabc"
+    },
+    "requirements.txt": {
+      "source": "requirements.txt",
+      "size": 657,
+      "sha256": "55993d1a257b56163a62f8c9483907c5fdb16198d752638b3406f6bf340e11a5"
+    },
+    "src\\game_mode.py": {
+      "source": "src\\game_mode.py",
+      "size": 2965,
+      "sha256": "83c2ff060c4cbc8b9200b2ac7568bf2100d1d94721479e39a21c426856a7752b"
+    },
+    "src\\group_switch.py": {
+      "source": "src\\group_switch.py",
+      "size": 7558,
+      "sha256": "3f3be3ebdc982bbf9a8f947c5b57f6f96161c82045cc8bb7aecfec41b52dc174"
+    },
+    "src\\data\\ai_mode.json": {
+      "source": "src\\data\\ai_mode.json",
+      "size": 40,
+      "sha256": "3ceea2e9ea1ec269a101c61942831a5b60c32aed3d78f99e7a53bd4dd4bcb327"
+    },
+    "src\\data\\downloads.json": {
+      "source": "src\\data\\downloads.json",
+      "size": 1415,
+      "sha256": "abea702691941103db54a714a25e537c3a1f31c0ddb2404088307746e21186d8"
+    },
+    "src\\data\\plans.json": {
+      "source": "src\\data\\plans.json",
+      "size": 1105958,
+      "sha256": "24e0411e8d0f18b224d11aac02b079d22ef62955aaa1712ffe8d01767c43d484"
+    },
+    "src\\data\\queue.json": {
+      "source": "src\\data\\queue.json",
+      "size": 674402,
+      "sha256": "02b20f22f1b2b45bb6517b4ed49ab3605ac8ef69b058a90f0053a1f60f09c66d"
+    },
+    "src\\data\\reminders.json": {
+      "source": "src\\data\\reminders.json",
+      "size": 434,
+      "sha256": "e998608195788be7b026d8bb813478720534a8d44c94c9e7ecd311e674ab9fa6"
+    },
+    "src\\plugins\\__init__.py": {
+      "source": "src\\plugins\\__init__.py",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "src\\plugins\\doupo\\avatar.py": {
+      "source": "src\\plugins\\doupo\\avatar.py",
+      "size": 8088,
+      "sha256": "9c6b19db2aa6945119e3b77eb308b76dc98e9963a8e678d55f88991f4eea9876"
+    },
+    "src\\plugins\\doupo\\card.py": {
+      "source": "src\\plugins\\doupo\\card.py",
+      "size": 13022,
+      "sha256": "e0eb00b6ded69d3c0f0a7b529659081828aff38d0b629ad9e574de513ea53606"
+    },
+    "src\\plugins\\doupo\\commands.py": {
+      "source": "src\\plugins\\doupo\\commands.py",
+      "size": 27421,
+      "sha256": "5e0f7580c4a6a1799d915a6963b8ca2c91cc3e356e7be0c1694db26bfda0b9fe"
+    },
+    "src\\plugins\\doupo\\config.py": {
+      "source": "src\\plugins\\doupo\\config.py",
+      "size": 19109,
+      "sha256": "7f8b611efd916dc560aad1da9951122fad84acabad0e1034175b95f7d479bd51"
+    },
+    "src\\plugins\\doupo\\core.py": {
+      "source": "src\\plugins\\doupo\\core.py",
+      "size": 25091,
+      "sha256": "91a8318b2152e265bc8c9e0197448d2028c8ba660518564d201c2b5971e01f43"
+    },
+    "src\\plugins\\doupo\\README.md": {
+      "source": "src\\plugins\\doupo\\README.md",
+      "size": 10212,
+      "sha256": "ff460ddc70de55712146b727bf09bd62f7c2661d07768c3d7d2a6a5fc80d0cd8"
+    },
+    "src\\plugins\\doupo\\store.py": {
+      "source": "src\\plugins\\doupo\\store.py",
+      "size": 2621,
+      "sha256": "3463d5d674143e6f2a2050c165009f5044f1b72838065b3664c88a893c9553b9"
+    },
+    "src\\plugins\\doupo\\test_avatar.py": {
+      "source": "src\\plugins\\doupo\\test_avatar.py",
+      "size": 7253,
+      "sha256": "56cc3b9a5353b61057ed25dcf1295be385211374b9aee9fc8375c307392eabfa"
+    },
+    "src\\plugins\\doupo\\test_card.py": {
+      "source": "src\\plugins\\doupo\\test_card.py",
+      "size": 9539,
+      "sha256": "7ad1610b989e6ab4b7add7dd80130fb168ce92228f5b4e87f37749b2191d7c5e"
+    },
+    "src\\plugins\\doupo\\test_commands.py": {
+      "source": "src\\plugins\\doupo\\test_commands.py",
+      "size": 17310,
+      "sha256": "0c7acb6f04c361c93b011b754fd1c557186dfa219490cca961bbe325eda73c81"
+    },
+    "src\\plugins\\doupo\\test_core.py": {
+      "source": "src\\plugins\\doupo\\test_core.py",
+      "size": 16203,
+      "sha256": "002b380122392ccf4bf216f594a578659d1d7adcaeac9f6d8977f81623b0fd3a"
+    },
+    "src\\plugins\\doupo\\test_e2e.py": {
+      "source": "src\\plugins\\doupo\\test_e2e.py",
+      "size": 18133,
+      "sha256": "f3ef837d98d87a8bd53c2dc3a8d0e083ecdfaed26ecc9bb2d3c215d4219212d3"
+    },
+    "src\\plugins\\doupo\\test_throttle.py": {
+      "source": "src\\plugins\\doupo\\test_throttle.py",
+      "size": 6311,
+      "sha256": "8846118ede951b41d46db9349310f339d8c77bc0e0216efac5b8d6f4386f85df"
+    },
+    "src\\plugins\\doupo\\_balance.py": {
+      "source": "src\\plugins\\doupo\\_balance.py",
+      "size": 5670,
+      "sha256": "76703bd40eb6b916eb237fe7e50f1b7d688e138576472bd09b200aae6e8c9ab8"
+    },
+    "src\\plugins\\doupo\\_gen_monsters.py": {
+      "source": "src\\plugins\\doupo\\_gen_monsters.py",
+      "size": 3073,
+      "sha256": "b730d702ab03efe7ff8351788c836c3c563dc1fd384fa4c5f63791ccd31cc494"
+    },
+    "src\\plugins\\doupo\\_throttle.py": {
+      "source": "src\\plugins\\doupo\\_throttle.py",
+      "size": 4572,
+      "sha256": "2c3b6b0c68219a558f7463653d78baf20c6a9f94b210873f2507184898a4c74d"
+    },
+    "src\\plugins\\doupo\\__init__.py": {
+      "source": "src\\plugins\\doupo\\__init__.py",
+      "size": 19356,
+      "sha256": "553e98554a6ca22ee9ae4615ab1df307e5ea3ce87c016d077d21106a3a4bd5c8"
+    },
+    "src\\plugins\\game_router\\__init__.py": {
+      "source": "src\\plugins\\game_router\\__init__.py",
+      "size": 1300,
+      "sha256": "80b2ffd47cc4bab742c7924dab13a1ad2a074bd20ac1e1d09dcec1b7dce2aa50"
+    },
+    "src\\plugins\\qq_bridge\\ai_mode.py": {
+      "source": "src\\plugins\\qq_bridge\\ai_mode.py",
+      "size": 32591,
+      "sha256": "a2b538baf72ce5652ebd6d12b120a6a2c9e8049f73ecfafdf2652a6e62d3ba31"
+    },
+    "src\\plugins\\qq_bridge\\ai_proactive.py": {
+      "source": "src\\plugins\\qq_bridge\\ai_proactive.py",
+      "size": 11870,
+      "sha256": "fe6c77ff1d997cac841ffed65a3fd360e13f71c7cafa48610eff42eb0cb2196c"
+    },
+    "src\\plugins\\qq_bridge\\config.py": {
+      "source": "src\\plugins\\qq_bridge\\config.py",
+      "size": 57065,
+      "sha256": "2027986cfa0df5414695d83f5c8362b795f840ed7d699b7e867b38334ef72bdd"
+    },
+    "src\\plugins\\qq_bridge\\config_api.py": {
+      "source": "src\\plugins\\qq_bridge\\config_api.py",
+      "size": 83194,
+      "sha256": "02c661b4ec84df5681806f8f59d47695e32bf45aaa601fa1e95fa60ee150cab8"
+    },
+    "src\\plugins\\qq_bridge\\gallery.py": {
+      "source": "src\\plugins\\qq_bridge\\gallery.py",
+      "size": 20774,
+      "sha256": "fc464fd6f770710f8b396dec161880d98e354206219424a5ee1cd8aa0740b070"
+    },
+    "src\\plugins\\qq_bridge\\pc.py": {
+      "source": "src\\plugins\\qq_bridge\\pc.py",
+      "size": 55545,
+      "sha256": "7ac0f24a24fcbfcad5bae0253c60dcc414783fc04b48a230f72910138edf7cfa"
+    },
+    "src\\plugins\\qq_bridge\\persona.py": {
+      "source": "src\\plugins\\qq_bridge\\persona.py",
+      "size": 12972,
+      "sha256": "37f5415b9321db4fa46bb12514ec6ee7706e5c889de36c0d74dae1b3ae43c9be"
+    },
+    "src\\plugins\\qq_bridge\\planstore.py": {
+      "source": "src\\plugins\\qq_bridge\\planstore.py",
+      "size": 9156,
+      "sha256": "0d8087175f1d5be8f1ff6a6d446646cd5c4ec11537150616aeb02f2e26af5a51"
+    },
+    "src\\plugins\\qq_bridge\\stickers.py": {
+      "source": "src\\plugins\\qq_bridge\\stickers.py",
+      "size": 25644,
+      "sha256": "9864354424ab45c30cc41a945abe80003c9d5a355283fb7747e10914c2277e3e"
+    },
+    "src\\plugins\\qq_bridge\\typo_generator.py": {
+      "source": "src\\plugins\\qq_bridge\\typo_generator.py",
+      "size": 15598,
+      "sha256": "0f1c5e859a6f4961b44483d2c2df77cfe9543139fae57881b90d857d94195914"
+    },
+    "src\\plugins\\qq_bridge\\wf_sync.py": {
+      "source": "src\\plugins\\qq_bridge\\wf_sync.py",
+      "size": 34543,
+      "sha256": "ee864a393d937ab9a2924316f662660efc162c485797549e1a61822977c0dbec"
+    },
+    "src\\plugins\\qq_bridge\\__init__.py": {
+      "source": "src\\plugins\\qq_bridge\\__init__.py",
+      "size": 378114,
+      "sha256": "b7710f0870dcc4f43b13e244960b95fcaa362feb3225a5fa0ad78490da88e7a0"
+    },
+    "src\\plugins\\xiuxian\\broadcast.py": {
+      "source": "src\\plugins\\xiuxian\\broadcast.py",
+      "size": 8955,
+      "sha256": "7f37f7a4b56e7b8ecbc6ad3dd1d22beb414dbc3f3780c1b90e8dcac8c5280efe"
+    },
+    "src\\plugins\\xiuxian\\card.py": {
+      "source": "src\\plugins\\xiuxian\\card.py",
+      "size": 8206,
+      "sha256": "b473bccb49167656822cfe7682b79d7c8bb87e33e7ad1aa65e6247fc89da5433"
+    },
+    "src\\plugins\\xiuxian\\commands.py": {
+      "source": "src\\plugins\\xiuxian\\commands.py",
+      "size": 33941,
+      "sha256": "79c2161848798be7d03a037f1c7b94f6f7465a476a6afc87adaf1803be7840b9"
+    },
+    "src\\plugins\\xiuxian\\config.py": {
+      "source": "src\\plugins\\xiuxian\\config.py",
+      "size": 12149,
+      "sha256": "1ba9f72d1d75c67d5cd8d2fa38240ff4fdfe80af561b6281d89d685ad7df2762"
+    },
+    "src\\plugins\\xiuxian\\config_open.py": {
+      "source": "src\\plugins\\xiuxian\\config_open.py",
+      "size": 18426,
+      "sha256": "8bf652ba3b2e5430bc1a7580494cab6560f46b6289f14a1701e6f180d42da484"
+    },
+    "src\\plugins\\xiuxian\\core.py": {
+      "source": "src\\plugins\\xiuxian\\core.py",
+      "size": 32594,
+      "sha256": "c21b9f84ac806ff1b24054de757eeffe28f73a237b77ba6c7261eaeff31d9425"
+    },
+    "src\\plugins\\xiuxian\\migrate_v2.py": {
+      "source": "src\\plugins\\xiuxian\\migrate_v2.py",
+      "size": 2461,
+      "sha256": "acf3e1385c5e2924a4dfc5fb960dabcef51caec28f8734377e0fb5a0869b9901"
+    },
+    "src\\plugins\\xiuxian\\migrate_v3.py": {
+      "source": "src\\plugins\\xiuxian\\migrate_v3.py",
+      "size": 1930,
+      "sha256": "cf191174d9a46a01d1b173c54ff8ed17c31c2d0e874e868d2ac15fd2db1959af"
+    },
+    "src\\plugins\\xiuxian\\README.md": {
+      "source": "src\\plugins\\xiuxian\\README.md",
+      "size": 19055,
+      "sha256": "b01b6d6557b96293ce8279d68ae7ee07c2f3c4e1ee389a2f9467837fee980d99"
+    },
+    "src\\plugins\\xiuxian\\store.py": {
+      "source": "src\\plugins\\xiuxian\\store.py",
+      "size": 4062,
+      "sha256": "19bdf7093c5b5cd09ec17284a58e8d0842570fa59dd3df57eb3d89f747a710a2"
+    },
+    "src\\plugins\\xiuxian\\test_commands.py": {
+      "source": "src\\plugins\\xiuxian\\test_commands.py",
+      "size": 17304,
+      "sha256": "928eb6d844023a5adef0a90115022f836805aaeb3ebd2efde0c2e1fa55128a89"
+    },
+    "src\\plugins\\xiuxian\\test_core.py": {
+      "source": "src\\plugins\\xiuxian\\test_core.py",
+      "size": 20417,
+      "sha256": "475c16808d761275a0c937d55395531b03173a5c19c1d167ff8cade430b40033"
+    },
+    "src\\plugins\\xiuxian\\test_e2e.py": {
+      "source": "src\\plugins\\xiuxian\\test_e2e.py",
+      "size": 16095,
+      "sha256": "8a8e19b31e2c761fc041dfd90be03d89ee2140c35714cae3d2e446467b342bcc"
+    },
+    "src\\plugins\\xiuxian\\__init__.py": {
+      "source": "src\\plugins\\xiuxian\\__init__.py",
+      "size": 17966,
+      "sha256": "8e8a25e7f192d3eb9c221e94a7cf3561c86ef26baacb7d3b4179776276eb6d6f"
+    },
+    "src\\plugins\\xiuxian\\data\\xiuxian.json": {
+      "source": "src\\plugins\\xiuxian\\data\\xiuxian.json",
+      "size": 1801,
+      "sha256": "0dcba9bdf7ec97d9fe9367e332528107a245b4fc248c70a7c00e7b42897e409f"
+    },
+    "src\\plugins\\qq_bridge\\budget\\manager.py": {
+      "source": "src\\plugins\\qq_bridge\\budget\\manager.py",
+      "size": 7422,
+      "sha256": "814bde57d8f934575092c357c601d3b139df3bf2c9c507712efd28bc5111d54b"
+    },
+    "src\\plugins\\qq_bridge\\budget\\store.py": {
+      "source": "src\\plugins\\qq_bridge\\budget\\store.py",
+      "size": 3928,
+      "sha256": "4d50841151c2eaaaa2a7a9a87972b45e76cae11f4ba9e6b7353a25d84f41beac"
+    },
+    "src\\plugins\\qq_bridge\\budget\\__init__.py": {
+      "source": "src\\plugins\\qq_bridge\\budget\\__init__.py",
+      "size": 378,
+      "sha256": "78b4bc9db7a2daf746bac0fa1685d053b51a089669b366ea7905a79ee48e9c12"
+    },
+    "src\\plugins\\qq_bridge\\channel\\base.py": {
+      "source": "src\\plugins\\qq_bridge\\channel\\base.py",
+      "size": 5270,
+      "sha256": "e3ad827d0259652526cede2c6979f3960412eaf69f1351f68fef586ceec6edd5"
+    },
+    "src\\plugins\\qq_bridge\\channel\\card_buttons.py": {
+      "source": "src\\plugins\\qq_bridge\\channel\\card_buttons.py",
+      "size": 18331,
+      "sha256": "d44590ce5186839d9f256b658c66a9072ab8af99ea6ad6a0d3a3a049dfcf3b97"
+    },
+    "src\\plugins\\qq_bridge\\channel\\command_inventory.py": {
+      "source": "src\\plugins\\qq_bridge\\channel\\command_inventory.py",
+      "size": 16037,
+      "sha256": "91168dfbc8d018374fadbf04d5c72073664313c5647ec17193928781f0953d94"
+    },
+    "src\\plugins\\qq_bridge\\channel\\limiter.py": {
+      "source": "src\\plugins\\qq_bridge\\channel\\limiter.py",
+      "size": 3724,
+      "sha256": "409fef62feef200cef468d26b17b3b44c6f127aab0d0a50d6dc6d2145289260f"
+    },
+    "src\\plugins\\qq_bridge\\channel\\media_asset.py": {
+      "source": "src\\plugins\\qq_bridge\\channel\\media_asset.py",
+      "size": 12949,
+      "sha256": "29cdc9174af05b8a072f752a6807186e05f1930e7005a0362fe672e635a9da02"
+    },
+    "src\\plugins\\qq_bridge\\channel\\napcat.py": {
+      "source": "src\\plugins\\qq_bridge\\channel\\napcat.py",
+      "size": 3149,
+      "sha256": "6236f9f57a1b62a45e8528d46e52fd1176d46e2625fab7670fe2bd6c0fea7a14"
+    },
+    "src\\plugins\\qq_bridge\\channel\\official.py": {
+      "source": "src\\plugins\\qq_bridge\\channel\\official.py",
+      "size": 25496,
+      "sha256": "1053fe4d4bfe7bf2098aa8af2c15bb95039e52e773864af6f749fe13f082893b"
+    },
+    "src\\plugins\\qq_bridge\\channel\\passive_seq.py": {
+      "source": "src\\plugins\\qq_bridge\\channel\\passive_seq.py",
+      "size": 4884,
+      "sha256": "4263ba5046357272882b119c095180df50f2a6bd42bcd9c50f8f3ae11b8f1551"
+    },
+    "src\\plugins\\qq_bridge\\channel\\qq_interaction.py": {
+      "source": "src\\plugins\\qq_bridge\\channel\\qq_interaction.py",
+      "size": 10662,
+      "sha256": "c2019a571d75d4c66b64507206fb6929aa06582e3e18bf069c938428c991ebfb"
+    },
+    "src\\plugins\\qq_bridge\\channel\\qq_keyboard.py": {
+      "source": "src\\plugins\\qq_bridge\\channel\\qq_keyboard.py",
+      "size": 19396,
+      "sha256": "40f2557a83ff466dabc9e3aabc1d96f4d7beacccfdc8f8d441e24266a32ad318"
+    },
+    "src\\plugins\\qq_bridge\\channel\\rank_eligibility.py": {
+      "source": "src\\plugins\\qq_bridge\\channel\\rank_eligibility.py",
+      "size": 6779,
+      "sha256": "267e64bf5a3492a74d7e7fe3e74948d978c4af6d41aa90594fa0051a79b66615"
+    },
+    "src\\plugins\\qq_bridge\\channel\\riven_cache.py": {
+      "source": "src\\plugins\\qq_bridge\\channel\\riven_cache.py",
+      "size": 5280,
+      "sha256": "c5a015e839e91caba5e4d39b404066494c3f9d71886fbf8f8a1c8fb8e4ead75e"
+    },
+    "src\\plugins\\qq_bridge\\channel\\__init__.py": {
+      "source": "src\\plugins\\qq_bridge\\channel\\__init__.py",
+      "size": 2626,
+      "sha256": "d2d7575f1bf4f4c9a3898ffd7d9b5891964bedb55a1c41f92d8519c393d0d7e1"
+    },
+    "src\\plugins\\qq_bridge\\checkin\\manager.py": {
+      "source": "src\\plugins\\qq_bridge\\checkin\\manager.py",
+      "size": 6559,
+      "sha256": "b629f17881afe259a67fd6a41fd686b10f1653db3809b0683ddb86366854d3b1"
+    },
+    "src\\plugins\\qq_bridge\\checkin\\store.py": {
+      "source": "src\\plugins\\qq_bridge\\checkin\\store.py",
+      "size": 7965,
+      "sha256": "ca12d7b0b9349d9af175867e90ef55a46c3f65076d4e545144eb7184f8d9aa12"
+    },
+    "src\\plugins\\qq_bridge\\checkin\\__init__.py": {
+      "source": "src\\plugins\\qq_bridge\\checkin\\__init__.py",
+      "size": 649,
+      "sha256": "7656b083da033b4ee4f68cf0c195ed2ad081224c6e64b91f0ec0da56cf917d0f"
+    },
+    "src\\plugins\\qq_bridge\\connector\\__init__.py": {
+      "source": "src\\plugins\\qq_bridge\\connector\\__init__.py",
+      "size": 12481,
+      "sha256": "659443f5bb992a32cb09e16573e621867dd1b7a06d4c88d2aadd7d408de57a93"
+    },
+    "src\\plugins\\qq_bridge\\dispatcher\\__init__.py": {
+      "source": "src\\plugins\\qq_bridge\\dispatcher\\__init__.py",
+      "size": 10596,
+      "sha256": "6d6fe02171dd678619f5338af977e9ce943993accc847d62b052d50dfd368e34"
+    },
+    "src\\plugins\\qq_bridge\\download\\aria2.py": {
+      "source": "src\\plugins\\qq_bridge\\download\\aria2.py",
+      "size": 9647,
+      "sha256": "0d41f96a18e7471c671e106f11db60d2e6980bdd6dc2adb3962ffc220fbc9b13"
+    },
+    "src\\plugins\\qq_bridge\\download\\btselect.py": {
+      "source": "src\\plugins\\qq_bridge\\download\\btselect.py",
+      "size": 3764,
+      "sha256": "b92fbb5d88ee0290ffe8ba93f48c07fd8da2f7fdbd77a71d3618a1c849f9a8a7"
+    },
+    "src\\plugins\\qq_bridge\\download\\manager.py": {
+      "source": "src\\plugins\\qq_bridge\\download\\manager.py",
+      "size": 22498,
+      "sha256": "490164208caeb70ba40d0ebf020ebdc34d992585e4d2918d9b5dde06379cccf5"
+    },
+    "src\\plugins\\qq_bridge\\download\\subscribe.py": {
+      "source": "src\\plugins\\qq_bridge\\download\\subscribe.py",
+      "size": 12162,
+      "sha256": "7bd057f43290438f536c253fe2fd87da3a4f9de40795f5124a444300e6d1e36e"
+    },
+    "src\\plugins\\qq_bridge\\download\\ytdlp.py": {
+      "source": "src\\plugins\\qq_bridge\\download\\ytdlp.py",
+      "size": 7118,
+      "sha256": "0389cbca452a2597f9b110bdab7a3e703148e5d076d75ff8899ed66177eefa89"
+    },
+    "src\\plugins\\qq_bridge\\download\\__init__.py": {
+      "source": "src\\plugins\\qq_bridge\\download\\__init__.py",
+      "size": 2140,
+      "sha256": "368add2cdb060b9421bf4cbdfdfe436ed89847c06bb15497567670146ab109f4"
+    },
+    "src\\plugins\\qq_bridge\\emotion\\manager.py": {
+      "source": "src\\plugins\\qq_bridge\\emotion\\manager.py",
+      "size": 8441,
+      "sha256": "c2a8df6c10ef73338d4b37689dcb19f93cedca3728f57a5775f6d6f2fe354040"
+    },
+    "src\\plugins\\qq_bridge\\emotion\\mood.py": {
+      "source": "src\\plugins\\qq_bridge\\emotion\\mood.py",
+      "size": 9708,
+      "sha256": "c571aff1e43edc4cc88f29c90e9062befab5abe1d4000da28e2b30aaf3199610"
+    },
+    "src\\plugins\\qq_bridge\\emotion\\schedule.py": {
+      "source": "src\\plugins\\qq_bridge\\emotion\\schedule.py",
+      "size": 5878,
+      "sha256": "3e3bf7f188bad3574826f5ddd26d1a8b41c2273800d5f4dd9649e955479a35e4"
+    },
+    "src\\plugins\\qq_bridge\\emotion\\store.py": {
+      "source": "src\\plugins\\qq_bridge\\emotion\\store.py",
+      "size": 14744,
+      "sha256": "0af76f84b9f85a9ddb090c6b4e61666481761f7d879ec9c21471777ebfbd5b10"
+    },
+    "src\\plugins\\qq_bridge\\emotion\\__init__.py": {
+      "source": "src\\plugins\\qq_bridge\\emotion\\__init__.py",
+      "size": 2372,
+      "sha256": "37fff52fe4b342fdb2d5962fcfa9d0359ec2837749e6df548bb27dab3fa6939b"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\atlas.py": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\atlas.py",
+      "size": 5439,
+      "sha256": "d6aa606ef0cc60497a02ec5a962e519bb1210c3d58f52c8a0731895c25cb02e6"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\build_card.py": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\build_card.py",
+      "size": 16868,
+      "sha256": "2ee5647b763e7d6e477755b2fe3ebd47bf8c30828f157d5fe04a9c2c97c2805a"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\build_fetch.py": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\build_fetch.py",
+      "size": 18888,
+      "sha256": "121e1b4c6c56258a64dc28fcc5933f590c51f2a2f26b6054b1226938e955945c"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\conquest_zh.json": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\conquest_zh.json",
+      "size": 37889,
+      "sha256": "dba49e990ceb55112e1b65164e2e4429c008fbe92f024a54ea68736b89652ecc"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\data.py": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\data.py",
+      "size": 21242,
+      "sha256": "6025610f965fac06abe240385b68eac9744077c99b1e52dfe82ce798aaa40474"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\games.py": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\games.py",
+      "size": 13744,
+      "sha256": "b0915b4a443fa3add970885436d25f5417b8a5256a3bbbce99f238597fd51baf"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\gen_riven_data.py": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\gen_riven_data.py",
+      "size": 15419,
+      "sha256": "68e7c3c5c71e994f15d6cf750baefa240830f88f8f92019db8930033de43edad"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\netracell_zh.py": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\netracell_zh.py",
+      "size": 7953,
+      "sha256": "abb088faa97aadc106e7d033d67d98c17c134736950688a5000225e96aaf7b5c"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\ocr.py": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\ocr.py",
+      "size": 14675,
+      "sha256": "59338c4f59baedcc75367a93ad3b3ee177eb5f3c4da589e632db4b9c5c7c9725"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\ocr_rapid.py": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\ocr_rapid.py",
+      "size": 4345,
+      "sha256": "c0cbc93479f2cb4aec9f7dd0e0e89e526a728b6188c2e89b2f5959794c7767be"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\official_bridge.py": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\official_bridge.py",
+      "size": 16900,
+      "sha256": "88e474ea7b1faa6e152dfa546126dd931407c04e66da82b73e15e958dff6bc1e"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\riven.py": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\riven.py",
+      "size": 70792,
+      "sha256": "40fcabb74c29de96e19f5bd547d8f9ea4b378d6f293cf6af0ba97811c97df5e1"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\riven_alias_patch.py": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\riven_alias_patch.py",
+      "size": 7269,
+      "sha256": "87d361ab1bc2b1212c571a0719d3b4ba5834259ac9f2984a9be7396c27b25561"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\riven_card.py": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\riven_card.py",
+      "size": 167914,
+      "sha256": "5872ff367843686b2eb577557d88b82b3a46cb151e1b828889458d83c7edcd58"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\riven_full.py": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\riven_full.py",
+      "size": 57898,
+      "sha256": "5d7b47bd70aa2c9103e28adf09fefd048627481e5bcdbad02311e81edfc116c7"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\riven_fusion.py": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\riven_fusion.py",
+      "size": 4594,
+      "sha256": "223ee4d99cd0148997a7a92b49f4b782036059da68cd94dcee333384caf3d290"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\riven_price.py": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\riven_price.py",
+      "size": 10680,
+      "sha256": "76d7f04fc15fb36c39e8730b544bc830663dc813223e3aab53b149ff0f4226e5"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\riven_recommend.py": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\riven_recommend.py",
+      "size": 36575,
+      "sha256": "7d7dc0f3862650ee9f7bfd834bce559311168a4230014fe4272032cdb7454dd4"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\riven_trend.py": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\riven_trend.py",
+      "size": 17275,
+      "sha256": "0cb5b62fd4e048838a3be5ea7a6298f10205c22d7ecb916124474873b8c547ff"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\warframe.py": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\warframe.py",
+      "size": 286541,
+      "sha256": "9005fcd696584cc2c20c35e8f752cfcbe28f482061176260d27db6cf689a86c0"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\wf_reference.py": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\wf_reference.py",
+      "size": 13987,
+      "sha256": "991e11d65a4334cd482d61cdc38ab730d3d3692f0fd78b90a19c1b247e3fe8c8"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\wiki.py": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\wiki.py",
+      "size": 17643,
+      "sha256": "c1baaf6c7a13ecb357f406b3d12b0a0cd5f9572ae52f12900ceb6b92ae9054a2"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\__init__.py": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\__init__.py",
+      "size": 147450,
+      "sha256": "9d6b8a11398c1bc9e4dae34570791657f00081b22c194fc7cdc81ee4f467c429"
+    },
+    "src\\plugins\\qq_bridge\\group_style\\learn.py": {
+      "source": "src\\plugins\\qq_bridge\\group_style\\learn.py",
+      "size": 4932,
+      "sha256": "8f9159cb962cff29f2756ecbbe0992c8dcb7e47855f31ec835f0b4453a375d39"
+    },
+    "src\\plugins\\qq_bridge\\group_style\\manager.py": {
+      "source": "src\\plugins\\qq_bridge\\group_style\\manager.py",
+      "size": 4573,
+      "sha256": "588fd9cbf1b24258387d5f0a03e35da80f6cbf3a5328b6503ae7839e70f67624"
+    },
+    "src\\plugins\\qq_bridge\\group_style\\store.py": {
+      "source": "src\\plugins\\qq_bridge\\group_style\\store.py",
+      "size": 6408,
+      "sha256": "415a945c2cd6f4ff77ab6a4caaf21c4270530bf6af283eb741d9fe6db3ef2b1f"
+    },
+    "src\\plugins\\qq_bridge\\group_style\\__init__.py": {
+      "source": "src\\plugins\\qq_bridge\\group_style\\__init__.py",
+      "size": 540,
+      "sha256": "2fbd9b9c22e5c23e709f4059f3140590bea79e576b25986c1faf74bc94928409"
+    },
+    "src\\plugins\\qq_bridge\\history\\__init__.py": {
+      "source": "src\\plugins\\qq_bridge\\history\\__init__.py",
+      "size": 38795,
+      "sha256": "e9209c89e9e2dfe005987b7cd41d81f556e119d90960dffd15fcac65d7c6f425"
+    },
+    "src\\plugins\\qq_bridge\\intent\\__init__.py": {
+      "source": "src\\plugins\\qq_bridge\\intent\\__init__.py",
+      "size": 31653,
+      "sha256": "48d2af7ea5220b4f09b62b38797303c87a402c034a39af82bea242c502129425"
+    },
+    "src\\plugins\\qq_bridge\\media\\__init__.py": {
+      "source": "src\\plugins\\qq_bridge\\media\\__init__.py",
+      "size": 11179,
+      "sha256": "101f3ecc5bf357103c61717a72799b871d0e53d3eb56baa125707f3fa31f0c81"
+    },
+    "src\\plugins\\qq_bridge\\memory\\extract.py": {
+      "source": "src\\plugins\\qq_bridge\\memory\\extract.py",
+      "size": 5190,
+      "sha256": "3945e90a0e515ddf80732604be73c92ec81935650437846bd6e8bf29f4da47dd"
+    },
+    "src\\plugins\\qq_bridge\\memory\\manager.py": {
+      "source": "src\\plugins\\qq_bridge\\memory\\manager.py",
+      "size": 6724,
+      "sha256": "c1026bc03608701bba2e0ab7dca92f3319ccb36fa957b097cc7e6d01999ebee0"
+    },
+    "src\\plugins\\qq_bridge\\memory\\store.py": {
+      "source": "src\\plugins\\qq_bridge\\memory\\store.py",
+      "size": 22039,
+      "sha256": "449762edc543bd15b14f8a4da867f79b17995206abe5a4aa4a5824f0ef2d8f7f"
+    },
+    "src\\plugins\\qq_bridge\\memory\\__init__.py": {
+      "source": "src\\plugins\\qq_bridge\\memory\\__init__.py",
+      "size": 1762,
+      "sha256": "fec637c97f94f8b7b5ea8f36a67a30c0fea528e16f5e710507b4cbb06a96cd12"
+    },
+    "src\\plugins\\qq_bridge\\monitor\\infer_listen.py": {
+      "source": "src\\plugins\\qq_bridge\\monitor\\infer_listen.py",
+      "size": 14425,
+      "sha256": "8f014846712a7761b7854cbbde967073710d7808d76c19ac1a07021512b449a7"
+    },
+    "src\\plugins\\qq_bridge\\monitor\\__init__.py": {
+      "source": "src\\plugins\\qq_bridge\\monitor\\__init__.py",
+      "size": 10259,
+      "sha256": "6de30fbf2daf864c66accbb18f69c6820be52f274c51fac648127e87df756c18"
+    },
+    "src\\plugins\\qq_bridge\\multimodal\\album.py": {
+      "source": "src\\plugins\\qq_bridge\\multimodal\\album.py",
+      "size": 6475,
+      "sha256": "6e7d2bdf5991b70504987a9f1bee9bd22cd9ea48986d1971460c64a8ddb21c5e"
+    },
+    "src\\plugins\\qq_bridge\\multimodal\\audio.py": {
+      "source": "src\\plugins\\qq_bridge\\multimodal\\audio.py",
+      "size": 8967,
+      "sha256": "a6c5b0c91b7ec743d44ee8ec175c32dd17dae0e8e2bc7e4415c990eb2f754ee4"
+    },
+    "src\\plugins\\qq_bridge\\multimodal\\audio_seed.py": {
+      "source": "src\\plugins\\qq_bridge\\multimodal\\audio_seed.py",
+      "size": 9196,
+      "sha256": "2ff53648c457c84e24f301098ee717d4a5e004d692f4c49e64004670e6c4b494"
+    },
+    "src\\plugins\\qq_bridge\\multimodal\\manager.py": {
+      "source": "src\\plugins\\qq_bridge\\multimodal\\manager.py",
+      "size": 7146,
+      "sha256": "9fc0ca3fc3b9c796dd75f33d9bb3a27bd58b3c75fe1af334d25ea43435279092"
+    },
+    "src\\plugins\\qq_bridge\\multimodal\\vision.py": {
+      "source": "src\\plugins\\qq_bridge\\multimodal\\vision.py",
+      "size": 8407,
+      "sha256": "479127c422cd1ddabbd1203599c1f6b691b3d65898ce06273f657607aa08adc0"
+    },
+    "src\\plugins\\qq_bridge\\multimodal\\__init__.py": {
+      "source": "src\\plugins\\qq_bridge\\multimodal\\__init__.py",
+      "size": 2693,
+      "sha256": "8a0d3e2432028df034512ce8e9b1f66facfdea1a7e35cd2133520a3e7e553414"
+    },
+    "src\\plugins\\qq_bridge\\ops\\connwatch.py": {
+      "source": "src\\plugins\\qq_bridge\\ops\\connwatch.py",
+      "size": 14563,
+      "sha256": "995e60569699a7c5d97189edf9f48d143dd7128f8783cc5c85d62ea4eaa584b4"
+    },
+    "src\\plugins\\qq_bridge\\ops\\frp.py": {
+      "source": "src\\plugins\\qq_bridge\\ops\\frp.py",
+      "size": 3609,
+      "sha256": "d2624520e1a9a2efa50de7b57d51f6e3de817f6cd35245ea9c2f773332907176"
+    },
+    "src\\plugins\\qq_bridge\\ops\\gitinfo.py": {
+      "source": "src\\plugins\\qq_bridge\\ops\\gitinfo.py",
+      "size": 6643,
+      "sha256": "d979cbf5c74e14bed6ddce55ea0373edbbaff1ae0352d84b9376bfe772f47433"
+    },
+    "src\\plugins\\qq_bridge\\ops\\notify.py": {
+      "source": "src\\plugins\\qq_bridge\\ops\\notify.py",
+      "size": 7752,
+      "sha256": "6050c31d64175c94ef0c569c17c59589aae10bb544ac1a4d3b4b64e165be801f"
+    },
+    "src\\plugins\\qq_bridge\\ops\\ssh.py": {
+      "source": "src\\plugins\\qq_bridge\\ops\\ssh.py",
+      "size": 8453,
+      "sha256": "b78c21cff1ccdeb79ec01f02a118cb413d778088cc7ee48d0f52374412a059c3"
+    },
+    "src\\plugins\\qq_bridge\\ops\\watchdog.py": {
+      "source": "src\\plugins\\qq_bridge\\ops\\watchdog.py",
+      "size": 7592,
+      "sha256": "d2578243900b8518dca0c53ba036be6bfd7343a36fe8b14fb1aea72056f144c8"
+    },
+    "src\\plugins\\qq_bridge\\ops\\wol.py": {
+      "source": "src\\plugins\\qq_bridge\\ops\\wol.py",
+      "size": 5308,
+      "sha256": "20f9bc58de331f1a99e28733d3dbb8847dc2c213c4962970c222f33e38a939e0"
+    },
+    "src\\plugins\\qq_bridge\\ops\\__init__.py": {
+      "source": "src\\plugins\\qq_bridge\\ops\\__init__.py",
+      "size": 2508,
+      "sha256": "5645202d21518cb3086b97f874b2e04289ae769e718c379f43ae884a274b5d9b"
+    },
+    "src\\plugins\\qq_bridge\\pic\\assets.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\assets.py",
+      "size": 8501,
+      "sha256": "f6fa00a08260c6ba976ca87930a0d9901a1de643febb95906430df07ed009d57"
+    },
+    "src\\plugins\\qq_bridge\\pic\\cache.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\cache.py",
+      "size": 7077,
+      "sha256": "d2d7d6898a7b5610c185b1af82ff8084fc5c9faf56871b5ce46a7bc0ba3ccecb"
+    },
+    "src\\plugins\\qq_bridge\\pic\\canvas.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\canvas.py",
+      "size": 23391,
+      "sha256": "25fc19c9bbffbf1852c4e86d31a39343b4e0d3d09ee3c471dc7c10d8cf3fd60b"
+    },
+    "src\\plugins\\qq_bridge\\pic\\card_binds.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\card_binds.py",
+      "size": 2670,
+      "sha256": "7486ea1abd18527d560b15f9b83746de75b622761627f32054311de101831c30"
+    },
+    "src\\plugins\\qq_bridge\\pic\\currency_icons.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\currency_icons.py",
+      "size": 5530,
+      "sha256": "b23d775bd98242f19be41b9d5de3d829afc30e65e041c4eccaac860f94db79ba"
+    },
+    "src\\plugins\\qq_bridge\\pic\\decor.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\decor.py",
+      "size": 12028,
+      "sha256": "9abf626c85d22fad72ebfaddbda45636c4a8cd8e72d2946ff4e2442f58200cdb"
+    },
+    "src\\plugins\\qq_bridge\\pic\\editor.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\editor.py",
+      "size": 30164,
+      "sha256": "ecd967c78a6ec5edf9fd6fcaa466d5a4d05b2a0cbbc1c9e2ce16bc6ed429a39a"
+    },
+    "src\\plugins\\qq_bridge\\pic\\editor_page.html": {
+      "source": "src\\plugins\\qq_bridge\\pic\\editor_page.html",
+      "size": 168025,
+      "sha256": "43314f5e0ab8d84921e7c29c22da50c8ae91e293d4e5b3d0895a971b747dcb60"
+    },
+    "src\\plugins\\qq_bridge\\pic\\element_icons.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\element_icons.py",
+      "size": 9664,
+      "sha256": "00f79fee6d070214069657440f5b98739004ea9423c06604fbcf2fe9ca6a2cd4"
+    },
+    "src\\plugins\\qq_bridge\\pic\\fonts.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\fonts.py",
+      "size": 9364,
+      "sha256": "54304a2d75b1cf01b1200a10c3992cd7703bd8787716b518b57de26d5e56d667"
+    },
+    "src\\plugins\\qq_bridge\\pic\\gen_sticker.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\gen_sticker.py",
+      "size": 5992,
+      "sha256": "93992ea3afedd7e46080d7b4f6126fce32c92a5e48d1b911fa4b217388b0df6f"
+    },
+    "src\\plugins\\qq_bridge\\pic\\icons.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\icons.py",
+      "size": 21775,
+      "sha256": "b801e64bcf3a78622bc8b925ff8dbd67af0590342b3174e7f83994628aab09c2"
+    },
+    "src\\plugins\\qq_bridge\\pic\\icon_paste.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\icon_paste.py",
+      "size": 1595,
+      "sha256": "d512f45017c1261ae5243febe5bcab77994e9ff8da3b6b9971870581f3feb972"
+    },
+    "src\\plugins\\qq_bridge\\pic\\item_icons.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\item_icons.py",
+      "size": 9692,
+      "sha256": "b61d2fe63c6229a542345f22ea2b35b1f0d31bc94e0fbf8557bd87acb004fdde"
+    },
+    "src\\plugins\\qq_bridge\\pic\\theme.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\theme.py",
+      "size": 23022,
+      "sha256": "d9a5c1391b51e8835e839ae0a069bbd2b4b237a01eed9087f42f817acf1e900d"
+    },
+    "src\\plugins\\qq_bridge\\pic\\themes_store.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\themes_store.py",
+      "size": 31004,
+      "sha256": "87bb152be9aa16d719b9be9ad2cfac440add92072fb98d1b0f4cf2463ba15594"
+    },
+    "src\\plugins\\qq_bridge\\pic\\weapon_icons.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\weapon_icons.py",
+      "size": 34305,
+      "sha256": "2e3f8fefcf02f10cecd213f485020dcb7ca79b799826b2f4dc7855378c413ecc"
+    },
+    "src\\plugins\\qq_bridge\\pic\\widgets.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\widgets.py",
+      "size": 25296,
+      "sha256": "f9f0a8ff9d2df89cf0a83a9367fd137eb8954e27b6d2404ee93216cf9e7fa013"
+    },
+    "src\\plugins\\qq_bridge\\pic\\__init__.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\__init__.py",
+      "size": 12969,
+      "sha256": "a770a100e941ccac4dc9b14f2010fdbcef37497ce75c1241a2f8f8e5474fa177"
+    },
+    "src\\plugins\\qq_bridge\\queue\\__init__.py": {
+      "source": "src\\plugins\\qq_bridge\\queue\\__init__.py",
+      "size": 62868,
+      "sha256": "05fe4ae7a42734325ca8671a59852b5ea75fb6990e0b6739be6f34ee88f8ec88"
+    },
+    "src\\plugins\\qq_bridge\\ratelimit\\__init__.py": {
+      "source": "src\\plugins\\qq_bridge\\ratelimit\\__init__.py",
+      "size": 4646,
+      "sha256": "164740017f3948cf0bfad0f1de2ac203902cae61a31b5e52dd549fe1f929cc90"
+    },
+    "src\\plugins\\qq_bridge\\safety\\__init__.py": {
+      "source": "src\\plugins\\qq_bridge\\safety\\__init__.py",
+      "size": 4301,
+      "sha256": "ae63c7e655d1fcb439bf43a9c9e43261146ec13007f1c48d2d3984d9e022bb1b"
+    },
+    "src\\plugins\\qq_bridge\\session\\choice.py": {
+      "source": "src\\plugins\\qq_bridge\\session\\choice.py",
+      "size": 4619,
+      "sha256": "de8d21695220235326edd1cf88d6dac4dc2110bee7eeb9a076936fa82854a0c8"
+    },
+    "src\\plugins\\qq_bridge\\session\\__init__.py": {
+      "source": "src\\plugins\\qq_bridge\\session\\__init__.py",
+      "size": 2996,
+      "sha256": "ecab2184ae78887ab4f65497812c3c04c8bdc974876fdf778ccede97e4e0f0d3"
+    },
+    "src\\plugins\\qq_bridge\\smarthome\\camera.py": {
+      "source": "src\\plugins\\qq_bridge\\smarthome\\camera.py",
+      "size": 4839,
+      "sha256": "bb761f5e25c9311627c404d475da7d668d265e5017f57088aea0917687184eff"
+    },
+    "src\\plugins\\qq_bridge\\smarthome\\ha.py": {
+      "source": "src\\plugins\\qq_bridge\\smarthome\\ha.py",
+      "size": 18084,
+      "sha256": "b5212e85c9d4f26e518964f34330e243d50a025e5bb1f5bd4f64ee542ce7f903"
+    },
+    "src\\plugins\\qq_bridge\\smarthome\\webhook.py": {
+      "source": "src\\plugins\\qq_bridge\\smarthome\\webhook.py",
+      "size": 6648,
+      "sha256": "c3b044316c20def1a68faa83b841f664ceba9d9d73deb8782dc21686ca0c514d"
+    },
+    "src\\plugins\\qq_bridge\\smarthome\\__init__.py": {
+      "source": "src\\plugins\\qq_bridge\\smarthome\\__init__.py",
+      "size": 1921,
+      "sha256": "b51620dbd32b64e6c208d9fdcf25ebee120f1542aed46c1c94f6b5a848374c83"
+    },
+    "src\\plugins\\qq_bridge\\taskmgr\\__init__.py": {
+      "source": "src\\plugins\\qq_bridge\\taskmgr\\__init__.py",
+      "size": 26522,
+      "sha256": "bf3718ee84e578b32ca6396f564965b46efd90d18da5c2f5635704200e9840be"
+    },
+    "src\\plugins\\qq_bridge\\task_subscribe\\__init__.py": {
+      "source": "src\\plugins\\qq_bridge\\task_subscribe\\__init__.py",
+      "size": 23596,
+      "sha256": "abc25e70e87dfc292531041049feb28cbcbd3cde6463985825f8fb890df6ff24"
+    },
+    "src\\plugins\\qq_bridge\\tools\\builtins.py": {
+      "source": "src\\plugins\\qq_bridge\\tools\\builtins.py",
+      "size": 13397,
+      "sha256": "1b23292278ce8125875d1576f970313eca6a33f106127cfaccfc2371390e21c8"
+    },
+    "src\\plugins\\qq_bridge\\tools\\fc.py": {
+      "source": "src\\plugins\\qq_bridge\\tools\\fc.py",
+      "size": 6196,
+      "sha256": "47bbd2d5240cd27c5f1ff0e154a0479a2e24afcd13fb3b3a9b7680587a4acf04"
+    },
+    "src\\plugins\\qq_bridge\\tools\\llm.py": {
+      "source": "src\\plugins\\qq_bridge\\tools\\llm.py",
+      "size": 6910,
+      "sha256": "e7ff49da97ac8611795992cc059a6bac4316dd1d3cd2d003a25c5d8ff1a8c728"
+    },
+    "src\\plugins\\qq_bridge\\tools\\registry.py": {
+      "source": "src\\plugins\\qq_bridge\\tools\\registry.py",
+      "size": 12773,
+      "sha256": "3bcd83511034fbc152e05600c105dc7336d87d3aac3a7df3bff06f3b7b8ff95b"
+    },
+    "src\\plugins\\qq_bridge\\tools\\scheduler.py": {
+      "source": "src\\plugins\\qq_bridge\\tools\\scheduler.py",
+      "size": 24589,
+      "sha256": "43329804e8e8a41dcac97b56c4dbc7cbb3cfee29e3c76b1a7b2ff6b36e61d290"
+    },
+    "src\\plugins\\qq_bridge\\tools\\__init__.py": {
+      "source": "src\\plugins\\qq_bridge\\tools\\__init__.py",
+      "size": 1704,
+      "sha256": "c68726bf2d707af7cbfa96e1f723db9dda9d89982d543ecb641923390e3a8197"
+    },
+    "src\\plugins\\qq_bridge\\video_parse\\base.py": {
+      "source": "src\\plugins\\qq_bridge\\video_parse\\base.py",
+      "size": 6834,
+      "sha256": "a552d092774a810371e65dea616bdf09a7215f1c81a0357f02d0bea1515c5f25"
+    },
+    "src\\plugins\\qq_bridge\\video_parse\\bilibili.py": {
+      "source": "src\\plugins\\qq_bridge\\video_parse\\bilibili.py",
+      "size": 6292,
+      "sha256": "2fa93f42cf9e51cb0000ee9cff841202d873645bd769d78e1cee8850a56d804e"
+    },
+    "src\\plugins\\qq_bridge\\video_parse\\douyin.py": {
+      "source": "src\\plugins\\qq_bridge\\video_parse\\douyin.py",
+      "size": 2089,
+      "sha256": "459d4578d684e34c1d2bd4c973bf724a1ddb21ffe5150375a3e96d7fd0da1bf9"
+    },
+    "src\\plugins\\qq_bridge\\video_parse\\kuaishou.py": {
+      "source": "src\\plugins\\qq_bridge\\video_parse\\kuaishou.py",
+      "size": 1884,
+      "sha256": "27b0f1065c5968337ffbe42cf98a7587f9008386c5dd13b494b9ba179ae3df27"
+    },
+    "src\\plugins\\qq_bridge\\video_parse\\meta.py": {
+      "source": "src\\plugins\\qq_bridge\\video_parse\\meta.py",
+      "size": 5030,
+      "sha256": "a13024bc34849d38cf614b0ec4c6a9d11ff5935df0913f22cc0e1771a666bf9e"
+    },
+    "src\\plugins\\qq_bridge\\video_parse\\xiaohongshu.py": {
+      "source": "src\\plugins\\qq_bridge\\video_parse\\xiaohongshu.py",
+      "size": 1705,
+      "sha256": "ff6355d9b59ab7912c9882b8c189ba73e6d9d7bc1fc990a8e3eb191b69650501"
+    },
+    "src\\plugins\\qq_bridge\\video_parse\\__init__.py": {
+      "source": "src\\plugins\\qq_bridge\\video_parse\\__init__.py",
+      "size": 9999,
+      "sha256": "b2c2f9bd3fcb20d565858d10fbfd06cc82d8f2881e3c7bd216cc4ce5d3609789"
+    },
+    "src\\plugins\\qq_bridge\\_backup_riven_recommend_20261105_0201\\game_tools\\warframe.py": {
+      "source": "src\\plugins\\qq_bridge\\_backup_riven_recommend_20261105_0201\\game_tools\\warframe.py",
+      "size": 262261,
+      "sha256": "603a7f2dec437f9b35a393dfd5c4c7b0e04d0bf477f7ee5012d2baf431446327"
+    },
+    "src\\plugins\\qq_bridge\\_backup_riven_recommend_20261105_0201\\game_tools\\wf_reference.py": {
+      "source": "src\\plugins\\qq_bridge\\_backup_riven_recommend_20261105_0201\\game_tools\\wf_reference.py",
+      "size": 11308,
+      "sha256": "832a4ea20595c04e1e26f215088054478b2b2fd89f7d04b940e842aabf39f3d6"
+    },
+    "src\\plugins\\qq_bridge\\_backup_riven_recommend_20261105_0201\\game_tools\\__init__.py": {
+      "source": "src\\plugins\\qq_bridge\\_backup_riven_recommend_20261105_0201\\game_tools\\__init__.py",
+      "size": 99562,
+      "sha256": "db329115356e72bbad60bdeee8545168d32a6d72eab2f9629ff9533ca8cc692a"
+    },
+    "src\\plugins\\qq_bridge\\_backup_riven_recommend_20261105_0201\\pic\\__init__.py": {
+      "source": "src\\plugins\\qq_bridge\\_backup_riven_recommend_20261105_0201\\pic\\__init__.py",
+      "size": 11193,
+      "sha256": "a923dbf4cc589079ef49455d18e2cea43044faa8479a6b83e606cb060f1ff198"
+    },
+    "src\\plugins\\qq_bridge\\_backup_riven_recommend_20261105_0201\\pic\\templates\\riven_analysis.py": {
+      "source": "src\\plugins\\qq_bridge\\_backup_riven_recommend_20261105_0201\\pic\\templates\\riven_analysis.py",
+      "size": 35606,
+      "sha256": "b36177ca565a8cdc4e73cf5632c05baa811ed70dafcfb745425d3eb1787a1ec0"
+    },
+    "src\\plugins\\qq_bridge\\pic\\assets\\archon_base.png": {
+      "source": "src\\plugins\\qq_bridge\\pic\\assets\\archon_base.png",
+      "size": 124067,
+      "sha256": "3119d05f8e76cf2bb45b71e926aa2c937f66b3a4d7c3464ad34d9361aaa48546"
+    },
+    "src\\plugins\\qq_bridge\\pic\\assets\\archon_ic_assassination.png": {
+      "source": "src\\plugins\\qq_bridge\\pic\\assets\\archon_ic_assassination.png",
+      "size": 993,
+      "sha256": "07d06c28aa456f966da8117c795174e1e5e2daa077a8096b7b0072df124eb582"
+    },
+    "src\\plugins\\qq_bridge\\pic\\assets\\archon_ic_interception.png": {
+      "source": "src\\plugins\\qq_bridge\\pic\\assets\\archon_ic_interception.png",
+      "size": 1115,
+      "sha256": "c1c7bd83b163938b07f1a2a9130f8784000df00de37b4b2ea57aa372bd8c154d"
+    },
+    "src\\plugins\\qq_bridge\\pic\\assets\\archon_ic_mobile_defense.png": {
+      "source": "src\\plugins\\qq_bridge\\pic\\assets\\archon_ic_mobile_defense.png",
+      "size": 814,
+      "sha256": "f09958e481258fd947c15d798b8c0d6c5c90ab7136fd626218e46a82f78fb33d"
+    },
+    "src\\plugins\\qq_bridge\\pic\\assets\\archon_ic_planet.png": {
+      "source": "src\\plugins\\qq_bridge\\pic\\assets\\archon_ic_planet.png",
+      "size": 1297,
+      "sha256": "45be0b59784c9af0007317178b71635ee57dd5dfb7f79a444e76940625e7508d"
+    },
+    "src\\plugins\\qq_bridge\\pic\\planets\\deimos.png": {
+      "source": "src\\plugins\\qq_bridge\\pic\\planets\\deimos.png",
+      "size": 15734,
+      "sha256": "5fcff19f1fae49f71c9c77d93e4b45e7505d439ef21677efd1a7710556109473"
+    },
+    "src\\plugins\\qq_bridge\\pic\\planets\\duviri.png": {
+      "source": "src\\plugins\\qq_bridge\\pic\\planets\\duviri.png",
+      "size": 16008,
+      "sha256": "c839840766e93467e3600e9ca7487bc4e6e7ad1a37698f309ebb189de9b25bdb"
+    },
+    "src\\plugins\\qq_bridge\\pic\\planets\\earth.png": {
+      "source": "src\\plugins\\qq_bridge\\pic\\planets\\earth.png",
+      "size": 17171,
+      "sha256": "2d2f0707f64c68e4e4129bce1367817022e8c4ab0b384ad4963f0fa2a52799c4"
+    },
+    "src\\plugins\\qq_bridge\\pic\\planets\\venus.png": {
+      "source": "src\\plugins\\qq_bridge\\pic\\planets\\venus.png",
+      "size": 14037,
+      "sha256": "13ee361dd8098c82ac95e085508772bedc7e1c89d1c8d5faeb339223ae312f80"
+    },
+    "src\\plugins\\qq_bridge\\pic\\static\\coloris.min.css": {
+      "source": "src\\plugins\\qq_bridge\\pic\\static\\coloris.min.css",
+      "size": 8506,
+      "sha256": "b5e003381340500620df07a09b982abbfe1a848f9ca7efc4f3b3d91f89b9d83d"
+    },
+    "src\\plugins\\qq_bridge\\pic\\static\\coloris.min.js": {
+      "source": "src\\plugins\\qq_bridge\\pic\\static\\coloris.min.js",
+      "size": 14295,
+      "sha256": "54bb59eb7e4300294c7a8623258c8937ff71ab87e2c3299ef189f822145fd0b9"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\aimenu.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\aimenu.py",
+      "size": 4691,
+      "sha256": "929448d2b590a095e450ee9ff42c99a5ac2c57dc60f21bf39de0f1ad393b3ff3"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\alerts.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\alerts.py",
+      "size": 15014,
+      "sha256": "a97a41b6bb0a9ede0d768babf79640c85dc1780a8c4ab4b34c71bae2b4af9273"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\arbitration_table.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\arbitration_table.py",
+      "size": 8253,
+      "sha256": "4a6ca80bf792ce43c76f1f06a0b96cb27a5368b30b361c8fbc06485e3daff4ff"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\archon.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\archon.py",
+      "size": 11156,
+      "sha256": "c75681b4221daa0319360e3ed41226e9e403e0d9810a4640c78f5c2e7aaa718b"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\bounty.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\bounty.py",
+      "size": 2601,
+      "sha256": "4b19e18d1fcdd5fa68619ea2b60846236d19cfbbdbede17e9da1176fe6428242"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\bounty_atoms.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\bounty_atoms.py",
+      "size": 10155,
+      "sha256": "7d64e8b3216eb324d12a59fa71b8a30fadd86dba71e4d94b906f2ba916488f9e"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\bounty_deep.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\bounty_deep.py",
+      "size": 6634,
+      "sha256": "da7197c703943cb4444b97422a23dfb2f1418b613d36cd7d34fe7e532104e1b0"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\bounty_icons.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\bounty_icons.py",
+      "size": 9866,
+      "sha256": "358611c95419d46c115dd446d6aed25f30c342db0b865ec664827c963ed85e00"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\bounty_layout.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\bounty_layout.py",
+      "size": 19324,
+      "sha256": "7c4390a03c9ab401e665166db35589dce811557f458000f6d9b093708dde4978"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\bounty_live.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\bounty_live.py",
+      "size": 20304,
+      "sha256": "076c2e97786b5b229f0f09f4b66d7fc294dd37e80baf1eb3927509e12dd3d7e5"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\bounty_model.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\bounty_model.py",
+      "size": 12523,
+      "sha256": "351669240fbb49cab4ab583475c15ea61c83d1014a84bfbf29f30405cf374c71"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\checkin.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\checkin.py",
+      "size": 20361,
+      "sha256": "c836036d86883e3405eb7d9ccb76d94b46edd544f3ac33917265859ed9299a82"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\checkin_font.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\checkin_font.py",
+      "size": 9101,
+      "sha256": "e4589af0f5604536eae567562753c3ce7379083333225c2d5df567d795f60c3e"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\checkin_gold_icons.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\checkin_gold_icons.py",
+      "size": 6845,
+      "sha256": "147ec771a026fe94292272f6d94e1098007072536f1ccf1083b366aa525197a7"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\checkin_parts.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\checkin_parts.py",
+      "size": 8250,
+      "sha256": "69aa196804f9f1d67f2e256ebbed5fc04004553d278c55ca2ea4850ba7236468"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\coda.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\coda.py",
+      "size": 18024,
+      "sha256": "9a6cc7f4b42e53fa1309325bf5a2ef2a46115f9c13c422c25739f7e437985b0e"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\doupo.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\doupo.py",
+      "size": 17036,
+      "sha256": "782adc19a56226390b2a3a18f92a2b2a63df09f2d1f339d36a3bf66757a87a40"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\doupo_list.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\doupo_list.py",
+      "size": 7495,
+      "sha256": "db5a8690a5a513925172bb25c487db3de372e2565c7c2f5b7d3d717bce0a5992"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\doupo_menu.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\doupo_menu.py",
+      "size": 6501,
+      "sha256": "ee2845c7b65c3e54f7cfb88248cfc0f41324cc545a38a968f2f7ff25e657f85e"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\fissure.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\fissure.py",
+      "size": 15679,
+      "sha256": "b4a2372ce3c7379e8089b8c6e14bb48c5199878d1ac68cab5d5f5d92f25f34f1"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\guide.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\guide.py",
+      "size": 59817,
+      "sha256": "c9a4a1ccaa5e1970b0904c4556b30206bfde36ae52f7eea1f77a4885e5e16c8b"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\hw.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\hw.py",
+      "size": 5168,
+      "sha256": "12007aab74060443c9cc01535992dddc97477ffa73ee38323972ca998d16f70f"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\incarnon.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\incarnon.py",
+      "size": 36249,
+      "sha256": "6162977d93009fb641400a765befe1069e3e6f63752863c878df7076181c1d99"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\market_currency.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\market_currency.py",
+      "size": 10799,
+      "sha256": "cbe3da2bbdabae0d9a42a52f07104445f6723cf58bda7349e2ae9dc50d368ad7"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\menu.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\menu.py",
+      "size": 7538,
+      "sha256": "4726b755c76c90350fed254e71e86ce68b9e645c376bb6840ebf0e7fec951654"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\netracell.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\netracell.py",
+      "size": 20346,
+      "sha256": "c76dc69e5bf662d9c36d7e310eb86a3166836df1064b5945cf402e90d199bd6d"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\plain.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\plain.py",
+      "size": 10738,
+      "sha256": "9a4f84e439a413258ac7be715e1a505d56d84db859e1755648d0d0d55ae8d920"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\progress.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\progress.py",
+      "size": 2842,
+      "sha256": "cf6a9da071d07e3aae4f35f405a75de5ba8349191f276fbce2668d46acafd00c"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\quota.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\quota.py",
+      "size": 2235,
+      "sha256": "8f8b5b7aff4ea9b318c8b9e7b665afdddb88dd5e4a1d58e575f1ddd260954963"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\riven.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\riven.py",
+      "size": 4990,
+      "sha256": "e2ff3991af296de49863f2b38600e0470ee45ca366c050785840275767116fe4"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\riven_analysis.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\riven_analysis.py",
+      "size": 35352,
+      "sha256": "fd5d53fdfb6e9a5568a8eea24d960dee670de3195eae3d02db785380498a5e0c"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\riven_base.png": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\riven_base.png",
+      "size": 178459,
+      "sha256": "1a835c199a7357ddf56edbb367a5374b85095a9a54c296b2b207e1b4ab1ad088"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\riven_full.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\riven_full.py",
+      "size": 33132,
+      "sha256": "20aabda1cd5f6102b06b133f50318d193662fbacd0d5ee636def6e42fc8bc84a"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\riven_fusion.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\riven_fusion.py",
+      "size": 8269,
+      "sha256": "f6b1350b2b77adcabb991af859c5c1b5c18d0d0910fcd315a6103ce1f9f37b75"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\riven_recommend.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\riven_recommend.py",
+      "size": 13868,
+      "sha256": "8109829f783a6411905af06d9a45b89139f6cf81e5658c88db5588925c59dc05"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\riven_trend.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\riven_trend.py",
+      "size": 12063,
+      "sha256": "6282749ca909369e2a5a60df6f4f5fd409d1df6cc63262f61c1833acd04bad0c"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\task_alert.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\task_alert.py",
+      "size": 8886,
+      "sha256": "70ec6b18316712ddf58b51fb861ead275a13685b2dcc6ac7ab16a2fef7c9a6f8"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\tenet.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\tenet.py",
+      "size": 18247,
+      "sha256": "371c81c7ec307f9050648a9bedff20e7056d906ca20a7b1caa080749b0b82649"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\text.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\text.py",
+      "size": 4025,
+      "sha256": "7f5f0bbbfcf8a3271e975f6ef83a9e1d3a321bca966f3566884c80fdfcf8580e"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\xiuxian.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\xiuxian.py",
+      "size": 15400,
+      "sha256": "69a31c540804f5c081d8540b6939d43b53c0edfbca16f7a7e96ba9ef4a09a2e8"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\xiuxian_help.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\xiuxian_help.py",
+      "size": 6673,
+      "sha256": "73d29ed0e22a232140b0d3f56277a5d813696f952361b345875ddcc85f214706"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\xiuxian_menu.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\xiuxian_menu.py",
+      "size": 6082,
+      "sha256": "bf4e686677aee21021cbe730da473b53a2e6de08757a510394859f4e349d1e63"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\__init__.py": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\__init__.py",
+      "size": 413,
+      "sha256": "ca7f8d06b51369c14309745f0f317ae657a4fe17a542cc6005507d03838cfb10"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\riven_full_assets\\bunny.png": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\riven_full_assets\\bunny.png",
+      "size": 2788,
+      "sha256": "903feda8db72a086008687459eec68d57f0c3a60280931c2972bf0984047609d"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\riven_full_assets\\bunny_dark.png": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\riven_full_assets\\bunny_dark.png",
+      "size": 2787,
+      "sha256": "80471c2db3203a5e2f64e2783f6c866db06024d79706739ea42fe25dbae8fec7"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\riven_full_assets\\cart.png": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\riven_full_assets\\cart.png",
+      "size": 1453,
+      "sha256": "110224055f1546c9707728efdcdc4eaf89182efc1fcd20249766369d6ce1aa46"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\riven_full_assets\\chart.png": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\riven_full_assets\\chart.png",
+      "size": 1164,
+      "sha256": "1fcbfcfc1e6b8d1d267bc91b7f31422e339d54c7a6171cf2009e1141e0d433a4"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\riven_full_assets\\chibi.png": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\riven_full_assets\\chibi.png",
+      "size": 65300,
+      "sha256": "80e7a47fe14f4b1344defbd765886d2ffc5bd0a527872277f678613d904b9691"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\riven_full_assets\\mod_0_0.png": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\riven_full_assets\\mod_0_0.png",
+      "size": 15314,
+      "sha256": "e2107fa86744b32cad3e670bd6b2017e8605d4378d67f99bb31eb62998653b2d"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\riven_full_assets\\mod_0_1.png": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\riven_full_assets\\mod_0_1.png",
+      "size": 15384,
+      "sha256": "6769ec8b4ab8f947ea51509c8952dd9519599c8da68d226cc175dfd95f79b900"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\riven_full_assets\\mod_0_2.png": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\riven_full_assets\\mod_0_2.png",
+      "size": 14409,
+      "sha256": "b58c8200a27c36fb442b91a2d8b13307e8f9a44a2266ce863a8f615d92f6dd7d"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\riven_full_assets\\mod_0_3.png": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\riven_full_assets\\mod_0_3.png",
+      "size": 15588,
+      "sha256": "347c7f570f0cd2eb0170857fa36ddeb483fc894cea821342b241206ef709fdb9"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\riven_full_assets\\mod_1_0.png": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\riven_full_assets\\mod_1_0.png",
+      "size": 16034,
+      "sha256": "a8e9b662157512c226c4730966f732c702b486a5f34995a0a070b3e13d597d00"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\riven_full_assets\\mod_1_1.png": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\riven_full_assets\\mod_1_1.png",
+      "size": 15554,
+      "sha256": "ab34e2931adbd05a07554383c2d681a4a904f72baf8ef73dfa6280a3fb88c9cb"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\riven_full_assets\\mod_1_2.png": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\riven_full_assets\\mod_1_2.png",
+      "size": 15975,
+      "sha256": "b339054171590593f87d0b3f91b417b439b59ff2c0a4e99070d46288d74841e3"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\riven_full_assets\\mod_1_3.png": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\riven_full_assets\\mod_1_3.png",
+      "size": 17124,
+      "sha256": "ae0e4cb224862176e9a50c3c369ef84e74be476d2f5483873b23cfc34acde2d3"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\riven_full_assets\\search.png": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\riven_full_assets\\search.png",
+      "size": 1697,
+      "sha256": "4ed82254ef994ba80310b46937a16ba7dfaba3faef2f64a7dfe555a055bcbb62"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\assets\\checkin_fonts\\body.ttf": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\assets\\checkin_fonts\\body.ttf",
+      "size": 57976,
+      "sha256": "3c29faf51acea6415915a5a7ab68a8d23f49067ad55ae807c20942c92a35d763"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\assets\\checkin_fonts\\display.ttf": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\assets\\checkin_fonts\\display.ttf",
+      "size": 229836,
+      "sha256": "e1b3d61ca09676f986e3f4f0c9ded592933f11d49e47f6761926d13e72270b44"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\assets\\checkin_fonts\\heavy.ttf": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\assets\\checkin_fonts\\heavy.ttf",
+      "size": 57976,
+      "sha256": "3c29faf51acea6415915a5a7ab68a8d23f49067ad55ae807c20942c92a35d763"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\assets\\checkin_fonts\\README.md": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\assets\\checkin_fonts\\README.md",
+      "size": 2385,
+      "sha256": "80979f851f7eba6ce85e7279dfc8ab5f936dcb4ebfe6a570742ee2b2189b9074"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\assets\\checkin_fonts\\section.ttf": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\assets\\checkin_fonts\\section.ttf",
+      "size": 197864,
+      "sha256": "e78a1f47bbf16e6e6e3aa5cd29e1a6e2c82077fa58b0682ae2961602ab39a666"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\assets\\checkin_gold\\arrow-up.png": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\assets\\checkin_gold\\arrow-up.png",
+      "size": 9208,
+      "sha256": "a1161e529b641416629a6e3f761d70de83f4c58b039f21dafaa2cb450c2fec8c"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\assets\\checkin_gold\\bolt.png": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\assets\\checkin_gold\\bolt.png",
+      "size": 9743,
+      "sha256": "7b1204bca7b1cad9d5992be3abdab01ded10e1d7e783f456c4844520f9c4dc73"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\assets\\checkin_gold\\check.png": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\assets\\checkin_gold\\check.png",
+      "size": 8237,
+      "sha256": "753bc3918672831d87aa7e54c988bbc4dac91d47be760b9af3a227bc830263db"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\assets\\checkin_gold\\clock.png": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\assets\\checkin_gold\\clock.png",
+      "size": 12678,
+      "sha256": "57565f7d44973390112d8911be01d58d2ecc0931f33fe30045aa817bf6603684"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\assets\\checkin_gold\\coins.png": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\assets\\checkin_gold\\coins.png",
+      "size": 40085,
+      "sha256": "c2678ecbc5c51697867624027b3606bd6f6b99ced1a1ff19dce75491c196b998"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\assets\\checkin_gold\\README.md": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\assets\\checkin_gold\\README.md",
+      "size": 3630,
+      "sha256": "b5a2bb079ccf5730053240079d9de29a1b2ac371a8797e97124090f87a560cde"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\assets\\checkin_gold\\star.png": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\assets\\checkin_gold\\star.png",
+      "size": 10947,
+      "sha256": "7a4e609f0c25e2283a1642adc48ab4db7979ccded32857306d9fb1e4fdee8872"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\assets\\checkin_gold\\wand-magic-sparkles.png": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\assets\\checkin_gold\\wand-magic-sparkles.png",
+      "size": 18021,
+      "sha256": "5bb8d30606df25bdb16e8e293a68ec65aa76c2ef18ce12d49c09f797c8ad5f11"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\assets\\wf_currency\\credits.png": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\assets\\wf_currency\\credits.png",
+      "size": 20924,
+      "sha256": "4852171ec6dc6067c90eb5fa1ea0fd7d9e882287050db797e72296cf49969ef1"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\assets\\wf_currency\\ducats.png": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\assets\\wf_currency\\ducats.png",
+      "size": 23650,
+      "sha256": "1762afe83f86e0c6dc8ecbf06c21d393f3a6b5e281bb4444189467f08d75e498"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\assets\\wf_currency\\platinum.png": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\assets\\wf_currency\\platinum.png",
+      "size": 25213,
+      "sha256": "46702dbd7ccd8bd2e8ec188ba75898e68f82f8cdc531ff8c1807285e9c3e4f59"
+    },
+    "src\\plugins\\qq_bridge\\pic\\templates\\assets\\wf_currency\\README.md": {
+      "source": "src\\plugins\\qq_bridge\\pic\\templates\\assets\\wf_currency\\README.md",
+      "size": 3517,
+      "sha256": "cfa966593877d4ff9b66dbcc698e852997d0b01c06314a2740b5043094434afa"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\msyh.ttc": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\msyh.ttc",
+      "size": 19704352,
+      "sha256": "d79c55e68b1131eea0cc1c47be4f572d964f28c682e143db2ad09c1e4cb07a3f"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\AmalgamBackground.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\AmalgamBackground.png",
+      "size": 78437,
+      "sha256": "abb71176b6deea5d5501dc8b9e00836ddcd6268498627bfbe4a919be83ca3ade"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\AmalgamCornerLights.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\AmalgamCornerLights.png",
+      "size": 3776,
+      "sha256": "8b410475270d8eb8b3e7a61e139670d74fd1f2f2164b2673d4218f987f874fd2"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\AmalgamFrameBottom.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\AmalgamFrameBottom.png",
+      "size": 24795,
+      "sha256": "d1a85406cb9296bec93c2d8c1c3c9b70b82c6b9ca33cb7c1556106fb2813ce3d"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\AmalgamFrameTop.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\AmalgamFrameTop.png",
+      "size": 15464,
+      "sha256": "b1d17a35ccc16713cb0251c00380c638de557f38ba12fd99959090619c683283"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\AmalgamSideLight.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\AmalgamSideLight.png",
+      "size": 1975,
+      "sha256": "c159479e32080e6345d9dbfcb608092b819468278df8c05c4c510147c866a9cb"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\AshenHeader.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\AshenHeader.png",
+      "size": 5059,
+      "sha256": "63223a3a357340008e512947b3b3e2395f1ab9e0a7ec7e789dd519459ec46ab7"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\AugurHeader.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\AugurHeader.png",
+      "size": 4637,
+      "sha256": "848e5821ed94908f9aa1ea5f219a3f12caa6f1efa3460394a516e3dfad73afbd"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\AvionicBronzeFrameBottom.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\AvionicBronzeFrameBottom.png",
+      "size": 30413,
+      "sha256": "b784a79e23f5b3cfa986c876ede8eeac2fc18ce5bc3cda13e6f6ca8cd3f0a52a"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\AvionicBronzeFrameTop.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\AvionicBronzeFrameTop.png",
+      "size": 27499,
+      "sha256": "08913413b2cee73cc2f759bc4b8814c7d74c25c329451ad2e1d1b9b262f56ade"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\AvionicGoldFrameBottom.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\AvionicGoldFrameBottom.png",
+      "size": 30522,
+      "sha256": "964f70f81d6ab218d518d2989596cfdb3d5dd172a5e5513047f3230eec6d174d"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\AvionicGoldFrameTop.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\AvionicGoldFrameTop.png",
+      "size": 27467,
+      "sha256": "cdd016a75d151fc05347e3f6ae29a21709ba813b0eec6e904af35f2b7f2f9c93"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\AvionicModsFrameBottomBronze.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\AvionicModsFrameBottomBronze.png",
+      "size": 30413,
+      "sha256": "b784a79e23f5b3cfa986c876ede8eeac2fc18ce5bc3cda13e6f6ca8cd3f0a52a"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\AvionicModsFrameBottomGold.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\AvionicModsFrameBottomGold.png",
+      "size": 30522,
+      "sha256": "964f70f81d6ab218d518d2989596cfdb3d5dd172a5e5513047f3230eec6d174d"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\AvionicModsFrameBottomSilver.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\AvionicModsFrameBottomSilver.png",
+      "size": 29895,
+      "sha256": "d6cb272909943dbe54b56781ba9cb4b3c2931ab108d6efd8f9b2522adb04761b"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\AvionicModsFrameTopGold.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\AvionicModsFrameTopGold.png",
+      "size": 27467,
+      "sha256": "cdd016a75d151fc05347e3f6ae29a21709ba813b0eec6e904af35f2b7f2f9c93"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\AvionicModsFrameTopSilver.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\AvionicModsFrameTopSilver.png",
+      "size": 27299,
+      "sha256": "02db42b93833de344f80d5106184a95d647e55e918f90a3800ecc40dda0e398b"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\AvionicSilverFrameBottom.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\AvionicSilverFrameBottom.png",
+      "size": 29895,
+      "sha256": "d6cb272909943dbe54b56781ba9cb4b3c2931ab108d6efd8f9b2522adb04761b"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\AvionicSilverFrameTop.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\AvionicSilverFrameTop.png",
+      "size": 27299,
+      "sha256": "02db42b93833de344f80d5106184a95d647e55e918f90a3800ecc40dda0e398b"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\BonebladeHeader.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\BonebladeHeader.png",
+      "size": 4649,
+      "sha256": "6eb0c3568472681d4bcd5633eb28a62bf2fa3fb0cbab719e0cef9202f54221fd"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\BronzeBackground.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\BronzeBackground.png",
+      "size": 83845,
+      "sha256": "e316219af9196256f855dfe7f4cdde7be621da62cb7401d297ab33e03d8d0c13"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\BronzeCornerLights.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\BronzeCornerLights.png",
+      "size": 3400,
+      "sha256": "2a4822a6aad3c0e4d573d88b7f6b12fd8a610e6fd94c743b144e6066af33822a"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\BronzeFrameBottom.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\BronzeFrameBottom.png",
+      "size": 21924,
+      "sha256": "583975b295a6cb3676bb0eeb90f84937ee352f880faea79b74fc4471798dae6d"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\BronzeFrameTop.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\BronzeFrameTop.png",
+      "size": 3655,
+      "sha256": "97a14ea8f5fcbb9b440865283a6ac35b4053c3e10c6416ae52fa15bc04e87ec1"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\BronzeLowerTab.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\BronzeLowerTab.png",
+      "size": 908,
+      "sha256": "572c99d49513cb0916e90630a97318c49754f7243240aa0156b7ad61dd77ef9a"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\BronzeSideLight.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\BronzeSideLight.png",
+      "size": 3649,
+      "sha256": "df3baedb455c39ab56388220b61499e09c59743a9f1ca0a84bd9f4348dde3659"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\BronzeTopRightBacker.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\BronzeTopRightBacker.png",
+      "size": 530,
+      "sha256": "20b3575138ee7609e257903f52acfdd8394fc3334835551e640fd81af14a7980"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\FemurHeader.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\FemurHeader.png",
+      "size": 4776,
+      "sha256": "db12dcb4b535f4ce7f745aaefa5af9483cfb32a710ee6de85674b553b3c42df1"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\GalvanizedBackground.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\GalvanizedBackground.png",
+      "size": 94960,
+      "sha256": "d748a648d87542b9c0f9b4b863558e311fc1a397a8a4d492deaebb0471b2187e"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\GalvanizedBottomLight.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\GalvanizedBottomLight.png",
+      "size": 3133,
+      "sha256": "4c7a2b1fd689d57ef76613e9b022d30f8e173ead419ab3776319fc1be7fcc127"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\GalvanizedFrameBottom.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\GalvanizedFrameBottom.png",
+      "size": 94960,
+      "sha256": "7e32d96be61470595c7f208ecfc0d02608498314012aae3d2762cf0ebfc5de72"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\GalvanizedFrameTop.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\GalvanizedFrameTop.png",
+      "size": 80434,
+      "sha256": "af53a9b4924a9638b9347956d284eafde3fe4678b6d601ede131a92cd8bc1b1a"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\GalvanizedSideLight.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\GalvanizedSideLight.png",
+      "size": 28748,
+      "sha256": "4c0e104a3183dcdf2080876856bb305b76180325cf4b03a97b6a2e44b09de8a3"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\GladiatorHeader.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\GladiatorHeader.png",
+      "size": 4638,
+      "sha256": "eb5a61f4fa579300d68883df8215e179de9a59b4ab914561be9678f253d770cd"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\GoldBackground.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\GoldBackground.png",
+      "size": 107145,
+      "sha256": "995da0b214a5ca01d80519dd3731c2db50866deee7f6d246f91ee97f065b69e3"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\GoldCornerLights.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\GoldCornerLights.png",
+      "size": 4216,
+      "sha256": "450aa68ad53b2c0632e47b4eb4ed3b8328f1921c551a2ce7f3c8769c7009ee4c"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\GoldFrameBottom.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\GoldFrameBottom.png",
+      "size": 19569,
+      "sha256": "a9a132fbbd55fe9174e5d79fb6458745ac12e994406713056e2e256d8aafb7a1"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\GoldFrameTop.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\GoldFrameTop.png",
+      "size": 3988,
+      "sha256": "5bc4ecb68a8f844793ec3781a36577948bab3bdd183d5fc64b911756119c8fc9"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\GoldLowerTab.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\GoldLowerTab.png",
+      "size": 994,
+      "sha256": "190ec599317f6c4ae6f6916597fcd91577917d156cea8c681bc5409835cc0c53"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\GoldSideLight.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\GoldSideLight.png",
+      "size": 3364,
+      "sha256": "e3dd7ba51957d3f96fc7631482871d4e514aff8436841e5e63b900e882527caa"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\GoldTopRightBacker.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\GoldTopRightBacker.png",
+      "size": 572,
+      "sha256": "498152e4595a84e0300d0e5eafb1488313d9eb7968e6ee30252caa455ef34c52"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\HawkHeader.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\HawkHeader.png",
+      "size": 4438,
+      "sha256": "fd2bbe698ec0f2cfcc5ba95140438bac0b571c90cf7566a3c1fcdd8aadca71ac"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\HunterHeader.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\HunterHeader.png",
+      "size": 4772,
+      "sha256": "9bb2da87d1371e0e766ae66cb8cc8d2cfd1a7eab6d18d1cde84db3ece4378679"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\ImmortalRuneGlowChaos.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\ImmortalRuneGlowChaos.png",
+      "size": 26836,
+      "sha256": "867a4a8cb008bfc5a14a3b25c3c34c0afa4d1cdf73417fb26348e491ddf5a47c"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\ImmortalRuneGlowDecay.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\ImmortalRuneGlowDecay.png",
+      "size": 26077,
+      "sha256": "6a8e55e0b2cb4ab484f1fc94f8152105f283d5dd4fc758b9733437471c65adf0"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\ImmortalRuneGlowEmpty.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\ImmortalRuneGlowEmpty.png",
+      "size": 20079,
+      "sha256": "226402bd8fc47edb0b02629e87a4aa2165372b1bc633e822e1b7e35522d11ad3"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\ImmortalRuneGlowForm.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\ImmortalRuneGlowForm.png",
+      "size": 27363,
+      "sha256": "ba1d3bce1849ebcf2b0669847c3c42e261786a50702d347ed9d5324881a6155e"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\ImmortalRuneGlowLight.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\ImmortalRuneGlowLight.png",
+      "size": 28406,
+      "sha256": "a806e5dd3ff967f70b0cfbb74d25d7f4ab93f683230fbe777f4ef78ffa07da77"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\ImmortalRuneGlowOrder.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\ImmortalRuneGlowOrder.png",
+      "size": 27130,
+      "sha256": "fbaee89ac00512f4301fedda8807b947a5951837081bf1220c978ef1af10cac5"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\ImmortalRuneGlowSlash.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\ImmortalRuneGlowSlash.png",
+      "size": 9353,
+      "sha256": "a4fa85471a4a62bcd45925c016177778070018415aa4709309c56276de733b5f"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\ImmortalRuneGlowTime.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\ImmortalRuneGlowTime.png",
+      "size": 26765,
+      "sha256": "2d5ccbeeee07c3c60d8ea54fe50f6374cebd6b4df179cc1c7a133c512f160705"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\ImmortalRuneGlowTruth.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\ImmortalRuneGlowTruth.png",
+      "size": 26280,
+      "sha256": "fff0c8916111583e7e4216991dcfccadf6af4a6724e2df199159b5b60b58f331"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\ImmortalRuneGlowVoid.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\ImmortalRuneGlowVoid.png",
+      "size": 29483,
+      "sha256": "9b1df1e1aaa5eddb79faad35c9417a06d278ef392514ebb8bb9ca36cd8ede672"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\LegendaryBackground.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\LegendaryBackground.png",
+      "size": 30233,
+      "sha256": "b48423d7b09951f63094037067821292b72d215dc109da120aa82707eae608c4"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\LegendaryCornerLights.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\LegendaryCornerLights.png",
+      "size": 3515,
+      "sha256": "e00ac65df3ae3e3ef6688f959be6f0385d4db430fc74231015af29bc1b22395e"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\LegendaryFrameBottom.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\LegendaryFrameBottom.png",
+      "size": 15101,
+      "sha256": "8ee9c9a78167057873bdb1aae81ce16237a280a5031e2508882bff2e51ad9369"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\LegendaryFrameTop.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\LegendaryFrameTop.png",
+      "size": 3618,
+      "sha256": "ab2c5d991ad6f9d492c4c4ec1b506f69d607c726f13d3f318bdac20ec8844d6a"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\LegendaryLowerTab.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\LegendaryLowerTab.png",
+      "size": 762,
+      "sha256": "57314b8e99e0a953cce0f5ab1e2c9e2b9d4374d271cca3069c0e043770e0d8c1"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\LegendarySideLight.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\LegendarySideLight.png",
+      "size": 2125,
+      "sha256": "a0638941bcc5eaac006821ed06d0eac233b707c0b04f57d8b0c443a4fe194dac"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\LegendaryTopRightBacker.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\LegendaryTopRightBacker.png",
+      "size": 511,
+      "sha256": "3617adf21a1a7f314ae8aa0aaa80a0605ca69d31ab0f86ade3b1d5abd939d984"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\MechaHeader.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\MechaHeader.png",
+      "size": 4767,
+      "sha256": "e0968e6fad68b79ddac1d0650c376d23b0444004d1bfe052ac4ae2f8a4f3049b"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\OmegaCornerLights.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\OmegaCornerLights.png",
+      "size": 4321,
+      "sha256": "d53f27961b4a173622b4f1a193b4576e3b4114c45ebc94f70c50202c913e3643"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\OmegaEquippedLight.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\OmegaEquippedLight.png",
+      "size": 5328,
+      "sha256": "3531f8e18a21c405bea039ad36ad476b46d1125c0c1934ecf6e78e417c814a39"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\OmegaFrameBottom.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\OmegaFrameBottom.png",
+      "size": 48522,
+      "sha256": "122fd6dd8d45cecd8706c70f2721afdfba8dafd8cedfedf14ae46167e69b536e"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\OmegaFrameTop.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\OmegaFrameTop.png",
+      "size": 38308,
+      "sha256": "378734aaf9a45040372601676e07730c5d48f51977f7b0348857dc66255c4240"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\OmegaSideLight.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\OmegaSideLight.png",
+      "size": 2803,
+      "sha256": "2f8c92adc3d4fe0ef828f3207bdc3d694ff88c8b1bc54dbe20e30e0d6a17633e"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\PeculiarCornerLights.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\PeculiarCornerLights.png",
+      "size": 18667,
+      "sha256": "799b2ab50b2f65c29a1843863f07bcb306ca4ea849df23de78a327e6d0f89945"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\PeculiarFrameBottom.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\PeculiarFrameBottom.png",
+      "size": 70006,
+      "sha256": "7bb188413fbf2d2c607b1ba6fbfc3ba29848032b656e52b3825222f6622afa0f"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\PeculiarFrameTop.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\PeculiarFrameTop.png",
+      "size": 120428,
+      "sha256": "dc65bb0e9de3364233ae2625d4bfdd1cbbf45870182b260dc20bb5ef5e51c5e5"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\PeculiarSideSmoke.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\PeculiarSideSmoke.png",
+      "size": 43020,
+      "sha256": "9770922a0dd06015ab67a3c4bb21855eec6d3361e8472e5837e7c3051e9f5907"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\RadialButtonOff.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\RadialButtonOff.png",
+      "size": 326,
+      "sha256": "1fbb931fa2e9b8ef643980174bda46271ee8c8b02f0985b66b5b8c0f2a3129dd"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\RadialButtonOn.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\RadialButtonOn.png",
+      "size": 521,
+      "sha256": "71eaf987443a3782a61ff5a206f857222c1ac2817131a8f9b0a09b37ca00fc95"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\RankCompleteLine.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\RankCompleteLine.png",
+      "size": 338,
+      "sha256": "af2599f1f2023e9ca559e943d60d2abc2e211b0dfa5f00559e11e4dafb795082"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\RankSlotActive.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\RankSlotActive.png",
+      "size": 439,
+      "sha256": "343202fdf10a93e04d3b71796742402a024c79986d73b1b08e7cd1d70d05842f"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\RankSlotEmpty.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\RankSlotEmpty.png",
+      "size": 255,
+      "sha256": "f83176fb265ce5d45bfd0843975bca9a46d3fc8227714a1e9a857719443c36af"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\RaptorHeader.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\RaptorHeader.png",
+      "size": 4595,
+      "sha256": "b0d79d866806791d4d9b5bbda262400392f2008a09ba55091be606313cf22f91"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\RequiemModCharge.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\RequiemModCharge.png",
+      "size": 3692,
+      "sha256": "7cccf4060e918dc100ae99eadd99f3675ae9c2ef8acac7385fce69ec2046d0de"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\RequiemModDamage.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\RequiemModDamage.png",
+      "size": 511462,
+      "sha256": "820457ae0f1509744331a92f7a8e2cd40a40ee237ca484e8f7bd08d7685657cb"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\RequiemModFrame.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\RequiemModFrame.png",
+      "size": 188743,
+      "sha256": "96cada3b64cb0207179f1779cdd65adf7d69e5324086ec443ed5daa7cab33394"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\Reset.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\Reset.png",
+      "size": 828,
+      "sha256": "33c9ad3c5720a04a26b65f9988a40d2a7bd45c72c2ef07d2aab12bcf3ef39584"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\RivenLowerTab.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\RivenLowerTab.png",
+      "size": 1206,
+      "sha256": "b52dc8bb3eff7a014fa81be61498c217bb8e6d2befbf44fca01f8f171f75d38a"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\RivenTopRightBacker.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\RivenTopRightBacker.png",
+      "size": 974,
+      "sha256": "a2d119019518725fc7e04d1f6d4f21eb64889f905de434b84c448fa87084ca35"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\SilverBackground.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\SilverBackground.png",
+      "size": 91380,
+      "sha256": "bb8cc6e964ec9240365fcf55f6354a08bdb55946c49247fd51b80e7346b20f66"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\SilverCornerLights.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\SilverCornerLights.png",
+      "size": 1941,
+      "sha256": "4c09a4897be69afb3cd31133c9858661d141cc8a010de78c780c31ea78810c9c"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\SilverFrameBottom.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\SilverFrameBottom.png",
+      "size": 20618,
+      "sha256": "2f715f3f067dcb8c1cec39f1ea4df309dcbebd8436ace9261bc9f13db532272a"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\SilverFrameTop.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\SilverFrameTop.png",
+      "size": 3845,
+      "sha256": "48a6bc0ebeb264287086a59781a8c5fd8bfe1c46a6facace1e3e511b2a2f88a1"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\SilverLowerTab.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\SilverLowerTab.png",
+      "size": 903,
+      "sha256": "a8288d17c72d1d35406f8039768fecc500e36b0ffffd6783706ac92ec8e86a0b"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\SilverSideLight.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\SilverSideLight.png",
+      "size": 2616,
+      "sha256": "63e258bcb284b767e286d7188089ff905174be2fb4ad4975c821f46ac9f6ade9"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\SilverTopRightBacker.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\SilverTopRightBacker.png",
+      "size": 531,
+      "sha256": "b7fc013bd327d666da9c9b5057b8d0fe653d8953a55cc9d181243890dd6eff52"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\SpiderHeader.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\SpiderHeader.png",
+      "size": 4666,
+      "sha256": "9abb0a30e2a760e1039f799576bfa841efef904fe44e88b48085c8a9780427a2"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\StrainHeader.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\StrainHeader.png",
+      "size": 4990,
+      "sha256": "d83d5827fc18b30abf7ff2a14b9025dede88ae1f71159db4c64a3b2ad8e4e660"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\SynthHeader.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\SynthHeader.png",
+      "size": 4690,
+      "sha256": "a93811bda4e156ca94e8301724a296e50895f0f32de68d7ddca44095fc5118cb"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\TekHeader.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\TekHeader.png",
+      "size": 4644,
+      "sha256": "110f7bb90a8ad02e26339acc75d803f6cb053c12771e5c80c42159cc233db4f8"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\UmbraHeader.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\UmbraHeader.png",
+      "size": 4470,
+      "sha256": "f8d379094886f36eb1b74b968ec2a7d8d6ac45e15a4c0d0d7c7f1bfef27ab3f2"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\VigilanteHeader.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\VigilanteHeader.png",
+      "size": 4541,
+      "sha256": "ce506785c4131827cb2f489d1c47bd80f7577a71d6c5c9679b28c927b3733dd3"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\polarities\\koneski.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\polarities\\koneski.png",
+      "size": 1804,
+      "sha256": "c1de96259100026ce7767ff37508ec846bfa4a7f18ba05a1332fc5a64b367bf0"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\polarities\\madurai.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\polarities\\madurai.png",
+      "size": 1534,
+      "sha256": "c3aec00661ced2d0d1a2e468c702f38e30502b4d0c43e6f85d40d0b525debb68"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\polarities\\naramon.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\polarities\\naramon.png",
+      "size": 982,
+      "sha256": "92d52c1dfa02ccabdc2f7f06d0324fb82bb90e6ba04c56da5e3120b60219d486"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\polarities\\penjaga.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\polarities\\penjaga.png",
+      "size": 1388,
+      "sha256": "f09d9a359f3d7ad0c1540ed7e215b90001b90a20e60071b8465a562ae81fa881"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\polarities\\umbra.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\polarities\\umbra.png",
+      "size": 23720,
+      "sha256": "b470ece3b878267ce5430f071849fffc332573eeb659e8a257f7cdfc71954239"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\polarities\\unairu.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\polarities\\unairu.png",
+      "size": 1348,
+      "sha256": "2d9a43577cc55372d2bab342f68a407401f3ed8a44aedc5bd37724fdca915855"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\polarities\\vazarin.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\polarities\\vazarin.png",
+      "size": 1540,
+      "sha256": "a7f0a9a279022d45fa57586e49ec94c0c411c9081495ada4bb168116ed669987"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\polarities\\zenurik.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\polarities\\zenurik.png",
+      "size": 1326,
+      "sha256": "85d371b1021ce161996a12c5a2d4398140aa1852755e4c1ffb7dae1c4385fb29"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\wide\\BronzeFrameBottom.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\wide\\BronzeFrameBottom.png",
+      "size": 21265,
+      "sha256": "a385e7a497f212773afc5307f3e33d4af303ba7a57221c993db8f05670d47f2d"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\wide\\BronzeFrameTop.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\wide\\BronzeFrameTop.png",
+      "size": 3528,
+      "sha256": "5fdd388025624e839c6b0362f51d24d48e2f51841f57814737db5112878e5792"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\wide\\GoldFrameBottom.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\wide\\GoldFrameBottom.png",
+      "size": 19107,
+      "sha256": "a50f4e8d5d2d57d36d119196f63285ed959b23da504a2b2e4729e4af50b753ad"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\wide\\GoldFrameTop.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\wide\\GoldFrameTop.png",
+      "size": 3915,
+      "sha256": "541ecedbb5a0e087290b06fc48b9e89869f8779ecd24c2f4a28eacdc7de1a95f"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\wide\\LegendaryFrameBottom.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\wide\\LegendaryFrameBottom.png",
+      "size": 14366,
+      "sha256": "64e89bbb4c78a9144804322e7a4fc6f860bc444650ea0a014f74f9f6abdb5ba1"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\wide\\LegendaryFrameTop.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\wide\\LegendaryFrameTop.png",
+      "size": 3608,
+      "sha256": "391b07f69d4ae526757cf4594103089ba2af1be24e4c3c3e98a87da442d5d0a7"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\wide\\SilverFrameBottom.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\wide\\SilverFrameBottom.png",
+      "size": 20033,
+      "sha256": "e60ba282f045dc59b1aa8561c944dc32caa4ecf490689841f774a3f4b5d22fb1"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\wide\\SilverFrameTop.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\modcard\\assets\\modFrames\\wide\\SilverFrameTop.png",
+      "size": 3871,
+      "sha256": "f6d2e675903201579759a790f96fbba41536662c3c67138c8b75613d25d59939"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\3e88f01bebcf904153be28f13b637f1b.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\3e88f01bebcf904153be28f13b637f1b.png",
+      "size": 34611,
+      "sha256": "4c7ffb814ce82c978363a9c49ce0fa39e87a18a353959b016cf2722841de2e19"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\4df82307b3d209145771a86ee9b85638.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\4df82307b3d209145771a86ee9b85638.png",
+      "size": 43562,
+      "sha256": "d6240b410d4ceef01417e0cc8454b607fe4ced4282fb00846399b135490aa53b"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\737e328fa28f6318b863d2f5fe97f0f4.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\737e328fa28f6318b863d2f5fe97f0f4.png",
+      "size": 23611,
+      "sha256": "c8ff4051fe797c68a99bda23d835292826bc5dcf07e152a929e253e5aeced140"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\94141b459c1fc8bbd95335aa2abd9b90.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\94141b459c1fc8bbd95335aa2abd9b90.png",
+      "size": 32987,
+      "sha256": "48ac8451d8016392c539d726cc2ebf1b2193ba84592fc3ecfe53bb710ca8fc0b"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\9b283c742e3281f222210a0efd120a1c.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\9b283c742e3281f222210a0efd120a1c.png",
+      "size": 43506,
+      "sha256": "136b10baf0f2e072e4b7690a8e45fbd6c0fcb3958014d7dcb8eb37ee8be6483a"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\a24568f78928a80bc083278f0e4df7d4.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\a24568f78928a80bc083278f0e4df7d4.png",
+      "size": 43116,
+      "sha256": "86624e5d3749563b98e929e723fcea49198c31e9a9c35f29be8035f6af5c93c9"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\af20bc960cff7e6a0e75d85e537e64ab.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\af20bc960cff7e6a0e75d85e537e64ab.png",
+      "size": 45586,
+      "sha256": "0309bcdfbbd8e6d13f5afc5665e74fcc8f7d83d3a78ebeea3dc059897f9ac47a"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\b8e6474be6e07a74f58c690f86f958ef.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\b8e6474be6e07a74f58c690f86f958ef.png",
+      "size": 28875,
+      "sha256": "6b8eb41f86332e2ee274fdf466561ededaecf8f8314f751de92ea51c0171c6d7"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\ce618fe6265991228b6d5a4a03c7ed1c.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\ce618fe6265991228b6d5a4a03c7ed1c.png",
+      "size": 8917,
+      "sha256": "963c25161ba509eb94732080851aee30d8f3fd97187d927d9e8da739e8e8d1a4"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\eadccc27293578b833985f7e8ad3fc8b.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\eadccc27293578b833985f7e8ad3fc8b.png",
+      "size": 32511,
+      "sha256": "b2f100995ade924e9ced0eb28f85c6df3b72a69bc3409b6a5c30e1ef83397d01"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\efb86534fbec65a28384fbcd2f223a15.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\efb86534fbec65a28384fbcd2f223a15.png",
+      "size": 36078,
+      "sha256": "e6c883113b255b972e2eaeb2d14c8d5419cc27daa9614e3fb974f3ac80ac10e1"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\f258c9dc50a7ae5f701acabd13eca8e4.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\f258c9dc50a7ae5f701acabd13eca8e4.png",
+      "size": 28870,
+      "sha256": "8c42c71eca48438d5778b12164f50976c6c50d59d88ac7691da145be2952918e"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\fca169432ff51d4f688a2296d274ca92.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\fca169432ff51d4f688a2296d274ca92.png",
+      "size": 38414,
+      "sha256": "671e7d962a6f722a8e2265ebd732882feea75466ff02178fba205a0d2a745edb"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\gen_3a6a679c8cf022070f77242c6e944087.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\gen_3a6a679c8cf022070f77242c6e944087.png",
+      "size": 5616,
+      "sha256": "7094ab0fd9b97145728bd9d69c420d0aadef1d18bf4784f1314d234e04ef14d6"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\gen_529fe20a2fb502c303915804c63a1245.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\gen_529fe20a2fb502c303915804c63a1245.png",
+      "size": 6549,
+      "sha256": "50f41825966bfd74f1b9d4b25372d0199150f364c6a946e9daf06f11faa0bd75"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\gen_65241b3ff940e6ae4f1a5c01fef56b69.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\gen_65241b3ff940e6ae4f1a5c01fef56b69.png",
+      "size": 7321,
+      "sha256": "8705d87f8cb2be1e8db8088e1956f7ab74a23909bf82d19be60950522bc92009"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\gen_6854dfe56f528ba20ceb25a91b5bdc04.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\gen_6854dfe56f528ba20ceb25a91b5bdc04.png",
+      "size": 5266,
+      "sha256": "3eb8dde18345b193e44eb3c0c0d72a1bf806a2a16bb4b6987118fb327d745f8b"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\gen_806bcaee72618dcccbe3f86764c9acec.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\gen_806bcaee72618dcccbe3f86764c9acec.png",
+      "size": 7001,
+      "sha256": "96db91f0a8f5993a98270f61354eed5adda77aa2a697ad1d64fe90aec118c81f"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\gen_98db37765b838303f67b4c51012e00ab.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\gen_98db37765b838303f67b4c51012e00ab.png",
+      "size": 7723,
+      "sha256": "fb4ed97c593178dae7a80666cdb55a1b70b8450ad904c62f7576f248d5c2dc75"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\gen_cd7a614a81a4fc537661ddb8ef799809.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\gen_cd7a614a81a4fc537661ddb8ef799809.png",
+      "size": 6862,
+      "sha256": "d79b5ab21bb6a7d3b6fdfd6e5347e85ae3151fdfec29d4922d6c4d4aaed48988"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\gen_f9257813f428230faeae91de94cf2923.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\gen_f9257813f428230faeae91de94cf2923.png",
+      "size": 5360,
+      "sha256": "e754a793bc0e745b3f18129ebc351a696af1590ae3106391174a31d01ddc3e45"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\gen_ffc7f912c4df843cc28b05faa3dfd213.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\gen_ffc7f912c4df843cc28b05faa3dfd213.png",
+      "size": 6188,
+      "sha256": "1b0ad04b14153652a3693d7d860245ad3473f7b5237f0007c8b3d13c0f97e4c6"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\glyph_131f461ab1111b0d9b1576c34b4f3a7b.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\glyph_131f461ab1111b0d9b1576c34b4f3a7b.png",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\glyph_33cfd6dd7cc1b7f5ced7adb59997f9c2.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\glyph_33cfd6dd7cc1b7f5ced7adb59997f9c2.png",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\glyph_3dc38c4c59e183a3f02d520c0bac7a10.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\glyph_3dc38c4c59e183a3f02d520c0bac7a10.png",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\glyph_3e811ed00d0c6121ba84b5c28917fa8a.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\glyph_3e811ed00d0c6121ba84b5c28917fa8a.png",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\glyph_b2a4796a65068575f590cd42bf959d54.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\glyph_b2a4796a65068575f590cd42bf959d54.png",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\glyph_d47448678995ef926a82b86c19528b07.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\glyph_d47448678995ef926a82b86c19528b07.png",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\glyph_d71215b5cffdb87331478994b9325a6b.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\glyph_d71215b5cffdb87331478994b9325a6b.png",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\glyph_d7f0413414bd92339c659fbaf909fa97.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\glyph_d7f0413414bd92339c659fbaf909fa97.png",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\icons\\51a6d09474cfea35dc63a28a7135bcd4.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\icons\\51a6d09474cfea35dc63a28a7135bcd4.png",
+      "size": 26097,
+      "sha256": "8dc1c93ba87bdd2c6ac5c525f38c7f254ff8ce69283c5b5b440590be2d2bee1c"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\icons\\be466f641996bfa1117c70244c583699.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\icons\\be466f641996bfa1117c70244c583699.png",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\icons\\c7ed877519e28d1ddd10ea96cb63db8d.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\icons\\c7ed877519e28d1ddd10ea96cb63db8d.png",
+      "size": 7730,
+      "sha256": "e628939c40550d7e04388850aafd971880b62ec2bd120ba327e7d5a858d355d4"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\icons\\ca3f3b93d095d375504f33471cd392aa.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\icons\\ca3f3b93d095d375504f33471cd392aa.png",
+      "size": 59715,
+      "sha256": "6a87e4d4f323377416dd3309f729df064e69d60a909b3c9271b5f43501a58c6b"
+    },
+    "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\icons\\f7ef5367cbd18b03f0f6f9b124b1d1dc.png": {
+      "source": "src\\plugins\\qq_bridge\\game_tools\\.wm_cache\\avatars\\icons\\f7ef5367cbd18b03f0f6f9b124b1d1dc.png",
+      "size": 6096,
+      "sha256": "7da1a28d93ab830343d80f60a9e2f6bdffa8bbd447aa577e8cbb9c3da4b0a34b"
+    },
+    "src\\plugins\\doupo\\data\\doupo.json": {
+      "source": "src\\plugins\\doupo\\data\\doupo.json",
+      "size": 1100,
+      "sha256": "db8ba29b18dc120028a4fc00b2de6d90a28ef8aa8a459f9665e51502536ebbfb"
+    },
+    "src\\plugins\\doupo\\assets\\idle\\h0.gif": {
+      "source": "src\\plugins\\doupo\\assets\\idle\\h0.gif",
+      "size": 84892,
+      "sha256": "52cf270c54a385b1f0de28aea293bff0f44dad450e8d2707b812b918b6b92bca"
+    },
+    "src\\plugins\\doupo\\assets\\idle\\h5.gif": {
+      "source": "src\\plugins\\doupo\\assets\\idle\\h5.gif",
+      "size": 19984,
+      "sha256": "16025447e7bdd08e5e3fd9bce8b5c1f78c132145818f66c73f7da2aa039e1aa9"
+    },
+    "src\\plugins\\doupo\\assets\\idle\\hd_h0.gif": {
+      "source": "src\\plugins\\doupo\\assets\\idle\\hd_h0.gif",
+      "size": 67110,
+      "sha256": "12e46723211b49c91a2af3c6fd02cbba5a390bb580d1176f294819d6ddd962b4"
+    },
+    "src\\plugins\\doupo\\assets\\idle\\hd_n0.gif": {
+      "source": "src\\plugins\\doupo\\assets\\idle\\hd_n0.gif",
+      "size": 106986,
+      "sha256": "b7f429df8fcd041886a8961534aecf613441748ad6c0f6aad225faf6c200564a"
+    },
+    "src\\plugins\\doupo\\assets\\idle\\n90.gif": {
+      "source": "src\\plugins\\doupo\\assets\\idle\\n90.gif",
+      "size": 71949,
+      "sha256": "edcbbb9f0e54e8d3ac567869225f162e449ad979b785f215c8d47bfdccf1580e"
+    },
+    "src\\plugins\\doupo\\assets\\idle\\w0.gif": {
+      "source": "src\\plugins\\doupo\\assets\\idle\\w0.gif",
+      "size": 20379,
+      "sha256": "b668b9145f5c6cb8f4909728681ef150168ebe3a480a231b6362d7302decebd2"
+    },
+    "tests\\check_riven_full_layout.py": {
+      "source": "tests\\check_riven_full_layout.py",
+      "size": 4524,
+      "sha256": "77de29b48bf7c7c8eae0964100e02d1b3a10cb119e61d342cced41bdd0be7fc4"
+    },
+    "tests\\conftest.py": {
+      "source": "tests\\conftest.py",
+      "size": 2353,
+      "sha256": "ff6f4e7f4d424a374ddd48fb9ce8d949802a8ecce5af40739f1b37e1fd9832f2"
+    },
+    "tests\\qq-row-focus-active.png": {
+      "source": "tests\\qq-row-focus-active.png",
+      "size": 17085,
+      "sha256": "410e6ea461cfadea228da928f4d35f3abca69b31c22321efe1186c41ba7f46b7"
+    },
+    "tests\\render_wm_card.py": {
+      "source": "tests\\render_wm_card.py",
+      "size": 7844,
+      "sha256": "f08097656d23139e72adee49f66ef86f2f51cd713a08bc3b8b47ce6c65a27d57"
+    },
+    "tests\\test_ai_mode_game_passthrough.py": {
+      "source": "tests\\test_ai_mode_game_passthrough.py",
+      "size": 3902,
+      "sha256": "91cb5873ba6cd09f9ec01fa972c3bf6bcc70b8568667f0e5b5e2dfb96cd9fa60"
+    },
+    "tests\\test_arbitration_node_zh.py": {
+      "source": "tests\\test_arbitration_node_zh.py",
+      "size": 2626,
+      "sha256": "1fa5e7cf5053e3f6aa24b234ffbaa69951bab38424b875cadeced50edc965ad4"
+    },
+    "tests\\test_arbitration_table.py": {
+      "source": "tests\\test_arbitration_table.py",
+      "size": 5694,
+      "sha256": "dec14c4fb6090d0bc140024cced38d827bd0bdd14f1fc81fa8167368d81ad622"
+    },
+    "tests\\test_archon.py": {
+      "source": "tests\\test_archon.py",
+      "size": 5338,
+      "sha256": "91b457cdca55adfd93885fca45dd7facf20b48f8cf9efad2a2e82ac53b61f8bd"
+    },
+    "tests\\test_audio_seed.py": {
+      "source": "tests\\test_audio_seed.py",
+      "size": 9797,
+      "sha256": "fc1a8fe48799b1567ac95b42be21a18d083cd40de3003c78b40763f292fadf59"
+    },
+    "tests\\test_bg_overrides.py": {
+      "source": "tests\\test_bg_overrides.py",
+      "size": 20964,
+      "sha256": "3ad44518a26ebe532c272fd70ed7147fb3eebb91a93357cdd2973983aec00b37"
+    },
+    "tests\\test_bounty_card.py": {
+      "source": "tests\\test_bounty_card.py",
+      "size": 15407,
+      "sha256": "6fc613dac60c88a9847748120b27a23fa830bfb81968e24c2531de9fa69d0bef"
+    },
+    "tests\\test_bounty_live.py": {
+      "source": "tests\\test_bounty_live.py",
+      "size": 16862,
+      "sha256": "d70ad626b1ae78f8974f1d120082971f09c67ed44c8670f76d6d1159e5bb3b77"
+    },
+    "tests\\test_bounty_reference.py": {
+      "source": "tests\\test_bounty_reference.py",
+      "size": 13853,
+      "sha256": "ddc717740e51790b90670ab20528666363fa0a31c02932d7f8376490bfc7c166"
+    },
+    "tests\\test_budget.py": {
+      "source": "tests\\test_budget.py",
+      "size": 3783,
+      "sha256": "b8c6350660d7e29e7206eeec18b2386e77a3873545c6d2d6c022984cb86dde0e"
+    },
+    "tests\\test_channel_official.py": {
+      "source": "tests\\test_channel_official.py",
+      "size": 19615,
+      "sha256": "630146adaf824c4856b9c7def3a04b541e0f9260869b704724cb702fdf74944e"
+    },
+    "tests\\test_checkin_card.py": {
+      "source": "tests\\test_checkin_card.py",
+      "size": 19188,
+      "sha256": "a28c5bb19a902b1dc80df0c44a97567402a0f1c901644c8b170720699b48634f"
+    },
+    "tests\\test_checkin_coin.py": {
+      "source": "tests\\test_checkin_coin.py",
+      "size": 7272,
+      "sha256": "41b69740a163bd3803a604dab8e77f6ba52962e5ab9230669de8126b07866817"
+    },
+    "tests\\test_choice_session.py": {
+      "source": "tests\\test_choice_session.py",
+      "size": 2896,
+      "sha256": "7448e42adad16b712493deec6d23357864cc10082cd8e6e9087be4cfa0229007"
+    },
+    "tests\\test_config_api.py": {
+      "source": "tests\\test_config_api.py",
+      "size": 9677,
+      "sha256": "cdb920ff543f63b9684105b479a1b1a3168abcdb157f83c5f02e37d9b3b19abe"
+    },
+    "tests\\test_config_hot_reload.py": {
+      "source": "tests\\test_config_hot_reload.py",
+      "size": 16321,
+      "sha256": "afd275fb1f672d51f9caf4fc0c6993bf5678edba5f90fa7d8dae408a47fbcbde"
+    },
+    "tests\\test_custom_theme_resolve.py": {
+      "source": "tests\\test_custom_theme_resolve.py",
+      "size": 1220,
+      "sha256": "fe2e5477731e4e27b964cd9cb6521d8200d1c03cb36b1135f3855dd4800a58f1"
+    },
+    "tests\\test_dispatcher.py": {
+      "source": "tests\\test_dispatcher.py",
+      "size": 8882,
+      "sha256": "16e898d00b5f6018a4fd52f032f11384352205566358490bb15c546c732aaec2"
+    },
+    "tests\\test_dispatcher_gallery_bypass.py": {
+      "source": "tests\\test_dispatcher_gallery_bypass.py",
+      "size": 5470,
+      "sha256": "8707d51b0e6eb45263cdbf5c179646ba3da4c07a6759f1af4274bd49c982eb3f"
+    },
+    "tests\\test_dispatcher_pending_bypass.py": {
+      "source": "tests\\test_dispatcher_pending_bypass.py",
+      "size": 2892,
+      "sha256": "f9d5b972ea286e9465fb0113b8c2a18cd95a6eabd5b20e36e87f47fe02e4741e"
+    },
+    "tests\\test_download_aria2.py": {
+      "source": "tests\\test_download_aria2.py",
+      "size": 8163,
+      "sha256": "9fd4e07cb82985e5e44f4972e20cee3621dfe32030ed20f0e22407f86f85523e"
+    },
+    "tests\\test_download_btselect.py": {
+      "source": "tests\\test_download_btselect.py",
+      "size": 4425,
+      "sha256": "a98e3e57689a93def1fcc23b6af51b91866be1594acecc9ca3430227f20adc0d"
+    },
+    "tests\\test_download_manager.py": {
+      "source": "tests\\test_download_manager.py",
+      "size": 13992,
+      "sha256": "e9ec3ff0c4cdbe484f84e42ed9219637e60a35bbefe19105f488869a799ee620"
+    },
+    "tests\\test_download_subscribe.py": {
+      "source": "tests\\test_download_subscribe.py",
+      "size": 7089,
+      "sha256": "4698dc24976530a26efb520a2ec9c37beedf17a7341042ee1f2674a61cc6dd07"
+    },
+    "tests\\test_e2e_local_t2i.py": {
+      "source": "tests\\test_e2e_local_t2i.py",
+      "size": 3947,
+      "sha256": "fea5290839de4210da233e6c90d6bab24ead160bd296fb95408d3b50fcb0a40e"
+    },
+    "tests\\test_e2e_ws.py": {
+      "source": "tests\\test_e2e_ws.py",
+      "size": 9461,
+      "sha256": "43b71c5f57e7d2c2af575777314966775c505f3bbe36d46b3b0aa3665d1cd7b6"
+    },
+    "tests\\test_emotion_manager.py": {
+      "source": "tests\\test_emotion_manager.py",
+      "size": 4534,
+      "sha256": "f97abd34e9388520f1403160e480870de6bee385d0c31659e8e87fc2d387962b"
+    },
+    "tests\\test_emotion_mood.py": {
+      "source": "tests\\test_emotion_mood.py",
+      "size": 7276,
+      "sha256": "d350388f8e1f6f78826478db0351a966988f3545f23260bf1aef1368006b84d5"
+    },
+    "tests\\test_emotion_store.py": {
+      "source": "tests\\test_emotion_store.py",
+      "size": 11072,
+      "sha256": "a7614b50f69fc632903e6c797dfd262e4908734612d47534c2f8fa23a1399ac7"
+    },
+    "tests\\test_fissure_node_zh.py": {
+      "source": "tests\\test_fissure_node_zh.py",
+      "size": 2669,
+      "sha256": "709987fdc1d1cce71506bbf1aecd3d6a525eb9b6515c74bb31d2b2d242752375"
+    },
+    "tests\\test_gallery.py": {
+      "source": "tests\\test_gallery.py",
+      "size": 15871,
+      "sha256": "af258d3eb98b6ab3609c0cd4f93c6722cd9c308541f9dba9f96195c1daac4878"
+    },
+    "tests\\test_gallery_nav.py": {
+      "source": "tests\\test_gallery_nav.py",
+      "size": 14819,
+      "sha256": "8e6727f947cf01640cfe6d2fa7f4297e6064ac237f0e81ea14b1b245e66abe8a"
+    },
+    "tests\\test_group_style.py": {
+      "source": "tests\\test_group_style.py",
+      "size": 4828,
+      "sha256": "002772f10d6d0d430f973ac26970b3dd48f47a8a2f371ae5ca66e0c290b9d31c"
+    },
+    "tests\\test_handle_gallery_keyword_bypass.py": {
+      "source": "tests\\test_handle_gallery_keyword_bypass.py",
+      "size": 3862,
+      "sha256": "e0f9bb455c039e7c411eb885a9e71532ebad29adf6e6ae27c146e21bfcdb3997"
+    },
+    "tests\\test_handle_message_timeout.py": {
+      "source": "tests\\test_handle_message_timeout.py",
+      "size": 2795,
+      "sha256": "ebdc36199ebbbdf564ff2e22a9ac1a71ddef8cf219ceaddba1cc9786e3d74df6"
+    },
+    "tests\\test_hw_command.py": {
+      "source": "tests\\test_hw_command.py",
+      "size": 5454,
+      "sha256": "6057ce9a8e91703b2f01a305f6505e0a628ea235635d7e0f2248d3dabcf6111b"
+    },
+    "tests\\test_incarnon.py": {
+      "source": "tests\\test_incarnon.py",
+      "size": 6872,
+      "sha256": "fe2f774a49cab4dc437c006a1c67a4abdbe670e75723022a13756d99ec58e7e7"
+    },
+    "tests\\test_intent.py": {
+      "source": "tests\\test_intent.py",
+      "size": 3891,
+      "sha256": "b620114feb0b9acc632fe9ee60f83b95b2d589e6c7d6aef3cc5ab12c5450de2b"
+    },
+    "tests\\test_intent_task_cmds.py": {
+      "source": "tests\\test_intent_task_cmds.py",
+      "size": 11035,
+      "sha256": "975917ef9e4b71fb7b0ba6853d219fb476f679a309c9d6c7e76c259c586f9179"
+    },
+    "tests\\test_keyword_gate.py": {
+      "source": "tests\\test_keyword_gate.py",
+      "size": 1831,
+      "sha256": "ca7b44f2aed8725f356a9fe3bc129394b6802998373f1538af479779b8c7c12c"
+    },
+    "tests\\test_memory_manager.py": {
+      "source": "tests\\test_memory_manager.py",
+      "size": 8376,
+      "sha256": "22819954cb032c03bf331dfa1572da49c89f321a53d2457ce5883c4e8681e2c4"
+    },
+    "tests\\test_memory_store.py": {
+      "source": "tests\\test_memory_store.py",
+      "size": 7530,
+      "sha256": "1103b7d4e8846afe8799c9ea59de43d5291591505c623df1a0c5b52b25d9bd9a"
+    },
+    "tests\\test_monitor.py": {
+      "source": "tests\\test_monitor.py",
+      "size": 7115,
+      "sha256": "005a1eb79eed0c3e2d5c049ed648eb1e41fb86dca6619e09ef5283bceb35d662"
+    },
+    "tests\\test_multimodal_audio.py": {
+      "source": "tests\\test_multimodal_audio.py",
+      "size": 12932,
+      "sha256": "3307e6a0660ed4762619ae7e665f0de27e0d90697674a9cbd1fa467fde4c2c15"
+    },
+    "tests\\test_multimodal_vision.py": {
+      "source": "tests\\test_multimodal_vision.py",
+      "size": 8799,
+      "sha256": "92349cbc645e40c80ce2fe6291c4354c9ea12e6a8e873f53f1e69f3796c1caf7"
+    },
+    "tests\\test_official_routes.py": {
+      "source": "tests\\test_official_routes.py",
+      "size": 4925,
+      "sha256": "4010767741fc7c1ae6ff6c10fcc50fb95476414489d2a7c7bc5810c125b51c8a"
+    },
+    "tests\\test_ops_gitinfo.py": {
+      "source": "tests\\test_ops_gitinfo.py",
+      "size": 3383,
+      "sha256": "a07e6901eea91c6f6eaba2d00bbd4255ccffe873562f0a3798aed2f8cfee28b7"
+    },
+    "tests\\test_ops_notify.py": {
+      "source": "tests\\test_ops_notify.py",
+      "size": 8015,
+      "sha256": "06899b118c6cdc5d4c1be2d0b48d5fae479560c773e4d67797d2e559140a0dec"
+    },
+    "tests\\test_ops_ssh.py": {
+      "source": "tests\\test_ops_ssh.py",
+      "size": 3570,
+      "sha256": "377875df68dcbfea811400bfe9901225db3909b03b81b5d50eb79277385aa6eb"
+    },
+    "tests\\test_ops_wol_frp.py": {
+      "source": "tests\\test_ops_wol_frp.py",
+      "size": 5749,
+      "sha256": "64b05c54c38ffbbff29eaa1cf22e3d63428a878a58599a45e26bf03272183ef2"
+    },
+    "tests\\test_persona.py": {
+      "source": "tests\\test_persona.py",
+      "size": 4880,
+      "sha256": "1a6056ba53fa1afa528ebd435e1c912922cb48e871745431567aeb5f133a7473"
+    },
+    "tests\\test_pic_canvas.py": {
+      "source": "tests\\test_pic_canvas.py",
+      "size": 8443,
+      "sha256": "cb1c7c103d3c84ae001b5560f3ccbea67ad79ed4935e8dec82b4b053035cc233"
+    },
+    "tests\\test_pic_custom_theme.py": {
+      "source": "tests\\test_pic_custom_theme.py",
+      "size": 14002,
+      "sha256": "8274366322b4eced65aa0d47a35948b888ce746a85e4934aeef2d6fe400b1c77"
+    },
+    "tests\\test_pic_hw.py": {
+      "source": "tests\\test_pic_hw.py",
+      "size": 3958,
+      "sha256": "6ce622bb6d4fee00167757cfddb3e1509d4d39aa0556b17cdef627dfe64d5876"
+    },
+    "tests\\test_pic_integration.py": {
+      "source": "tests\\test_pic_integration.py",
+      "size": 13514,
+      "sha256": "396c35b392e56b56052821953b10d0c4e0081eb963aaf9c66a491ce5f64b08a4"
+    },
+    "tests\\test_pic_project_images.py": {
+      "source": "tests\\test_pic_project_images.py",
+      "size": 14173,
+      "sha256": "364d5d2427427136ff66e461cd053ab6e66d22d1aa6df4e001b77de48137ff94"
+    },
+    "tests\\test_pic_templates.py": {
+      "source": "tests\\test_pic_templates.py",
+      "size": 40326,
+      "sha256": "37a28fd893a22d78491fbfa100a443e59a939eaa3ad6198273ae2be229481c66"
+    },
+    "tests\\test_pic_widgets.py": {
+      "source": "tests\\test_pic_widgets.py",
+      "size": 9891,
+      "sha256": "10369bda58bf5f8179418d55d173ed10496b85444f6e00bf83bef55a682da4fb"
+    },
+    "tests\\test_plain_card.py": {
+      "source": "tests\\test_plain_card.py",
+      "size": 7681,
+      "sha256": "c696971bd67ff59eec00ffa7beba8083bbe0d7202f031d291748cc9e9497a7da"
+    },
+    "tests\\test_plan_batch_mgr.py": {
+      "source": "tests\\test_plan_batch_mgr.py",
+      "size": 4023,
+      "sha256": "9a3763e99d34ed7a3ae60a348ae63090a01ce9a60aa38e8f24bf37559ca2c049"
+    },
+    "tests\\test_plan_commands.py": {
+      "source": "tests\\test_plan_commands.py",
+      "size": 15913,
+      "sha256": "6503d5aab2b0c39ba09fec043098b46493338a4f52dbf61bb8c205b5730ef764"
+    },
+    "tests\\test_plan_schedule.py": {
+      "source": "tests\\test_plan_schedule.py",
+      "size": 4804,
+      "sha256": "843b63a42d4959cb24463434e12cdc09d44a25943fe71bd207cacd8c727a65dd"
+    },
+    "tests\\test_plan_schedule_e2e.py": {
+      "source": "tests\\test_plan_schedule_e2e.py",
+      "size": 7471,
+      "sha256": "cf7005ed28e25202575a43ff5e22a34fb31145b8c0d7dba906b455b71cc7f1fb"
+    },
+    "tests\\test_platform_timeout_clamp.py": {
+      "source": "tests\\test_platform_timeout_clamp.py",
+      "size": 1602,
+      "sha256": "339618a4494a9959fccf282b3f03db6b90bb93567e07b1756f6ff89805ff7f2c"
+    },
+    "tests\\test_prompt_truncate.py": {
+      "source": "tests\\test_prompt_truncate.py",
+      "size": 7541,
+      "sha256": "6ed4676c6eaf2011a813dc39ec4e9538809436e5322f32c668c8321d5ca106a8"
+    },
+    "tests\\test_qq_button_merge.py": {
+      "source": "tests\\test_qq_button_merge.py",
+      "size": 33617,
+      "sha256": "6522a66d27bd5457f572341eb013e95061439acb3e8c1776e779e182c43325e6"
+    },
+    "tests\\test_qq_button_payload.py": {
+      "source": "tests\\test_qq_button_payload.py",
+      "size": 13066,
+      "sha256": "ea6c63243a8b9c84b4d07d0803f409992f2c7c7a03f03c389034e356370706bc"
+    },
+    "tests\\test_qq_card_buttons.py": {
+      "source": "tests\\test_qq_card_buttons.py",
+      "size": 24801,
+      "sha256": "902a60c0a0f4b4fbe4bd9055592fcab3c39b9e0a2c3edd7afd48e168d83dcf85"
+    },
+    "tests\\test_qq_keyboard.py": {
+      "source": "tests\\test_qq_keyboard.py",
+      "size": 22579,
+      "sha256": "aacf0dc98fcc47df0e25c14098617349f6b7dc8541aab5ce37dad180b6739fae"
+    },
+    "tests\\test_qq_msg_seq.py": {
+      "source": "tests\\test_qq_msg_seq.py",
+      "size": 17126,
+      "sha256": "e50e269c7b7a743a0ad02be446fad94ed7540d252f11d83d8680a27a0f88e519"
+    },
+    "tests\\test_qq_rank_eligibility.py": {
+      "source": "tests\\test_qq_rank_eligibility.py",
+      "size": 14586,
+      "sha256": "bcf2dda04346b6efdc350f4a31d724ee336ae02f0c05bdcc4ade98d36174aff2"
+    },
+    "tests\\test_qq_riven_alias_patch.py": {
+      "source": "tests\\test_qq_riven_alias_patch.py",
+      "size": 11328,
+      "sha256": "f7c5977084d57d1fac08782b750f823524d4ee878816848d70008e7db0a15fc1"
+    },
+    "tests\\test_qq_riven_build.py": {
+      "source": "tests\\test_qq_riven_build.py",
+      "size": 42755,
+      "sha256": "8e1d9a6f82ebfa4244ab0ef84baf8042eeb797e209bdb216fd0031a6569a1be6"
+    },
+    "tests\\test_qq_riven_build_by_riven.py": {
+      "source": "tests\\test_qq_riven_build_by_riven.py",
+      "size": 12895,
+      "sha256": "a58e4952d0f293e21bc6413a6241753ecb4adb60ac0efd1b75f802b0a5d0c634"
+    },
+    "tests\\test_qq_riven_button.py": {
+      "source": "tests\\test_qq_riven_button.py",
+      "size": 16485,
+      "sha256": "6de02bd87f3956a0f529aeeb717f1b1e9de194985e4ec77049051d88f0277e7c"
+    },
+    "tests\\test_qq_riven_cache.py": {
+      "source": "tests\\test_qq_riven_cache.py",
+      "size": 25562,
+      "sha256": "7d6cdc01553826e2247a062a7f6976a8ef77f0e12876c67d98b8ef1d6aed06ae"
+    },
+    "tests\\test_qq_riven_full_4stats.py": {
+      "source": "tests\\test_qq_riven_full_4stats.py",
+      "size": 4264,
+      "sha256": "ee3336d30cf7f70e46da65fc1d7b3f7365ca54d7f578724b7315b37c432c07fd"
+    },
+    "tests\\test_qq_riven_full_visual.py": {
+      "source": "tests\\test_qq_riven_full_visual.py",
+      "size": 14982,
+      "sha256": "db51aec740cb233a0fee7d0b80e47940dc20b465485317ced0ca291a397bf46d"
+    },
+    "tests\\test_qq_riven_fusion.py": {
+      "source": "tests\\test_qq_riven_fusion.py",
+      "size": 9410,
+      "sha256": "8c53876dc29b5341db785ec9c88a4f154b0c44636bc743cc1e16231ac60260b2"
+    },
+    "tests\\test_qq_riven_gainmax.py": {
+      "source": "tests\\test_qq_riven_gainmax.py",
+      "size": 46293,
+      "sha256": "07e0de9b9797f4bbdcc440c23cef9aa869b14c8a1527b92697bd30ea636f8b1e"
+    },
+    "tests\\test_qq_riven_market_note.py": {
+      "source": "tests\\test_qq_riven_market_note.py",
+      "size": 8161,
+      "sha256": "f715e2af4db30252bfebadad0b0a071dfed98336232b6a86bae09d5c0e38638d"
+    },
+    "tests\\test_qq_riven_market_type.py": {
+      "source": "tests\\test_qq_riven_market_type.py",
+      "size": 15708,
+      "sha256": "f083e2fef1254634bc9f8114ec8fb7ffdffe72f3ed22277c1b64ae7fac04657b"
+    },
+    "tests\\test_qq_riven_panel_fallback.py": {
+      "source": "tests\\test_qq_riven_panel_fallback.py",
+      "size": 14565,
+      "sha256": "953dc1969ec67c39e2afff0c758b631f74e2f20a98757c1de870796c89d685c2"
+    },
+    "tests\\test_qq_riven_price_text.py": {
+      "source": "tests\\test_qq_riven_price_text.py",
+      "size": 10759,
+      "sha256": "f2e8eff563e0477336e482ee828b5c872de42d29f8937eb71dcfdf20831749b1"
+    },
+    "tests\\test_qq_riven_robot_ref.py": {
+      "source": "tests\\test_qq_riven_robot_ref.py",
+      "size": 12733,
+      "sha256": "7de0007e707171d24b2ec33a7ab6579947dc6cd19a7552d14f80c072d9499ace"
+    },
+    "tests\\test_qq_riven_scores.py": {
+      "source": "tests\\test_qq_riven_scores.py",
+      "size": 4966,
+      "sha256": "a716328c452bd1f851f58ea0e4de7d1d624def4687215ea0287a51c416bf2850"
+    },
+    "tests\\test_qq_riven_slug.py": {
+      "source": "tests\\test_qq_riven_slug.py",
+      "size": 11418,
+      "sha256": "38fd1d002a8dd1a438bccc163633f568012b94a2fa5490d9dc714083ee08257d"
+    },
+    "tests\\test_qq_riven_status_gap.py": {
+      "source": "tests\\test_qq_riven_status_gap.py",
+      "size": 9855,
+      "sha256": "9185048f3be6e8270cc3b584dc29f371d75d5d05948118ce6293600270b223cb"
+    },
+    "tests\\test_qq_riven_std_build.py": {
+      "source": "tests\\test_qq_riven_std_build.py",
+      "size": 28909,
+      "sha256": "644c6a2efb63f50d50436bb128e6f25b94661593b30236daa4acfd14d5cf5a67"
+    },
+    "tests\\test_queue.py": {
+      "source": "tests\\test_queue.py",
+      "size": 17668,
+      "sha256": "d35ef5164996b705edf6701396ae26ab6159808d6a1e6e8adacd705664b0110d"
+    },
+    "tests\\test_queue_batch.py": {
+      "source": "tests\\test_queue_batch.py",
+      "size": 10402,
+      "sha256": "d6c24fbf35cf6cd6db2ec29e47525cd7d02c17f811e1fce1b8060cc8da6c2137"
+    },
+    "tests\\test_queue_groups.py": {
+      "source": "tests\\test_queue_groups.py",
+      "size": 7421,
+      "sha256": "58f4adacd04c380c635f67c0d4b0a77e966a64323c63be86296130b44aca8125"
+    },
+    "tests\\test_queue_notifier.py": {
+      "source": "tests\\test_queue_notifier.py",
+      "size": 3839,
+      "sha256": "a48742df945992613a3fc78964f0a74ce6b96c4df5bf1616990d5fe8f42c7bc1"
+    },
+    "tests\\test_queue_retry_failed.py": {
+      "source": "tests\\test_queue_retry_failed.py",
+      "size": 3958,
+      "sha256": "bc8a725fb7ea04c003e30a7efaaddee04a062f6ca11a5eb2f1dba3fb77ea1e1d"
+    },
+    "tests\\test_queue_task_envelope.py": {
+      "source": "tests\\test_queue_task_envelope.py",
+      "size": 6569,
+      "sha256": "e930d30262a1844e26c0aabed58f016c19a43807a8056d05d467261fa9be5d46"
+    },
+    "tests\\test_queue_upscale.py": {
+      "source": "tests\\test_queue_upscale.py",
+      "size": 8473,
+      "sha256": "075a7b6b3f9677e669cca118959acfdaaed61206e7eee55793ba6e64ab2cea08"
+    },
+    "tests\\test_quick_actions.py": {
+      "source": "tests\\test_quick_actions.py",
+      "size": 6575,
+      "sha256": "49214fb6fbc5d0923912df384a970d1bb683086abd3c91c14fd178793770a26a"
+    },
+    "tests\\test_ratelimit_session_safety.py": {
+      "source": "tests\\test_ratelimit_session_safety.py",
+      "size": 4636,
+      "sha256": "3564b27fb399f06093f7040cdc01e25375f4fa688f25b1a682b4d7b923f24dfa"
+    },
+    "tests\\test_reminders.py": {
+      "source": "tests\\test_reminders.py",
+      "size": 12564,
+      "sha256": "f2e97a6008ec89c2ecd6f9f47b6990e20a270d66f73c4c562d945f98587a04c0"
+    },
+    "tests\\test_riven_full.py": {
+      "source": "tests\\test_riven_full.py",
+      "size": 14584,
+      "sha256": "60629c78d4cb9ab67a91e1b93e01e72b701901302e7c66f860e8261b94c9f8e7"
+    },
+    "tests\\test_riven_full_dispatch.py": {
+      "source": "tests\\test_riven_full_dispatch.py",
+      "size": 8322,
+      "sha256": "611e48e8ce1d8ef4702cd9cd0181a17de1906c04c701a51b1b21e55541e60bd0"
+    },
+    "tests\\test_riven_queue_recall.py": {
+      "source": "tests\\test_riven_queue_recall.py",
+      "size": 3014,
+      "sha256": "6cc23be8e36b671e6e24e3301dbf2e0ec63e413c13898f370aa9029cebf6d02b"
+    },
+    "tests\\test_riven_trend.py": {
+      "source": "tests\\test_riven_trend.py",
+      "size": 8297,
+      "sha256": "ce1e49d22abecfa9221dd069d7b4cbb76981d2008498885ad73525c93b01b635"
+    },
+    "tests\\test_route_full_image.py": {
+      "source": "tests\\test_route_full_image.py",
+      "size": 6795,
+      "sha256": "7e957fe1ecf5f7ccdbde6142e814703812fa11d4a77d50fe8ac8f3b96d5a5e00"
+    },
+    "tests\\test_smarthome.py": {
+      "source": "tests\\test_smarthome.py",
+      "size": 15524,
+      "sha256": "9c810ca4b1662eff08029ec138f64e6a9c6f3d6ea31238ee57eb3f3a7e347472"
+    },
+    "tests\\test_smarthome_alert.py": {
+      "source": "tests\\test_smarthome_alert.py",
+      "size": 4965,
+      "sha256": "06403f33ebf39d54b65dc4d4c42a834b76e4719136002219595ed43a5d41a5b6"
+    },
+    "tests\\test_smarthome_live.py": {
+      "source": "tests\\test_smarthome_live.py",
+      "size": 6022,
+      "sha256": "c9ecd3c652f49defe09322e1c396fbbbc96f48ec4f38ffcdea23cd2d8fb38a5e"
+    },
+    "tests\\test_status_queue_fallback.py": {
+      "source": "tests\\test_status_queue_fallback.py",
+      "size": 9945,
+      "sha256": "8d3bb664cb811a378bfee1384945b52b8b1a293da7926eb15552f3a52a0f9215"
+    },
+    "tests\\test_status_reporting.py": {
+      "source": "tests\\test_status_reporting.py",
+      "size": 9927,
+      "sha256": "a389f2e680f17279350d1f3c82e40318cbc46ecaad1373e0f2c31e24cb2c68b1"
+    },
+    "tests\\test_taskmgr.py": {
+      "source": "tests\\test_taskmgr.py",
+      "size": 10848,
+      "sha256": "c43f1eb2c5e26464f832c90813a612bbb6fd065308b5cd68e90a96a814c7f2bb"
+    },
+    "tests\\test_taskmgr_local.py": {
+      "source": "tests\\test_taskmgr_local.py",
+      "size": 10645,
+      "sha256": "cb6e506318f3061f5718fac35ad44eefd0ca06712230ace590f1f48fb4d1c97c"
+    },
+    "tests\\test_task_subscribe.py": {
+      "source": "tests\\test_task_subscribe.py",
+      "size": 8973,
+      "sha256": "d4edc60e390cb210d6c6bc12e32dc7eb940a8c03b8deb9cb6a3240607e68b25d"
+    },
+    "tests\\test_task_timeout_default.py": {
+      "source": "tests\\test_task_timeout_default.py",
+      "size": 1785,
+      "sha256": "b126ddbad91bead7b491afaeb1e71bb9de8077cfa678739c87f752355fe129bc"
+    },
+    "tests\\test_tenet.py": {
+      "source": "tests\\test_tenet.py",
+      "size": 10248,
+      "sha256": "4bf660994090586f69a7c282c581b1f660f0f6c173b945c21acd67cf46f4cf8f"
+    },
+    "tests\\test_tenet_command_routing.py": {
+      "source": "tests\\test_tenet_command_routing.py",
+      "size": 5180,
+      "sha256": "a96abc281af11e693ea7c2b2b2cb0b3508b4b9688db6d0cad657c52a71748a77"
+    },
+    "tests\\test_text_style.py": {
+      "source": "tests\\test_text_style.py",
+      "size": 5555,
+      "sha256": "39cd3ee9a8a3d1bfe93eecbe418e143f4c3a7b61e0a55d418e58096198b2b7ed"
+    },
+    "tests\\test_theme_assets.py": {
+      "source": "tests\\test_theme_assets.py",
+      "size": 4972,
+      "sha256": "cdb6b8972182ce48d533b34fc231b2b2cd51383326485d22e8b236c3a673e75b"
+    },
+    "tests\\test_theme_colors_backcompat.py": {
+      "source": "tests\\test_theme_colors_backcompat.py",
+      "size": 3047,
+      "sha256": "63840afd17e88c1c3adf71fceee3695acd692d05ecb1ede58e47a361ab0ae267"
+    },
+    "tests\\test_theme_fill.py": {
+      "source": "tests\\test_theme_fill.py",
+      "size": 14473,
+      "sha256": "4db3bc3eeb0ade161ebc05c1b727fd744b78bd80a811e103c9f377e007861d10"
+    },
+    "tests\\test_theme_layout.py": {
+      "source": "tests\\test_theme_layout.py",
+      "size": 12365,
+      "sha256": "e6905509b6e4f18c6db39d4e641727bb3e669fcbb0ab4ef2ae003787d8e2a5a0"
+    },
+    "tests\\test_tools_fc.py": {
+      "source": "tests\\test_tools_fc.py",
+      "size": 8442,
+      "sha256": "3cb8a389ccae58a1061dd7a4c05a143402a2ef0a01749ddd6146dceb29616d82"
+    },
+    "tests\\test_tools_registry.py": {
+      "source": "tests\\test_tools_registry.py",
+      "size": 9514,
+      "sha256": "2aca35217e4c7391950db46e32876dc82a7bcb4d2095bb891ec23a3159206705"
+    },
+    "tests\\test_voice_output.py": {
+      "source": "tests\\test_voice_output.py",
+      "size": 11973,
+      "sha256": "91a75f6624f3e3cee21b8bc0669b7ed3caf36cd52495bd2ee640eb17aaf9574d"
+    },
+    "tests\\test_warframe.py": {
+      "source": "tests\\test_warframe.py",
+      "size": 58532,
+      "sha256": "389a8e112e2db80dd41c67eb1f32093b77dbc756160c8ec515eb65a01bbaab10"
+    },
+    "tests\\test_warframe_market_arcane.py": {
+      "source": "tests\\test_warframe_market_arcane.py",
+      "size": 6148,
+      "sha256": "2fb437cf54be21c11afb8a1ab205f5520aa876fbf3a738a827f422d3ae8ca0b3"
+    },
+    "tests\\test_warframe_market_card.py": {
+      "source": "tests\\test_warframe_market_card.py",
+      "size": 13278,
+      "sha256": "884cee23bbc104990faf157718b7c917112e6df039a9fe5d751a25fbcb65c655"
+    },
+    "tests\\test_warframe_market_rank.py": {
+      "source": "tests\\test_warframe_market_rank.py",
+      "size": 7070,
+      "sha256": "51f0d302f2f26ffdf3cf1ed53d9284b7e22370c64ab44bbb67e777fbb980a780"
+    },
+    "tests\\verify_qq_theme_editor.mjs": {
+      "source": "tests\\verify_qq_theme_editor.mjs",
+      "size": 27888,
+      "sha256": "36f1b097ae7d2c5925bd4e1dcae18c5f80ca17d2ffa3fa8fd736b1823b9a69ef"
+    },
+    "tests\\_rabbit_ref_full_3fb26e13.png": {
+      "source": "tests\\_rabbit_ref_full_3fb26e13.png",
+      "size": 98647,
+      "sha256": "240ea12c7ef880ea12f4c067ba4f0d2a92cb3c15d70bd81831b765d1ae582864"
+    },
+    "tests\\_rabbit_ref_full_c4d2005c.png": {
+      "source": "tests\\_rabbit_ref_full_c4d2005c.png",
+      "size": 89973,
+      "sha256": "74a2c2b0474e1eb78d3dbfdae1acdceeff4ce6f3445a200b00d74a5c371a825d"
+    },
+    "tests\\_rabbit_ref_full_f6f65e5b.png": {
+      "source": "tests\\_rabbit_ref_full_f6f65e5b.png",
+      "size": 208869,
+      "sha256": "efc07733f079088f91817f6cf4ef4649547661b7777820405a5ace652eb4ebf7"
+    },
+    "tests\\_rabbit_ref_price_3fb26e13.png": {
+      "source": "tests\\_rabbit_ref_price_3fb26e13.png",
+      "size": 192946,
+      "sha256": "9b94789c6a4a09f99cc26b2df52217a2ce6868fca7f26f0e3f75f6d000e426c1"
+    },
+    "tests\\_rabbit_ref_price_c4d2005c.png": {
+      "source": "tests\\_rabbit_ref_price_c4d2005c.png",
+      "size": 136942,
+      "sha256": "ba80d0052463e7b30aee781a4c583fbef1cb38571182713550dbc9f080ce7dc5"
+    },
+    "tests\\_rabbit_ref_price_f6f65e5b.png": {
+      "source": "tests\\_rabbit_ref_price_f6f65e5b.png",
+      "size": 300684,
+      "sha256": "fed79fcc17af06cc13cc692f0173c868c4ca6a4c4b8445ec6fd4c3abc51a6887"
+    },
+    "tests\\_riven_full_render.py": {
+      "source": "tests\\_riven_full_render.py",
+      "size": 3781,
+      "sha256": "d3f3d447272269bc8574b0a9e442f91d87706c8fbb074cd5e797fa4203224624"
+    },
+    "tests\\_riven_ref_price_0.png": {
+      "source": "tests\\_riven_ref_price_0.png",
+      "size": 662204,
+      "sha256": "2d0f9f6a4fb6ad35da857c83d775e76d13fc6dd8bf17e2b717fecee3de9fa00c"
+    },
+    "tests\\_riven_ref_price_1.png": {
+      "source": "tests\\_riven_ref_price_1.png",
+      "size": 500983,
+      "sha256": "a46472d7ab51f03223ffd7d635e29c5df53913a236b553371d0d2f61bd98d70b"
+    },
+    "tests\\_shot_atlas_bp_real.png": {
+      "source": "tests\\_shot_atlas_bp_real.png",
+      "size": 967427,
+      "sha256": "63723487183b898ab40b41505a4ea17ab29ce3af0b2444b4e317506d936eeff8"
+    },
+    "tests\\_shot_atlas_chassis_real.png": {
+      "source": "tests\\_shot_atlas_chassis_real.png",
+      "size": 496886,
+      "sha256": "5462834eef83f1d36301c0b3904ddd13b0761654d140bcbf87199f7e9b1b6b09"
+    },
+    "tests\\_shot_bounty_live.png": {
+      "source": "tests\\_shot_bounty_live.png",
+      "size": 246528,
+      "sha256": "69fe274ec215e54aec0a886650fbf26b6524cd1da1995386869c9f48ff917626"
+    },
+    "tests\\_shot_bounty_production.png": {
+      "source": "tests\\_shot_bounty_production.png",
+      "size": 222412,
+      "sha256": "b5a35b0c76a0fa87c7de3fcd5c69120c5e4120271d6062ad3111ade5733c6fda"
+    },
+    "tests\\_shot_bounty_reference.png": {
+      "source": "tests\\_shot_bounty_reference.png",
+      "size": 245937,
+      "sha256": "616d06f37c5a8c003bad838b89cbca2d24deeca886b5f073d9afa14fa6a8ba6c"
+    },
+    "tests\\_shot_container_icon_2x.png": {
+      "source": "tests\\_shot_container_icon_2x.png",
+      "size": 79260,
+      "sha256": "6f32cc4c1275a085fbc383f004ff162161bb04870de618ca2b7906e0c7a6b7ae"
+    },
+    "tests\\_shot_container_market_v2.png": {
+      "source": "tests\\_shot_container_market_v2.png",
+      "size": 200308,
+      "sha256": "ea7847573a2e40621009268f9caf040e16d6c170ae56435cd82a2efe9975ba32"
+    },
+    "tests\\_shot_container_price_3x.png": {
+      "source": "tests\\_shot_container_price_3x.png",
+      "size": 261154,
+      "sha256": "302299fe46ac8a39a9281bca26cb4817387eed922cf36ebaf3e130dcd9e12dd5"
+    },
+    "tests\\_shot_container_real_atlas.png": {
+      "source": "tests\\_shot_container_real_atlas.png",
+      "size": 216593,
+      "sha256": "3f2861e5d55ba88e148265ccdf5a655bec7587fd5235e174c6bb363271e23ad6"
+    },
+    "tests\\_shot_container_real_atlas_top_2x.png": {
+      "source": "tests\\_shot_container_real_atlas_top_2x.png",
+      "size": 227667,
+      "sha256": "a069299171b1e076a583db388a745a4cd7ad8cc7ca42dd72dc4f56dcb86c0d85"
+    },
+    "tests\\_shot_container_riven_matched.png": {
+      "source": "tests\\_shot_container_riven_matched.png",
+      "size": 342633,
+      "sha256": "3f9fdd6dfc366151ba99e561f49eac6eac55b98527cd7256b5544c1396271311"
+    },
+    "tests\\_shot_container_riven_no_match.png": {
+      "source": "tests\\_shot_container_riven_no_match.png",
+      "size": 341954,
+      "sha256": "3f9d87d889d2a3e328d026bde05e3075e120d59adca0a1a3f2cceab26537aa19"
+    },
+    "tests\\_shot_container_riven_price_zoom.png": {
+      "source": "tests\\_shot_container_riven_price_zoom.png",
+      "size": 312291,
+      "sha256": "a0eca87b041b544c137555010b3ec5b34cb22d368578e39ea55e4f9fc8ace369"
+    },
+    "tests\\_shot_container_table_2x.png": {
+      "source": "tests\\_shot_container_table_2x.png",
+      "size": 212841,
+      "sha256": "56ec9efa2ef954df65e896954c15d9adab1b641b00191b9b96996c63e079d4bf"
+    },
+    "tests\\_shot_final_2x.png": {
+      "source": "tests\\_shot_final_2x.png",
+      "size": 1065007,
+      "sha256": "30f5bc2fd0ffb41ea5f5ba4a43627f17d70e22595002122781cb590e4034f21e"
+    },
+    "tests\\_shot_market_currency_arcane.png": {
+      "source": "tests\\_shot_market_currency_arcane.png",
+      "size": 253233,
+      "sha256": "d7bb8ba4a1f37d6741230f48b5388d8e7fe98dbafc414b0e33894a7e4763f0af"
+    },
+    "tests\\_shot_market_currency_light.png": {
+      "source": "tests\\_shot_market_currency_light.png",
+      "size": 236113,
+      "sha256": "7743c1e3dd89a45ac96de1f8fefc826660fc16edeb0f8586b77657a1341b9fc4"
+    },
+    "tests\\_shot_market_currency_neon.png": {
+      "source": "tests\\_shot_market_currency_neon.png",
+      "size": 239017,
+      "sha256": "2652bd639ae190f1f402845bf2600a66585ecf7054f7991130935c1580f09161"
+    },
+    "tests\\_shot_market_currency_noducat.png": {
+      "source": "tests\\_shot_market_currency_noducat.png",
+      "size": 236851,
+      "sha256": "497e148bd4c01000605d5684099fea01781718d8955214bbadd6c1d587c905ca"
+    },
+    "tests\\_shot_market_currency_ranked.png": {
+      "source": "tests\\_shot_market_currency_ranked.png",
+      "size": 249576,
+      "sha256": "bd3b4da532fead0ad545827b6950c55ee267dc7e356630a9036f3276c916c8b5"
+    },
+    "tests\\_shot_market_currency_tall_icon.png": {
+      "source": "tests\\_shot_market_currency_tall_icon.png",
+      "size": 236233,
+      "sha256": "519a332eaed35c114a1f3fa6a94c9708431e27968abee5ee708b72e482d353d8"
+    },
+    "tests\\_shot_market_currency_wide_icon.png": {
+      "source": "tests\\_shot_market_currency_wide_icon.png",
+      "size": 235982,
+      "sha256": "562b18c8f1e02938684f2a7386b82f04be8eb8105981444f61bcfa8c11ad88d9"
+    },
+    "tests\\_shot_preview_zoom.png": {
+      "source": "tests\\_shot_preview_zoom.png",
+      "size": 230076,
+      "sha256": "e9417f9999ae77afac5699b7ba2ef5cfcdc04f525f236ad92a1b90a29f975ce9"
+    },
+    "tests\\_shot_real_itemicon.png": {
+      "source": "tests\\_shot_real_itemicon.png",
+      "size": 217656,
+      "sha256": "4813228fd8be927d3fb080fea391412aed2c112ddc1224283ca36c881b02f586"
+    },
+    "tests\\_shot_real_itemicon_top_2x.png": {
+      "source": "tests\\_shot_real_itemicon_top_2x.png",
+      "size": 328903,
+      "sha256": "9b7ec798e26001a00383148f9369b475b0d49c77c6e32d9be491d9e31b489b5f"
+    },
+    "tests\\_shot_region_labels.png": {
+      "source": "tests\\_shot_region_labels.png",
+      "size": 222813,
+      "sha256": "75a784bec3fbb622bf0b164a5965588c0d37fd34311aa43f3d26d302d484995e"
+    },
+    "tests\\_shot_riven_price_matched.png": {
+      "source": "tests\\_shot_riven_price_matched.png",
+      "size": 343049,
+      "sha256": "d791a315598326560d3c47a81345d04b32c1d91eeb07faa63a21afdb29301039"
+    },
+    "tests\\_shot_riven_price_no_match.png": {
+      "source": "tests\\_shot_riven_price_no_match.png",
+      "size": 342805,
+      "sha256": "e5aecaff9f8b803fa4e29d00f45b5f6e90402e7b630fef3542ad0a1858541d03"
+    },
+    "tests\\_shot_text_style.png": {
+      "source": "tests\\_shot_text_style.png",
+      "size": 210473,
+      "sha256": "ca9c1b64a91749add3583509a12de180f5963329eba08d06673e0c8cfde085bb"
+    },
+    "tests\\_shot_theme_fill.png": {
+      "source": "tests\\_shot_theme_fill.png",
+      "size": 192373,
+      "sha256": "1d5a58ae307830230a5e10441af5acb409dbae576d44814e071bc1b301bb4ae8"
+    },
+    "tests\\_shot_user_header_2x.png": {
+      "source": "tests\\_shot_user_header_2x.png",
+      "size": 24930,
+      "sha256": "3b822fae68c387f8c987e4c19e58d4556dd8952e085cc8528b90de47f68871c5"
+    },
+    "tests\\_shot_user_itemicon_4x.png": {
+      "source": "tests\\_shot_user_itemicon_4x.png",
+      "size": 114909,
+      "sha256": "7b2be97212afccf5f3d8285a5309fbaba44eae5fafcea8935f39d64a6b7a6c0f"
+    },
+    "tests\\_shot_v2_light_2x.png": {
+      "source": "tests\\_shot_v2_light_2x.png",
+      "size": 1103583,
+      "sha256": "70de8f17df8f8c00354cb949e8ed3296b343785bdc83ed9cea25a99536305d9f"
+    },
+    "tests\\_shot_v2_table_2x.png": {
+      "source": "tests\\_shot_v2_table_2x.png",
+      "size": 262077,
+      "sha256": "5c4e1e980413c1167498d84d4ce37b7664efaada9055206fefba92efca2fcaeb"
+    },
+    "tests\\_wm_card_container.png": {
+      "source": "tests\\_wm_card_container.png",
+      "size": 225435,
+      "sha256": "b43d7c06d5472d7ef83bea0b0bbad4efc071dcc180d60c4608ec83ff823e5240"
+    },
+    "tests\\_wm_card_container_arcane_light.png": {
+      "source": "tests\\_wm_card_container_arcane_light.png",
+      "size": 255063,
+      "sha256": "d70b83ebcd212a33ada60850aea332d7a7e7ccf1434f4c211900f973917846b7"
+    },
+    "tests\\_wm_card_container_arcane_neon.png": {
+      "source": "tests\\_wm_card_container_arcane_neon.png",
+      "size": 258242,
+      "sha256": "1067d536252a3fcc2b499b871f199b7a7f9b20716b1d3138deb631897d345462"
+    },
+    "tests\\_wm_card_container_ranked_light.png": {
+      "source": "tests\\_wm_card_container_ranked_light.png",
+      "size": 252085,
+      "sha256": "05b0c3accd0a5e41568624f86896bcfc8a0ad8b09c5403cdb17962210e402d75"
+    },
+    "tests\\_wm_card_container_ranked_neon.png": {
+      "source": "tests\\_wm_card_container_ranked_neon.png",
+      "size": 255213,
+      "sha256": "9ac8d333cec6990b00479412125101c5f62f6acb77a52ac426a0bc88bb162e6a"
+    },
+    "tests\\_wm_card_light.png": {
+      "source": "tests\\_wm_card_light.png",
+      "size": 236896,
+      "sha256": "9a954a4e48cb6a0bed1a3dbd396d0559b745cead351a8a43c315b1ae5d3d35a0"
+    },
+    "tests\\_wm_card_light_arcane.png": {
+      "source": "tests\\_wm_card_light_arcane.png",
+      "size": 253044,
+      "sha256": "85a15932fe67adc010b95276fd111c368bd3c1ef37fc255ee864f284bfab8001"
+    },
+    "tests\\_wm_card_light_ranked.png": {
+      "source": "tests\\_wm_card_light_ranked.png",
+      "size": 249613,
+      "sha256": "8d2f8fe51733759f85606296e922f2b9a86570ad932d77bee7ffbe56d2793aaf"
+    },
+    "tests\\_wm_card_neon.png": {
+      "source": "tests\\_wm_card_neon.png",
+      "size": 239832,
+      "sha256": "187bec6cb83fa87533c71b20c6be437acaed27d43f92e03844a93258f363cf61"
+    },
+    "tests\\_wm_card_neon_arcane.png": {
+      "source": "tests\\_wm_card_neon_arcane.png",
+      "size": 255857,
+      "sha256": "090f22b87d527b876d0df87258e6c374d77a63da9e768b722683cf2dd974439e"
+    },
+    "tests\\_wm_card_neon_ranked.png": {
+      "source": "tests\\_wm_card_neon_ranked.png",
+      "size": 252464,
+      "sha256": "3ecb9e8277e041f0c868f30d694f406d4d9a5fe9c32ae60d4f6ae4e580e89460"
+    },
+    "tests\\fixtures\\bounty_official.json": {
+      "source": "tests\\fixtures\\bounty_official.json",
+      "size": 2715,
+      "sha256": "c17a53ec34f3269872ef6bbedcec246ef3554dc1829634150cfff91d1fdb59e6"
+    },
+    "tests\\fixtures\\bounty_reference_groups.json": {
+      "source": "tests\\fixtures\\bounty_reference_groups.json",
+      "size": 2100,
+      "sha256": "07e8052ec22353e9fc08fadb0ae9e8d7fa47c7500aeafdcc112822600037af49"
+    },
+    "tests\\fixtures\\bounty_rsc_payload.json": {
+      "source": "tests\\fixtures\\bounty_rsc_payload.json",
+      "size": 44693,
+      "sha256": "07564ccd8262d91dbf86d716a638be1ef6b21eafe2390b253bbf1338dbe58e75"
+    },
+    "tests\\fixtures\\rabbit_riven_price_reference.json": {
+      "source": "tests\\fixtures\\rabbit_riven_price_reference.json",
+      "size": 1151,
+      "sha256": "d0b63d8edb6d0a2cc3e1ff36e2527df214cbe2720a6fe2d6d0504f5e2b046691"
+    },
+    "tests\\fixtures\\tenet_coda_flight.json": {
+      "source": "tests\\fixtures\\tenet_coda_flight.json",
+      "size": 3771,
+      "sha256": "f08ede63db3189716eb36a9da25a191d23bf617b5e9833b2dbac47fc5890d4fb"
+    }
+  }
+}

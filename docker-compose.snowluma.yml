@@ -1,0 +1,197 @@
+# ============================================================================
+# docker-compose.snowluma.yml —— SnowLuma 协议端 + qq_bridge 业务端的【全新独立部署】
+#
+# 隔离契约（对应 2026-11-10「原 NapCat 代码永久只读」最高声明）：
+#   * 项目名 / 容器名 / 镜像名 / 端口 / 数据卷 / 日志 / 配置 全部带 snowluma 前缀，
+#     与 qq_bridge/（NapCat :8080）和 qq_bridge_official/（官方 :8081）零共享。
+#   * 本文件及其所有挂载路径都只在本目录内；旧仓一个字节都不写、不重建。
+#   * bridge 业务代码是 qq_bridge/ 的完整副本（见 tools/copy_manifest.json），
+#     协议层换掉即可，业务逻辑零改动。
+#
+# 链路方向（关键，别接反）：
+#   QQ 客户端(容器内真实 Linux QQ, ptrace 注入)
+#     -> SnowLuma (OneBot v11)
+#     -> [WS 客户端, 出站] ws://bridge:8082/onebot/v11/ws
+#     -> bridge (NoneBot2 OneBot V11 反向 WS 服务端)
+#   SnowLuma 自带的 3000(HTTP) / 3001(正向 WS) 本方案【不用】，也不映射宿主，
+#   少开两个入口。bridge 只在同一 compose 内网被访问，管理口仅绑 127.0.0.1。
+#
+# 镜像版本：motricseven7/snowluma v2.2.0（2026-10-24 构建，linux/amd64，1.89GB）
+#   源 repo digest: sha256:34b4ec03738a698231cbad39c5650747330f5a96d953494fb6c12e1273974c0b
+#   不追 latest；国内加速源 docker.m.daocloud.io 已验证可用。
+#   ⚠️ 许可：SnowLuma 是「源码可见的非商业许可」，禁止商用；且仍属第三方注入，
+#      换平台不消除 QQ 风控/封号风险，务必用小号，别用主号。
+#
+# 启动：docker compose -f docker-compose.snowluma.yml up -d --build
+# 停止：docker compose -f docker-compose.snowluma.yml down
+# ============================================================================
+name: qq_bridge_snowluma
+
+services:
+  # --------------------------------------------------------------------------
+  # 业务端：NoneBot2 + OneBot V11 反向 WS 服务端（代码来自副本，端口改 8082）
+  # --------------------------------------------------------------------------
+  bridge:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.bridge
+    image: qq-bridge-snowluma:latest
+    container_name: qq-bridge-snowluma-bridge
+    # bridge 只是 WS 服务端，重启不会触发 QQ 重登，可以安全自动重启。
+    restart: unless-stopped
+    ports:
+      # 仅本机管理接口；SnowLuma 走 compose 内网服务名 bridge，不经过这个映射。
+      - "127.0.0.1:8082:8082"
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "8082"
+      # 主项目能力层在宿主；容器内 localhost 是容器自己。
+      MANJU_API_BASE: "http://host.docker.internal:7788/api/v1"
+      TASK_MONITOR_BASE: "http://host.docker.internal:8099/api/v1"
+      # 下载中心走本 compose 自己的 aria2 sidecar（不依赖旧仓的 6800）。
+      # 用【容器名】而非【服务名】：bridge 容器重建后，Docker 内嵌 DNS 的
+      # 服务名别名注册会失同步（实测 gethostbyname('aria2') 报
+      # Name or service not known），但容器名 qq-bridge-snowluma-aria2
+      # 解析稳定，故用它。
+      DL_ARIA2_RPC: "http://qq-bridge-snowluma-aria2:6800/jsonrpc"
+      # bridge 调用 aria2 RPC 必须带密钥（aria2 sidecar 启用了 --rpc-secret）；
+      # 应用用 os.environ 读取，不读挂载的 /app/.env，所以这里必须显式注入。
+      DL_ARIA2_SECRET: ${DL_ARIA2_SECRET:?DL_ARIA2_SECRET 必须在 .env 里设置}
+      DL_DIR: "/downloads"
+      # 容器内没有 .git，仓库巡检必然误报 → 关闭。
+      OPS_WATCH_ENABLE: "false"
+      WF_WIKI_MODCARDS_DISABLE: "0"
+      # 容器里没有 winrt，强制跨平台 OCR。
+      WF_OCR_BACKEND: "rapid"
+      # 纯 OneBot/SnowLuma 通道：绝不能注册官方适配器。
+      # AppID 1906371548 只允许一个 WS 连接，注册了会和 qq-bridge-official 互踢。
+      OFFICIAL_ENABLE: "false"
+      GROUP_ENABLED: "true"
+      # 副本是纯 OneBot 入站，但 conn_watch 沿用的是 NapCat 反向 WS 探针；
+      # 在 SnowLuma 完成扫码前它会一直误报 ws_not_connected 并尝试发通知。
+      # 官方副本已用同一招关掉（§23:43 遗留噪音），这里一并关闭。
+      OPS_CONN_WATCH_ENABLE: "false"
+      TZ: "Asia/Shanghai"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./.env:/app/.env:ro          # 副本自己的凭据（只读，绝不入镜像）
+      - ./data:/app/data             # 记忆/贴纸/卡图缓存等运行态
+      - ./logs:/app/logs
+      - ./tmp:/app/tmp
+      - ./downloads:/downloads
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket;socket.create_connection(('127.0.0.1',8082),3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+
+  # --------------------------------------------------------------------------
+  # 协议端：SnowLuma（容器内跑真实 Linux QQ + Xvfb/noVNC + ptrace hook）
+  # --------------------------------------------------------------------------
+  snowluma:
+    image: docker.m.daocloud.io/motricseven7/snowluma:v2.2.0
+    container_name: qq-bridge-snowluma-protocol
+    # ★ 账号安全 >> 服务可用性：必须为 "no"。
+    #   容器重启会重新拉起 QQ 并用 share 卷里的票据登录，等于「自动重登」；
+    #   被踢线/风控时频繁重登是最危险的行为（2026-09-16 封号事故的直接根因）。
+    #   容器停了就让它停着，人工 docker start 才再尝试一次。
+    restart: "no"
+    # ★ 设备身份四要素（沿用 NapCat 仓 2026-10-28 的教训）★
+    # 腾讯「登录新设备」弹窗里的设备名就是容器 hostname；容器一重建，
+    # hostname / MAC / 内网 IP 全变 = 每次都判新设备 = 抬高风险。
+    # 这里钉死三项，第四项 /app/data/config/machine-id 由 bind mount 持久化。
+    # ⚠️ 首次设置 hostname 本身就是一次身份变更，登录时会被判新设备（预期内），
+    #    所以必须在扫码【之前】做，之后不要再改。
+    hostname: snowluma-home
+    mac_address: "02:42:ac:1f:5a:0a"
+    networks:
+      default:
+        ipv4_address: 172.31.90.10
+    depends_on:
+      bridge:
+        condition: service_healthy
+    # QQ 基于 Chromium，/dev/shm 给小了会随机崩。
+    shm_size: 1gb
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 1048576
+    # ptrace 注入的硬性前提，两个都不能省。
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp=unconfined
+    environment:
+      TZ: "Asia/Shanghai"
+      SNOWLUMA_UID: "1000"
+      SNOWLUMA_GID: "1000"
+      SNOWLUMA_ONEBOT_HOST: "0.0.0.0"
+      SNOWLUMA_WEBUI_HOST: "0.0.0.0"
+      SNOWLUMA_WEBUI_PORT: "5099"
+      # 扫码后自动加载 hook，不用每次去 WebUI 手点 Load。
+      SNOWLUMA_HOOK_AUTOLOAD: "1"
+      # noVNC 远程桌面密码；强随机值只在 .env，绝不写死在这里。
+      VNC_PASSWD: ${VNC_PASSWD:?VNC_PASSWD 必须在 .env 里设置}
+      # 不设 SNOWLUMA_ACCEPT_EULA / PRIVACY：EULA 与隐私政策由本人在 WebUI 首次
+      # 登录时亲自阅读并确认，不由部署脚本代为同意。
+    ports:
+      # 6081 等于一台能操作 QQ 的远程桌面，只绑本机回环，绝不裸放公网。
+      - "127.0.0.1:6081:6081"
+      - "127.0.0.1:5099:5099"
+      # 3000 / 3001 故意不映射：本方案只用反向 WS 客户端出站连接。
+    volumes:
+      # onebot*.json（含 wsClients 与 token）在这里，必须 bind mount 便于脚本注入。
+      - ./snowluma/data:/app/data
+      - ./snowluma/qq-config:/app/.config
+      # QQ 登录态在这里，删了要重新扫码。
+      - ./snowluma/qq-share:/app/.local/share
+    healthcheck:
+      # WebUI 返回 401 也说明端口正常，这里只探 TCP 是否 listen。
+      test: ["CMD", "node", "-e", "require('net').connect(5099,'127.0.0.1').on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+
+  # --------------------------------------------------------------------------
+  # 下载中心 sidecar：复用副本镜像里的静态 aria2c，不依赖旧仓 6800 端口
+  # --------------------------------------------------------------------------
+  aria2:
+    image: qq-bridge-snowluma:latest
+    container_name: qq-bridge-snowluma-aria2
+    restart: unless-stopped
+    command:
+      - aria2c
+      - --enable-rpc=true
+      - --rpc-listen-all=true
+      - --rpc-allow-origin-all=true
+      - --rpc-secret=${DL_ARIA2_SECRET:?DL_ARIA2_SECRET 必须在 .env 里设置}
+      - --rpc-listen-port=6800
+      - --dir=/downloads
+      - --continue=true
+      - --file-allocation=none
+      - --max-concurrent-downloads=5
+      - --auto-file-renaming=false
+      - --seed-time=0
+    ports:
+      - "127.0.0.1:6802:6800"
+    volumes:
+      - ./downloads:/downloads
+      - ./data/aria2:/aria2
+    healthcheck:
+      test: ["CMD", "aria2c", "--version"]
+      interval: 60s
+      timeout: 5s
+      retries: 2
+      start_period: 10s
+
+# 固定子网：避免 Docker 自动分配漂移；172.31.90.0/24 与本机既有
+# 172.17/172.18/172.19/172.20/172.28 网段均不冲突。
+networks:
+  default:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.31.90.0/24
