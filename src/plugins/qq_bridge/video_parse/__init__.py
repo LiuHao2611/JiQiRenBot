@@ -198,6 +198,7 @@ async def _handle(bot: Bot, event: MessageEvent) -> None:
                 # 平台没重写 download_video = 有意只发元数据卡片（图片笔记等），
                 # 这种情况不该报「视频没下下来」。
                 supports_video = parser_cls.download_video is not BaseParser.download_video
+                notice_mid = 0
                 try:
                     # 下载偶发 DNS/连接抖动（实测 "ConnectError: [Errno -5] No address
                     # associated with hostname"，重试一次即成功）。同一条路重试一次不是
@@ -228,15 +229,24 @@ async def _handle(bot: Bot, event: MessageEvent) -> None:
                         else:
                             # 协议端在另一个容器里，本地绝对路径它读不到（ENOENT），
                             # 先搬到双方都能看见的目录，再发协议端视角的路径。
+                            notice_mid = 0
                             if size > 30 * 1024 * 1024:
                                 # 79MB 首次上传实测 ~150s（同一支重传走秒传只要几秒），
-                                # 先给个话，别让人干等
-                                await _say(bot, event, "视频 %.1fMB，正在上传，稍等一下。"
-                                           % (size / 1048576))
+                                # 先给个话，别让人干等；**发完立刻撤回**，不留废话
+                                # （用户 2026-11-14：「这种发送中的提示，视频发出后就
+                                # 自动撤回，别占地方，这属于无意义的聊天对话」）。
+                                notice_mid = await _say(
+                                    bot, event, "视频 %.1fMB，正在上传，稍等一下。" % (size / 1048576))
                             seg_file = await asyncio.to_thread(_stage_for_protocol, path)
-                            sent_v = await bot.send(event, Message(MessageSegment.video(file=seg_file)))
+                            # _timeout：22MB 上传就要 30s+，nonebot 默认 30s 会抛
+                            # "WebSocket call api send_msg timeout"——视频其实已经发成功，
+                            # 却被判失败再补一句「发不出去」（2026-11-14 实况），必须放宽。
+                            sent_v = await bot.send(
+                                event, Message(MessageSegment.video(file=seg_file)), _timeout=600)
                             await _record_out(event, f"[CQ:video,file={seg_file}]", sent_v)
                             logger.info(f"video_send_ok platform={result.platform} path={seg_file}")
+                            if notice_mid:
+                                await _recall(bot, notice_mid)
                     else:
                         # 下载彻底失败也要说话——沉默是用户最不能接受的
                         if supports_video:
@@ -246,17 +256,38 @@ async def _handle(bot: Bot, event: MessageEvent) -> None:
                             logger.info(f"video_not_supported platform={result.platform} (只发卡片)")
                 except Exception as e:  # noqa: BLE001
                     logger.error(f"video_send_failed platform={result.platform} error={type(e).__name__}: {e}")
-                    await _say(bot, event, "视频发不出去（%s），卡片信息在上面。" % type(e).__name__)
+                    # 先把「正在上传」收回，再报失败，避免两条互相矛盾的废话
+                    if notice_mid:
+                        await _recall(bot, notice_mid)
+                    # 超时是**不确定**状态：协议端可能已经把视频发出去了（实测过一次），
+                    # 所以措辞要留余地，不能一口咬定「没发出去」。
+                    if "timeout" in str(e).lower():
+                        await _say(bot, event, "视频上传超时了，没收到的话重发一次卡片我再试。")
+                    else:
+                        await _say(bot, event, "视频没发出去（%s），重发一次卡片我再试。"
+                                   % type(e).__name__)
             break  # 一条消息只回一个解析卡片，避免刷屏
 
 
-async def _say(bot: Bot, event: MessageEvent, text: str) -> None:
-    """补一句说明（超限/上传中）。失败只记日志，绝不影响主流程。"""
+async def _say(bot: Bot, event: MessageEvent, text: str) -> int:
+    """补一句说明（超限/上传中），返回 message_id 供后续撤回；失败只记日志。"""
     try:
         sent = await bot.send(event, Message(MessageSegment.text(text)))
         await _record_out(event, text, sent)
+        return int(sent.get("message_id") or 0) if isinstance(sent, dict) else 0
     except Exception as e:  # noqa: BLE001
         logger.warning(f"video_parse_say_failed: {type(e).__name__}: {e}")
+        return 0
+
+
+async def _recall(bot: Bot, message_id: int) -> None:
+    """撤回自己发的过渡性提示（「正在上传」这类占地方的废话）。失败无所谓。"""
+    try:
+        await bot.delete_msg(message_id=int(message_id))
+        logger.info(f"video_notice_recalled message_id={message_id}")
+    except Exception as e:  # noqa: BLE001 — 撤回失败不影响已发出的视频
+        logger.warning(f"video_notice_recall_failed message_id={message_id} "
+                       f"error={type(e).__name__}: {e}")
 
 
 async def _record_out(event: MessageEvent, raw: str, sent=None) -> None:

@@ -48,10 +48,16 @@ class _Ev:
 class _Bot:
     def __init__(self):
         self.sent = []
+        self.deleted = []
 
-    async def send(self, event, message):
+    async def send(self, event, message, **kwargs):
         self.sent.append(str(message))
+        self.last_kwargs = kwargs
         return {"message_id": len(self.sent)}
+
+    async def delete_msg(self, message_id):
+        self.deleted.append(int(message_id))
+        return None
 
 
 @pytest.fixture
@@ -130,6 +136,21 @@ def test_big_video_announces_upload_first(env, monkeypatch):
     asyncio.run(vp._handle(bot, _Ev()))
 
     texts = [s for s in bot.sent if "[CQ:" not in s]
-    assert any("上传" in t for t in texts), bot.sent
+    assert any("上传" in s for s in texts), bot.sent
     ids = [i for i, s in enumerate(bot.sent) if "[CQ:video" in s]
     assert ids and any(bot.sent.index(t) < ids[0] for t in texts), bot.sent
+    # 「正在上传」发完必须被撤回，不留废话（用户 2026-11-14 要求）
+    notice_id = bot.sent.index(next(t for t in texts if "上传" in t)) + 1  # send 返回的 message_id 从 1 递增
+    assert notice_id in bot.deleted, (notice_id, bot.deleted)
+
+
+def test_video_send_uses_long_timeout(env, monkeypatch):
+    """22MB 上传就要 30s+，nonebot 默认 30s 会误判 timeout（实测已发成功却报失败）。"""
+    monkeypatch.setattr(vp.Config, "VIDEO_PARSE_MAX_MB", 200, raising=False)
+    p = env / "mid.mp4"
+    _fake_download_with(p, 1024 * 1024, monkeypatch)
+    bot = _Bot()
+
+    asyncio.run(vp._handle(bot, _Ev()))
+
+    assert bot.last_kwargs.get("_timeout", 0) >= 300, bot.last_kwargs
