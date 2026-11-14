@@ -39,10 +39,10 @@ class KuaishouParser(MetaParser):
             try:
                 candidates += _extract_video_urls(json.loads(m.group(1)))
             except Exception as e:  # noqa: BLE001
-                logger.warning("kuaishou_state_failed: %s", e)
+                logger.warning(f"kuaishou_state_failed: {type(e).__name__}: {e}")
         for u in _dedup(candidates):
             path = await self._save_video(u, referer="https://www.kuaishou.com/")
             if path:
                 return path
-        logger.warning("kuaishou_no_video_url url=%s", real)
+        logger.warning(f"kuaishou_no_video_url url={real}")
         return None

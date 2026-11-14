@@ -104,13 +104,13 @@ class MetaParser(BaseParser):
                     r.raise_for_status()
                     length = int(r.headers.get("content-length", 0) or 0)
                     if length and length > VIDEO_MAX_BYTES:
-                        logger.warning("video_too_large skip bytes=%s", length)
+                        logger.warning(f"video_too_large skip bytes={length}")
                         return None
                     with open(raw_path, "wb") as f:
                         async for chunk in r.aiter_bytes(65536):
                             f.write(chunk)
         except Exception as e:  # noqa: BLE001
-            logger.warning("video_dl_failed: %s", e)
+            logger.warning(f"video_dl_failed: {type(e).__name__}: {e}")
             return None
         if raw_path.endswith(".mp4"):
             return raw_path
@@ -122,7 +122,7 @@ class MetaParser(BaseParser):
             )
             await asyncio.wait_for(proc.wait(), timeout=120.0)
         except Exception as e:  # noqa: BLE001
-            logger.warning("video_remux_failed: %s", e)
+            logger.warning(f"video_remux_failed: {type(e).__name__}: {e}")
             return None
         if proc.returncode != 0 or not os.path.exists(out_path):
             return None

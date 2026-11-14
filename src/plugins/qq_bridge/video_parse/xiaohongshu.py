@@ -38,5 +38,5 @@ class XiaohongshuParser(MetaParser):
             path = await self._save_video(u, referer=real)
             if path:
                 return path
-        logger.warning("xhs_no_video_url url=%s (可能需要登录 cookie)", real)
+        logger.warning(f"xhs_no_video_url url={real} (可能需要登录 cookie)")
         return None

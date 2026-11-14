@@ -96,7 +96,7 @@ class BilibiliParser(BaseParser):
             v = bili_video.Video(bvid=bvid, aid=(int(aid) if aid else None))
             dl = await v.get_download_url(0)
         except Exception as e:  # noqa: BLE001
-            logger.warning("bili_get_download_url_failed: %s", e)
+            logger.warning(f"bili_get_download_url_failed: {type(e).__name__}: {e}")
             return None
 
         if not isinstance(dl, dict):
@@ -140,7 +140,7 @@ class BilibiliParser(BaseParser):
                             async for chunk in r.aiter_bytes(65536):
                                 f.write(chunk)
         except Exception as e:  # noqa: BLE001
-            logger.warning("bili_download_failed: %s", e)
+            logger.warning(f"bili_download_failed: {type(e).__name__}: {e}")
             return None
 
         cmd = ["ffmpeg", "-y", "-i", v_path]
@@ -155,7 +155,7 @@ class BilibiliParser(BaseParser):
             )
             await asyncio.wait_for(proc.wait(), timeout=120.0)
         except Exception as e:  # noqa: BLE001
-            logger.warning("bili_mux_failed: %s", e)
+            logger.warning(f"bili_mux_failed: {type(e).__name__}: {e}")
             return None
         if proc.returncode != 0 or not os.path.exists(out_path):
             return None

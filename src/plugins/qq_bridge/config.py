@@ -321,6 +321,10 @@ class Config:
     VIDEO_PARSE_PROTO_MEDIA_SEEN: str = os.environ.get("VIDEO_PARSE_PROTO_MEDIA_SEEN") or ""
     # 落地文件保留时长（秒）：到期由下一次发片顺手清理，避免目录无限膨胀。
     VIDEO_PARSE_PROTO_MEDIA_TTL: int = int(os.environ.get("VIDEO_PARSE_PROTO_MEDIA_TTL") or 7200)
+    # 成片体积上限（MB）：超过就明说发不了，只保留解析卡。
+    # 原实现硬编码 50MB，实测 78.8MB 的正常 B站片子被静默丢弃（用户侧「视频没解析出来」）。
+    # 实测协议端 79MB 可正常发送（约 150s，QQ 侧能收能播），故默认放到 200MB 并留配置。
+    VIDEO_PARSE_MAX_MB: int = int(os.environ.get("VIDEO_PARSE_MAX_MB") or 200)
 
     # ---- QQ 官方机器人通道（docs/qq_official_bot_migration_plan.md §6.2）----
     # 双轨并行：本组配置只影响官方通道，**关掉 OFFICIAL_ENABLE 时 NapCat 零影响**。

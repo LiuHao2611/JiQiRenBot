@@ -188,30 +188,75 @@ async def _handle(bot: Bot, event: MessageEvent) -> None:
             try:
                 sent = await bot.send(event, Message(card))
             except Exception as e:  # noqa: BLE001 — 发送失败绝不拖垮消息循环
-                logger.error("video_parse_send_failed: %s", e)
+                logger.error(f"video_parse_send_failed: {type(e).__name__}: {e}")
                 sent = None
             # 落盘：管理页聊天记录里能看到机器人回了什么
             await _record_out(event, card, sent)
             # 统一走各平台 download_video 下载并发送视频（失败/不支持则只发文字卡）
             parser_cls = BaseParser.get_parser_by_name(result.platform)
             if parser_cls is not None:
+                # 平台没重写 download_video = 有意只发元数据卡片（图片笔记等），
+                # 这种情况不该报「视频没下下来」。
+                supports_video = parser_cls.download_video is not BaseParser.download_video
                 try:
-                    path = await parser_cls().download_video(result)
+                    # 下载偶发 DNS/连接抖动（实测 "ConnectError: [Errno -5] No address
+                    # associated with hostname"，重试一次即成功）。同一条路重试一次不是
+                    # 换备选实现，只是把网络抖动挡掉；第二次仍失败就如实告诉用户。
+                    path = None
+                    for attempt in ((1, 2) if supports_video else (1,)):
+                        path = await parser_cls().download_video(result)
+                        if path and os.path.exists(path):
+                            break
+                        logger.warning(
+                            f"video_download_miss platform={result.platform} attempt={attempt}")
+                        if attempt == 1:
+                            await asyncio.sleep(1.5)
                     if path and os.path.exists(path):
                         size = os.path.getsize(path)
-                        logger.info(f"video_download_ok platform={result.platform} size={size} path={path}")
-                        if size > 50 * 1024 * 1024:
-                            logger.warning(f"video_too_large_skip size={size}")
+                        limit = max(1, int(getattr(Config, "VIDEO_PARSE_MAX_MB", 200))) * 1024 * 1024
+                        logger.info(
+                            f"video_download_ok platform={result.platform} size={size} limit={limit} path={path}")
+                        if size > limit:
+                            # 超限**必须说话**：原来只写一行 warning 就沉默，
+                            # 用户侧表现为「视频没解析出来」（2026-11-14 实况：
+                            # 一条 78.8MB 的片子被 50MB 老上限静默丢弃）。
+                            logger.warning(
+                                f"video_too_large_skip size={size} limit={limit}")
+                            await _say(bot, event,
+                                       "视频有 %.1fMB，超过 %.0fMB 上限，这条发不了（卡片在上面）。"
+                                       % (size / 1048576, limit / 1048576))
                         else:
                             # 协议端在另一个容器里，本地绝对路径它读不到（ENOENT），
                             # 先搬到双方都能看见的目录，再发协议端视角的路径。
+                            if size > 30 * 1024 * 1024:
+                                # 79MB 首次上传实测 ~150s（同一支重传走秒传只要几秒），
+                                # 先给个话，别让人干等
+                                await _say(bot, event, "视频 %.1fMB，正在上传，稍等一下。"
+                                           % (size / 1048576))
                             seg_file = await asyncio.to_thread(_stage_for_protocol, path)
                             sent_v = await bot.send(event, Message(MessageSegment.video(file=seg_file)))
                             await _record_out(event, f"[CQ:video,file={seg_file}]", sent_v)
                             logger.info(f"video_send_ok platform={result.platform} path={seg_file}")
+                    else:
+                        # 下载彻底失败也要说话——沉默是用户最不能接受的
+                        if supports_video:
+                            logger.error(f"video_download_failed platform={result.platform}")
+                            await _say(bot, event, "视频这次没下下来（网络或平台风控），重发一次卡片我再试。")
+                        else:
+                            logger.info(f"video_not_supported platform={result.platform} (只发卡片)")
                 except Exception as e:  # noqa: BLE001
                     logger.error(f"video_send_failed platform={result.platform} error={type(e).__name__}: {e}")
+                    await _say(bot, event, "视频发不出去（%s），卡片信息在上面。" % type(e).__name__)
             break  # 一条消息只回一个解析卡片，避免刷屏
+
+
+async def _say(bot: Bot, event: MessageEvent, text: str) -> None:
+    """补一句说明（超限/上传中）。失败只记日志，绝不影响主流程。"""
+    try:
+        sent = await bot.send(event, Message(MessageSegment.text(text)))
+        await _record_out(event, text, sent)
+    except Exception as e:  # noqa: BLE001
+        logger.warning(f"video_parse_say_failed: {type(e).__name__}: {e}")
 
 
 async def _record_out(event: MessageEvent, raw: str, sent=None) -> None:
@@ -231,7 +276,7 @@ async def _record_out(event: MessageEvent, raw: str, sent=None) -> None:
             history.record_outgoing, ctx, raw, self_id, mid
         )
     except Exception as e:  # noqa: BLE001 — 旁路能力，失败不影响主流程
-        logger.warning("video_parse_history_failed: %s", e)
+        logger.warning(f"video_parse_history_failed: {type(e).__name__}: {e}")
 
 
 async def _try_parse_one(url: str) -> VideoParseResult | None:

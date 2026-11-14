@@ -43,10 +43,10 @@ class DouyinParser(MetaParser):
                 data = json.loads(base64.b64decode(m.group(1)).decode("utf-8", "ignore"))
                 candidates += _extract_video_urls(data)
             except Exception as e:  # noqa: BLE001
-                logger.warning("douyin_render_data_failed: %s", e)
+                logger.warning(f"douyin_render_data_failed: {type(e).__name__}: {e}")
         for u in _dedup(candidates):
             path = await self._save_video(u, referer="https://www.douyin.com/")
             if path:
                 return path
-        logger.warning("douyin_no_video_url url=%s", real)
+        logger.warning(f"douyin_no_video_url url={real}")
         return None
