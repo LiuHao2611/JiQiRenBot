@@ -246,7 +246,8 @@ def build_skills_data(p: dict) -> dict:
             "badge": tier[0],
             "name": name,
             "lv": lv, "max": mx, "maxed": maxed,
-            "desc": f"[{tier}] 斗气 {int(frac[tier] * 100)}%·mp_max ｜ {e.get('desc', '')}",
+            # 卡片只有两行位：放「短释」；完整说明走 斗技详情 / 图鉴文档
+            "desc": f"[{tier}] 斗气 {int(frac[tier] * 100)}%·mp_max ｜ {e.get('brief') or e.get('desc', '')}",
             "base_mult": round(base_mult, 2),
             "cur_mult": round(cur_mult, 2),
             "next_mult": round(next_mult, 2),

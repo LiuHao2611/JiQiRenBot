@@ -253,6 +253,20 @@ async def _(event: MessageEvent):
     await enh.finish(await commands.cmd_enhance(store, str(event.user_id)))
 
 
+# 斗技详情必须排在 skills_cmd 之前（同一 PRI 下先注册者先拦），否则「斗技详情 X」
+# 会被「斗技」列表口令吃掉。这里再用 PRI-1 明示抢在列表前。
+skinfo = on_regex(_pat(r"(?:斗技|技能|功法)详情") + r"\s*(.*)",
+                  priority=PRI - 1, block=True, rule=_mode_is("doupo"))
+
+
+@skinfo.handle()
+async def _(event: MessageEvent):
+    await _need_group(event, skinfo)
+    txt = _plain(event)
+    kw = next((k for k in ("斗技详情", "技能详情", "功法详情") if k in txt), "斗技详情")
+    await skinfo.finish(await commands.cmd_skill_info(store, str(event.user_id), _arg(event, kw)))
+
+
 # 注意：变量名不能叫 skills，否则会遮蔽 doupo.skills 子模块（core 依赖它）
 skills_cmd = on_regex(_pat(r"(?:斗技|技能)"), priority=PRI, block=True, rule=_mode_is("doupo"))
 
@@ -529,6 +543,9 @@ register_keywords("doupo", [
     "强化",
     "斗技",
     "技能",
+    "斗技详情",
+    "技能详情",
+    "功法详情",
     "升级",
     "升技",
     "上阵",

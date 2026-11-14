@@ -99,7 +99,7 @@ async def main():
     menu = commands.cmd_menu()
     check("菜单含 斗破菜单 口令", "斗破菜单" in menu)
     # 关键：菜单条数必须等于 __init__.py 里注册的 matcher 数（e2e 里再做静态断言）
-    check("菜单条数 = menu_total()", commands.menu_total() == 25,
+    check("菜单条数 = menu_total()", commands.menu_total() == 27,
           f"menu_total={commands.menu_total()}")
     # 新设计：菜单是唯一切换口（斗破菜单），其余口令全部纯中文、不再带前缀
     lines = [l.split(" —— ")[0].strip() for l in menu.splitlines() if " —— " in l]
@@ -246,6 +246,21 @@ async def main():
     check("斗技等级 =2", int(p["skills"]["龙吟碎"]) == 2)
     r = await commands.cmd_skill_up(store, A, "不存在")
     check("升级 未知斗技被挡", "无此斗技" in r, r[:40])
+
+    # ------------------------------------------------------------------
+    # 6b. 斗技详情：说明必须是真的（有数值/有来源/有原著），不是空壳
+    # ------------------------------------------------------------------
+    p = await store.get_player(A)
+    one = core.skill_pool(p)[0]["name"]
+    r = await commands.cmd_skill_info(store, A, one)
+    check("详情 含技名", one in r, r[:40])
+    check("详情 含完整说明", "出处：" in r and len(r) > 120, f"len={len(r)}")
+    check("详情 含数值口径", "斗气" in r and "%" in r, r[:80])
+    r = await commands.cmd_skill_info(store, A, "")
+    check("详情 缺参数给用法", "用法" in r and "可选" in r, r[:60])
+    r = await commands.cmd_skill_info(store, A, "不存在的斗技")
+    check("详情 未知斗技被挡", "无此斗技" in r, r[:40])
+
 
     # ------------------------------------------------------------------
     # 7. 异火 / 养火

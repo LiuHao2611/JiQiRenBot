@@ -14,6 +14,7 @@ import time
 
 from . import config as cfg
 from . import core
+from . import skill_book as book
 
 NOT_ENTERED = "你尚未踏入斗气大陆，发送「入道」开启征程。"
 
@@ -68,7 +69,9 @@ MENU_GROUPS = (
     ("养成 · 变强", (
         ("强化", "强化玄重尺：十级蜕变为异火恒古尺（2000/2000/1000/1200）"),
         ("斗技", "看 4 门斗技，快捷键 1/3/7/9"),
+        ("斗技详情 狂狮怒罡", "完整说明：怎么施展 → 打多少 → 副作用/限制 + 来源 + 原著"),
         ("升级 龙吟碎", "用焚血散升斗技，每级伤害 +20%"),
+        ("上阵 技1 技2 技3 技4", "四槽自由搭配，三阶（普通/高阶/特殊）可混搭"),
         ("异火", "看 5 种异火与进度"),
         ("养火 青莲地心火", "用药渣喂养异火（炼药失败会出药渣）"),
     )),
@@ -380,6 +383,55 @@ async def cmd_skills(store, qq) -> str:
     out.append("上阵：" + "、".join(f"{e['name']}[{e['tier']}]" for e in lo))
     out.append("　斗气不足将强制武器普攻（伤害大减、持续掉血）")
     out.append(f"　升一级伤害 +20%，消耗 {cfg.SKILL_UP_ITEM}；用法：升级 <技名> / 上阵 <4 技名>")
+    return "\n".join(out)
+
+
+async def cmd_skill_info(store, qq, name) -> str:
+    """斗技详情：完整说明（施展→效果→增益/副作用→限制）+ 数值 + 来源 + 原著。
+
+    desc 写在 skill_book.SKILL_BOOK 里，与图鉴文档同源；卡片只放两行短释，
+    想看全的就走这条口令。
+    """
+    p = await _player(store, qq)
+    if not p:
+        return NOT_ENTERED
+    name = (name or "").strip()
+    pool = core.skill_pool(p)
+    if not pool:
+        return "你还没有斗技。"
+    if not name:
+        return ("用法：斗技详情 <技名>\n本宗可选：" + "、".join(e["name"] for e in pool))
+
+    hit = next((e for e in pool if e["name"] == name), None) or next(
+        (e for e in pool if name in e["name"] or e["name"] in name), None)
+    if not hit:
+        book_hit = book.get(name)
+        if book_hit is None:
+            return "无此斗技。本宗可选：" + "、".join(e["name"] for e in pool)
+        return f"【{book_hit['name']}】不属于你的宗门，无法查看细节。"
+
+    lv = int((p.get("skills") or {}).get(hit["name"], 1))
+    st = core.stats(p)
+    raw = (st["力量"] * 0.5 + st["斗气"] * 1.5) * float(hit["dmg"]) * (1 + 0.2 * (lv - 1))
+    dmg = int(round(raw * (1 + core.crit_rate(p) / 100.0 * 0.5)))
+    state = "★上阵" if hit.get("equipped") else ("可学" if hit.get("unlocked") else "未解锁")
+
+    # 只有真打得出去的技才显示伤害系数；功法/增益/技艺的 130% 是倍率不是伤害，写出来会误导
+    nfmt = f"斗气 {int(hit['mp'] * 100)}%·mp_max ｜ 冷却 {hit.get('cd', '-')} 回合"
+    if hit.get("kind") in ("攻击", "控制", "召唤", "秘法"):
+        nfmt += f" ｜ 基础 {int(hit['dmg'] * 100)}% ｜ 当前约 {dmg} 伤害"
+    else:
+        nfmt += " ｜ 非直接伤害技（增益/功能）"
+    out = [f"📖 {hit['name']}　Lv{lv}　{state}",
+           f"{hit.get('rank', '')} · {hit.get('kind', '')} · {hit.get('scope', '')}［{hit['tier']}］",
+           nfmt,
+           ""]
+    out.append(hit.get("desc") or "（暂无说明）")
+    if hit.get("source"):
+        out += ["", f"出处：{hit['source']}"]
+    if hit.get("novel"):
+        out.append(f"原著：{hit['novel']}")
+    out += ["", f"　升级 +20%/级（需 {cfg.SKILL_UP_ITEM}）｜ 用法：升级 {hit['name']}"]
     return "\n".join(out)
 
 

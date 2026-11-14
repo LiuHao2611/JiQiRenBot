@@ -220,8 +220,11 @@ GIF 缺失时模板画剑形占位，卡片照常出图。
 | `core.py` | 纯函数（属性/战斗/强化/炼药/斗技/异火/任务/商店），零 nonebot |
 | `store.py` | json 落盘 + asyncio.Lock 原子写 |
 | `commands.py` | 业务层，`MENU_GROUPS` 是菜单唯一源 |
-| `__init__.py` | 25 个 matcher，全部 `priority=5 + block=True`；除 3 个入口外均带 `rule=_mode_is("doupo")` |
-| `test_*.py` | 十套自带 runner 的测试（core / commands / card / avatar / throttle / e2e / menu_full / skills_card / chance / typography） |
+| `__init__.py` | 27 个 matcher，全部 `priority=5 + block=True`；除 3 个入口外均带 `rule=_mode_is("doupo")` |
+| `skill_book.py` | **斗技唯一权威表**：185 门斗技的阶位/类型/范围/完整说明/数值/出处/原著 + 卡片短释 |
+| `skills.py` | 三阶四槽纯函数内核（目录/解锁/上阵/斗气单价），数据取 `skill_book` |
+| `_gen_book_doc.py` | 由 skill_book 生成 `docs/门派技能图鉴.md`（`--check` 可校验是否过期） |
+| `test_*.py` | 十三套自带 runner 的测试（avatar / card / chance / commands / core / e2e / factions / menu_full / skill_book / skills_card / skills_module / throttle / typography） |
 | `_balance.py` | 平衡模拟（调参用） |
 | `data/doupo.json` | 存档（可用 `DOUPO_DATA_PATH` 改到别处） |
 | `src/game_mode.py` | 按 QQ 号记录当前游戏模式，落 `data/game_mode.json`（`GAME_MODE_PATH` 可改） |
@@ -233,3 +236,14 @@ GIF 缺失时模板画剑形占位，卡片照常出图。
 ⚠️ 新增口令必须同时登记到 `register_keywords("doupo", [...])`，否则没选模式 / 打错模式时
 `game_router` 认不出这是口令，给不出提示。菜单（`MENU_GROUPS`）也要同步加一行，
 `test_commands.py` 会断言菜单条数等于 matcher 数。
+
+## 斗技描述的唯一权威源
+
+`factions.py` 的 `skills` / `special_skills` 是**带注解的字符串**（`"碎石掌（黄阶低）/ 劈山掌（黄阶中）[C1]"`），
+用 `split("/")[0]` 解析会把合并条目里其余斗技静默丢掉（历史上丢了约 70 门）。
+所以：
+
+* **游戏目录**走 `skill_book.FACTION_SKILLS` + `SKILL_BOOK`，`skills.catalog()` 只在该派未收录时退回字符串解析；
+* **技能说明**只写在 `skill_book` 的 `desc` 里（按施展流程：起手 → 斗气走向 → 打出什么 → 增益/副作用 → 限制）；
+* **卡片**只放 `brief`（≤24 字），完整说明走 `斗技详情 <技名>` 口令；
+* 改完必跑 `_gen_book_doc.py` + `test_skill_book.py`，后者 13 项全绿才算过（缺条目/占位词/无数值/文档过期都会 exit 1）。

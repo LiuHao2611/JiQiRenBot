@@ -14,16 +14,16 @@ from __future__ import annotations
 
 from . import config as cfg
 from . import factions as fac
+from . import skill_book as book
 
 
 # ---------------------------------------------------------------------------
 # 目录派生
 # ---------------------------------------------------------------------------
 def _skill_name(raw: str) -> str:
-    """从一条斗技描述里取展示名。
+    """从一条斗技描述里取展示名（仅在 skill_book 无该宗门时的兜底路径使用）。
 
     例："六合游身尺（地阶中，萧厉）[C1]" -> "六合游身尺"
-        "碎石掌（黄阶低）/ 劈山掌（黄阶中）[C1]" -> "碎石掌"（多技合并条目取首个）
     """
     s = str(raw).split("[")[0].strip()
     for sep in ("（", "("):
@@ -39,8 +39,33 @@ def _rank_tier(raw: str) -> str:
     return "普通"
 
 
-def catalog(fid: str) -> list[dict]:
-    """某个宗门的全部可学斗技（三阶），按数据顺序：先普通/高阶 skills，后 special。"""
+def _from_book(fid: str) -> list[dict]:
+    """从 skill_book（唯一权威表）派生某个宗门的斗技目录。"""
+    out: list[dict] = []
+    for rec in book.skills_of(fid):
+        tier = rec["tier"]
+        out.append({
+            "name": rec["name"],
+            "tier": tier,
+            "faction": fid,
+            "mp": round(rec["mp"] / 100.0, 4),
+            "dmg": rec["dmg"] / 100.0,
+            "unlock": int(rec.get("unlock") or cfg.SKILL_TIER_UNLOCK[tier]),
+            "desc": rec["desc"],
+            "brief": rec.get("brief", ""),
+            "rank": rec["rank"],
+            "kind": rec["kind"],
+            "scope": rec["scope"],
+            "source": rec["source"],
+            "novel": rec["novel"],
+            "cd": rec["cd"],
+            "core": str(rec["source"]).startswith("游戏自设"),
+        })
+    return out
+
+
+def _from_faction_strings(fid: str) -> list[dict]:
+    """兜底：skill_book 尚未收录该宗门时，退回 factions.py 的字符串解析。"""
     f = fac.FACTIONS.get(fid)
     if not f:
         return []
@@ -57,7 +82,7 @@ def catalog(fid: str) -> list[dict]:
             "name": name, "tier": tier, "faction": fid,
             "mp": cfg.SKILL_TIER_MP_FRAC[tier],
             "dmg": dmg, "unlock": cfg.SKILL_TIER_UNLOCK[tier],
-            "desc": raw, "core": core,
+            "desc": raw, "brief": _skill_name(raw), "core": core,
         })
         seen.add(name)
     for sp in f.get("special_skills", []):
@@ -69,10 +94,19 @@ def catalog(fid: str) -> list[dict]:
             "mp": cfg.SKILL_TIER_MP_FRAC["特殊"],
             "dmg": cfg.SKILL_TIER_DMG["特殊"],
             "unlock": int(sp.get("unlock_lv", cfg.SKILL_TIER_UNLOCK["特殊"])),
-            "desc": sp.get("note", ""),
+            "desc": sp.get("note", ""), "brief": name,
         })
         seen.add(name)
     return out
+
+
+def catalog(fid: str) -> list[dict]:
+    """某个宗门的全部可学斗技（三阶）。优先取 skill_book，缺则退回 factions 字符串。"""
+    fid = str(fid or "")
+    if fid in book.FACTION_SKILLS:
+        return _from_book(fid)
+    return _from_faction_strings(fid)
+
 
 
 def entries_for(p) -> list[dict]:

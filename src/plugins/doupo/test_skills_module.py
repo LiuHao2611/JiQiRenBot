@@ -64,11 +64,18 @@ def test_faction_is_stable_per_player():
     assert c["faction"] in fac.FACTIONS
 
 
-def test_every_faction_has_lv1_learnable():
-    for fid in fac.FACTIONS:
+def test_every_faction_has_learnable_at_its_unlock_level():
+    """每个宗门在「它自己进池的等级」必须至少有一门可学斗技。
+
+    不能统一用 1 级判定：风雷阁 / 太虚古龙这类高段宗门的斗技都是地阶、天阶，
+    它们是 40 级、90 级才进池的，1 级无可学是设计如此，不是缺陷。
+    """
+    for fid, f in fac.FACTIONS.items():
         cat = sk.catalog(fid)
         assert cat, "%s 无斗技目录" % fid
-        assert any(int(e["unlock"]) <= 1 for e in cat), "%s 1 级无任何可学斗技" % fid
+        base = fac.POOL_UNLOCK.get(f.get("pool"), 1)
+        assert any(int(e["unlock"]) <= base for e in cat), (
+            "%s 在进池等级 %d 时无任何可学斗技" % (fid, base))
 
 
 # ---------------------------------------------------------------------------
