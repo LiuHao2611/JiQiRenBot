@@ -325,6 +325,9 @@ class Config:
     # 原实现硬编码 50MB，实测 78.8MB 的正常 B站片子被静默丢弃（用户侧「视频没解析出来」）。
     # 实测协议端 79MB 可正常发送（约 150s，QQ 侧能收能播），故默认放到 200MB 并留配置。
     VIDEO_PARSE_MAX_MB: int = int(os.environ.get("VIDEO_PARSE_MAX_MB") or 200)
+    # 时长上限（分钟）：超过就**只发解析文字卡**，不下视频（2026-11-14 用户要求
+    # 「视频超过10分钟就不发了，只发文本解析结果」）。0 = 不限。
+    VIDEO_PARSE_MAX_MINUTES: int = int(os.environ.get("VIDEO_PARSE_MAX_MINUTES") or 10)
 
     # ---- QQ 官方机器人通道（docs/qq_official_bot_migration_plan.md §6.2）----
     # 双轨并行：本组配置只影响官方通道，**关掉 OFFICIAL_ENABLE 时 NapCat 零影响**。

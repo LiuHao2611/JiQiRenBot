@@ -193,8 +193,19 @@ async def _handle(bot: Bot, event: MessageEvent) -> None:
             # 落盘：管理页聊天记录里能看到机器人回了什么
             await _record_out(event, card, sent)
             # 统一走各平台 download_video 下载并发送视频（失败/不支持则只发文字卡）
+            # 时长闸（2026-11-14 用户要求）：「视频超过10分钟就不发了，只发文本解析结果」。
+            # 放在下载之前判定：超长片连下载都省掉，不白占带宽和落盘。
+            # 时长拿不到（None/0）时无法判定，按「不拦」处理并留痕，绝不瞎猜。
+            max_min = int(getattr(Config, "VIDEO_PARSE_MAX_MINUTES", 10) or 0)
+            dur = int(getattr(result, "duration", 0) or 0)
+            skip_video = bool(max_min > 0 and dur > max_min * 60)
+            if skip_video:
+                logger.info(
+                    f"video_too_long_skip platform={result.platform} duration={dur}s limit={max_min * 60}s")
+            elif max_min > 0 and dur <= 0:
+                logger.info(f"video_duration_unknown platform={result.platform}（不拦，照常发）")
             parser_cls = BaseParser.get_parser_by_name(result.platform)
-            if parser_cls is not None:
+            if parser_cls is not None and not skip_video:
                 # 平台没重写 download_video = 有意只发元数据卡片（图片笔记等），
                 # 这种情况不该报「视频没下下来」。
                 supports_video = parser_cls.download_video is not BaseParser.download_video
