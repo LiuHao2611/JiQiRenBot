@@ -311,16 +311,29 @@ async def _(event: MessageEvent):
     await loadout.finish(await commands.cmd_loadout(store, str(event.user_id), _arg(event, kw)))
 
 
-sect = on_regex(_pat(r"(?:宗门|门派|转宗|换宗|改换门庭)") + r"\s*(.*)",
+# 「宗门」看本门 + 可转列表；「转宗」执行改换门庭。
+# 拆成两个 matcher（而不是一个吃四个词）是为了让 matcher 数 == 菜单条数，
+# test_e2e 会断言这两个数相等（菜单是口令唯一源）。
+sect = on_regex(_pat(r"(?:宗门|门派)") + r"\s*(.*)",
                 priority=PRI, block=True, rule=_mode_is("doupo"))
 
 
 @sect.handle()
 async def _(event: MessageEvent):
     await _need_group(event, sect)
+    await sect.finish(await commands.cmd_faction(store, str(event.user_id), None))
+
+
+switch = on_regex(_pat(r"(?:转宗|换宗|改换门庭)") + r"\s*(.*)",
+                  priority=PRI, block=True, rule=_mode_is("doupo"))
+
+
+@switch.handle()
+async def _(event: MessageEvent):
+    await _need_group(event, switch)
     txt = _plain(event)
-    kw = next((k for k in ("改换门庭", "转宗", "换宗", "宗门", "门派") if k in txt), "宗门")
-    await sect.finish(await commands.cmd_faction(store, str(event.user_id), _arg(event, kw)))
+    kw = next((k for k in ("改换门庭", "转宗", "换宗") if k in txt), "转宗")
+    await switch.finish(await commands.cmd_faction(store, str(event.user_id), _arg(event, kw)))
 
 
 flames = on_regex(_pat(r"异火"), priority=PRI, block=True, rule=_mode_is("doupo"))
