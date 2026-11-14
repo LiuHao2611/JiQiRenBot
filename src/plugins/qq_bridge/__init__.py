@@ -6042,9 +6042,10 @@ async def _handle_bilibili_card(ev, card: dict, trace_id: str) -> None:
         return
     label = "直播" if kind == "live" else "视频"
     cap = "收到 B站分享%s" % label + ("：《%s》" % title if title else "")
-    # 1) 原样回呈卡片（核心：让 QQ 客户端渲染成卡片）
+    # 1) 原样回呈卡片（核心：让 QQ 客户端渲染成卡片）。
+    # 不 @ 人：@ 段拼在 json 卡片前会改变消息结构，保守只发纯卡片，减少渲染不确定性。
     try:
-        await send_card(ctx, seg_type, data, at_user=ev.is_group)
+        await send_card(ctx, seg_type, data, at_user=False)
     except Exception as e:  # noqa: BLE001 — 如实上报，绝不静默
         log.warning(jlog("bili_card_echo_failed", error=type(e).__name__,
                          detail=str(e)[:160], trace_id=trace_id))

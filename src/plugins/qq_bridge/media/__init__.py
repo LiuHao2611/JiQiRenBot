@@ -19,10 +19,11 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import json
 import random
 
 import httpx
-from nonebot.adapters.onebot.v11 import MessageSegment
+from nonebot.adapters.onebot.v11 import Message, MessageSegment
 
 from ..config import Config, get_logger, jlog
 from ..connector import connector
@@ -61,11 +62,22 @@ def _target(ctx: dict) -> tuple[str, dict]:
     return "send_private_msg", {"user_id": user_id}
 
 
-async def _send(ctx: dict, message: str, at_user: bool = False) -> None:
+async def _send(ctx: dict, message, at_user: bool = False) -> None:
+    """发消息。message 可以是 CQ 字符串，也可以是 Message/MessageSegment 对象。
+
+    卡片（json/xml）必须传 Message 对象：`str(MessageSegment.json(...))` 会拼成
+    `[CQ:json,data={...}]`，而卡片 JSON 里必然有逗号，CQ 字符串解析会按逗号截断。
+    传 Message 时适配器用 DataclassEncoder 序列化成段数组（`message:[{type,data}]`），
+    协议端按结构解析，不经过 CQ 文本解析。
+    """
     action, params = _target(ctx)
     if at_user and int(ctx.get("group_id") or 0):
         # 群聊回传时 @发起人（§5.2 示例）
-        message = str(MessageSegment.at(int(ctx["user_id"]))) + " " + message
+        _at = MessageSegment.at(int(ctx["user_id"]))
+        if isinstance(message, str):
+            message = str(_at) + " " + message
+        else:
+            message = Message(_at) + " " + message
     params = dict(params, message=message)
 
     await asyncio.sleep(_delay())
@@ -91,7 +103,7 @@ async def _send(ctx: dict, message: str, at_user: bool = False) -> None:
         bot = connector.first_bot()
         self_id = str(getattr(bot, "self_id", "") or "")
         msg_id = (ret or {}).get("message_id") if isinstance(ret, dict) else None
-        await asyncio.to_thread(history.record_outgoing, ctx, params.get("message") or "", self_id, int(msg_id or 0))
+        await asyncio.to_thread(history.record_outgoing, ctx, str(params.get("message") or ""), self_id, int(msg_id or 0))
     except Exception as e:  # noqa: BLE001
         log.warning(jlog("history_out_failed", error=type(e).__name__, detail=str(e)[:120]))
 
@@ -213,17 +225,23 @@ async def send_card(ctx: dict, seg_type: str, data: str, at_user: bool = False) 
     把它渲染成结构化卡片（而非退化成链接或文本）。这是「分享卡片」语义的核心——
     手机端分享到 QQ 的是卡片，机器人收到后也当作卡片原样回给对话，不扒链接、不下载视频。
 
+    注意：**必须以 Message 对象发送**，不能拼成 CQ 字符串——卡片 JSON 含逗号，
+    `[CQ:json,data=...]` 会被 CQ 解析器按逗号截断而失效（实测确认）。
+
     仅 NapCat/OneBot 通道支持：官方通道没有 json/xml 卡片概念，直接跳过（由调用方
     降级为文字说明），不强行发（贴了也发不出去）。
     """
     if _foreign_channel(ctx):
         log.warning(jlog("card_send_unsupported_channel", channel=_foreign_channel(ctx)))
         return
+    if not isinstance(data, str):
+        data = json.dumps(data, ensure_ascii=False) if str(seg_type).lower() != "xml" else str(data)
     if str(seg_type or "").lower() == "xml":
-        seg = MessageSegment.xml(str(data))
+        seg = MessageSegment.xml(data)
     else:
-        seg = MessageSegment.json(str(data))
-    await _send(ctx, str(seg), at_user=at_user)
+        seg = MessageSegment.json(data)
+    await _send(ctx, Message(seg), at_user=at_user)
+    log.info(jlog("card_sent", kind=str(seg_type), bytes=len(data)))
 
 
 async def send_video_link(ctx: dict, link: str, cover: str = "", at_user: bool = False) -> None:
