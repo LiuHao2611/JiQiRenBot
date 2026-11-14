@@ -99,7 +99,7 @@ async def main():
     menu = commands.cmd_menu()
     check("菜单含 斗破菜单 口令", "斗破菜单" in menu)
     # 关键：菜单条数必须等于 __init__.py 里注册的 matcher 数（e2e 里再做静态断言）
-    check("菜单条数 = menu_total()", commands.menu_total() == 27,
+    check("菜单条数 = menu_total()", commands.menu_total() == 29,
           f"menu_total={commands.menu_total()}")
     # 新设计：菜单是唯一切换口（斗破菜单），其余口令全部纯中文、不再带前缀
     lines = [l.split(" —— ")[0].strip() for l in menu.splitlines() if " —— " in l]

@@ -371,6 +371,82 @@ def _hit(p, target_def, entry, rng) -> dict:
     return {"dmg": dmg, "crit": crit, "kind": kind, "skill": entry is not None}
 
 
+def faction_pools_open(p) -> list[str]:
+    """当前境界已开放的卡池（新手 / 进阶 / 隐世）。"""
+    lv = int(p.get("lv", 1))
+    return [pool for pool in ("starter", "advanced", "hidden")
+            if lv >= int(fac.POOL_UNLOCK.get(pool, 1))]
+
+
+def faction_switch_cost(p) -> int:
+    """转宗所需金币（随境界上涨）。"""
+    return cfg.faction_switch_cost(int(p.get("lv", 1)))
+
+
+def faction_candidates(p) -> list[dict]:
+    """当前境界可以转去的宗门（排除本门）。
+
+    入道只进新手池，进阶池要 lv40、隐世池要 lv90 —— 不转宗的话，
+    25 派里 17 派的斗技玩家永远见不到。
+    """
+    lv = int(p.get("lv", 1))
+    cur = str(p.get("faction") or "")
+    out = []
+    for pool in ("starter", "advanced", "hidden"):
+        if lv < int(fac.POOL_UNLOCK.get(pool, 1)):
+            continue
+        for fid, f in fac.FACTIONS.items():
+            if f["pool"] != pool or fid == cur:
+                continue
+            out.append({
+                "faction": fid, "name": f["name"], "pool": pool,
+                "unlock_lv": int(f["unlock_lv"]), "weight": int(f["weight"]),
+                "skills": len(sk_mod.catalog(fid)),
+            })
+    return out
+
+
+def change_faction(p, key: str) -> dict:
+    """转宗：改换门庭，重配四槽。
+
+    * 只能转去**当前境界已开放**的卡池里的宗门；
+    * 扣金币（`cfg.faction_switch_cost`）；
+    * **不重新发该派的入道物品**（否则转一次刷一次）；
+    * 已升的技能等级按技名保留。
+    """
+    key = str(key or "").strip()
+    if not key:
+        return {"ok": False, "reason": "noarg"}
+    cands = faction_candidates(p)
+    if not cands:
+        return {"ok": False, "reason": "nopool"}
+
+    hit = next((c for c in cands if c["faction"] == key or c["name"] == key), None)
+    if not hit:
+        hit = next((c for c in cands if key in c["name"] or key in c["faction"]), None)
+    if not hit:
+        same = fac.FACTIONS.get(str(p.get("faction") or ""))
+        if same and (key in same["name"] or key == p.get("faction")):
+            return {"ok": False, "reason": "same", "name": same["name"]}
+        return {"ok": False, "reason": "notfound", "options": [c["name"] for c in cands]}
+
+    cost = faction_switch_cost(p)
+    if int(p.get("gold", 0)) < cost:
+        return {"ok": False, "reason": "gold", "need": cost,
+                "have": int(p.get("gold", 0))}
+
+    old_name = str(p.get("faction_name") or "")
+    p["gold"] = int(p.get("gold", 0)) - cost
+    p["faction"] = hit["faction"]
+    p["faction_name"] = hit["name"]
+    p["loadout"] = []                      # 清空后由 ensure_loadout 按新派重配
+    sk_mod.ensure_loadout(p)
+    return {"ok": True, "faction": hit["faction"], "name": hit["name"],
+            "old": old_name, "cost": cost,
+            "loadout": list(p.get("loadout") or []),
+            "pool": hit["pool"]}
+
+
 def _best_skill(p) -> str:
     """兼容旧接口：取上阵四槽里期望伤害最高的一门。"""
     entries = _loadout_entries(p)

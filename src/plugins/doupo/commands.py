@@ -14,6 +14,7 @@ import time
 
 from . import config as cfg
 from . import core
+from . import factions as fac
 from . import skill_book as book
 
 NOT_ENTERED = "你尚未踏入斗气大陆，发送「入道」开启征程。"
@@ -72,6 +73,8 @@ MENU_GROUPS = (
         ("斗技详情 狂狮怒罡", "完整说明：怎么施展 → 打多少 → 副作用/限制 + 来源 + 原著"),
         ("升级 龙吟碎", "用焚血散升斗技，每级伤害 +20%"),
         ("上阵 技1 技2 技3 技4", "四槽自由搭配，三阶（普通/高阶/特殊）可混搭"),
+        ("宗门", "看本门与可转宗门（进阶池 lv40 / 隐世池 lv90）"),
+        ("转宗 迦南学院", "改换门庭，重配四槽（不发该派入道物品）"),
         ("异火", "看 5 种异火与进度"),
         ("养火 青莲地心火", "用药渣喂养异火（炼药失败会出药渣）"),
     )),
@@ -432,6 +435,77 @@ async def cmd_skill_info(store, qq, name) -> str:
     if hit.get("novel"):
         out.append(f"原著：{hit['novel']}")
     out += ["", f"　升级 +20%/级（需 {cfg.SKILL_UP_ITEM}）｜ 用法：升级 {hit['name']}"]
+    return "\n".join(out)
+
+
+async def cmd_faction(store, qq, args) -> str:
+    """宗门：查看本门与可转宗门；`转宗 <宗门名>` 改换门庭。
+
+    为什么要有转宗：入道只能进新手池 8 派，进阶池（lv40）与隐世池（lv90）
+    共 17 派的斗技没有转宗就永远见不到。
+    """
+    p = await _player(store, qq)
+    if not p:
+        return NOT_ENTERED
+    POOL_CN = {"starter": "新手池", "advanced": "进阶池", "hidden": "隐世池"}
+    name = p.get("faction_name") or "无宗门"
+    lv = int(p.get("lv", 1))
+    key = (args or "").strip()
+
+    if key:
+        res = core.change_faction(p, key)
+        if not res.get("ok"):
+            r = res.get("reason")
+            if r == "same":
+                return f"你已在【{res['name']}】，无需转宗。"
+            if r == "gold":
+                return (f"❌ 转宗需 {res['need']:,} 金币，你有 {res['have']:,}。\n"
+                        f"　（境界越高，越难改换门庭）")
+            if r == "nopool":
+                return "当前境界还没有可转的宗门。"
+            if r == "notfound":
+                return ("当前境界没有这个宗门。可转："
+                        + "、".join(res.get("options") or ["（无）"]))
+            return "转宗失败，请检查宗门名。"
+        await store.put_player(p)
+        return (f"🏯 已转投【{res['name']}】（原【{res['old']}】），耗 {res['cost']:,} 金币。\n"
+                f"　四槽已按新门重配：" + "、".join(res["loadout"])
+                + "\n　已升的技能等级按技名保留；本门斗技见「斗技」。")
+
+    fac_name = p.get("faction") or ""
+    cur_pool = ""
+    try:
+        cur_pool = fac.FACTIONS.get(fac_name, {}).get("pool", "")
+    except Exception:  # noqa: BLE001
+        cur_pool = ""
+    out = [f"🏯 宗门：{name}"
+           + (f"（{POOL_CN.get(cur_pool, cur_pool)}）" if cur_pool else "")]
+    pools = core.faction_pools_open(p)
+    out.append(f"境界 lv{lv} ｜ 已开放卡池：" + " ".join(POOL_CN[x] for x in pools))
+
+    cands = core.faction_candidates(p)
+    if not cands:
+        out.append("当前无可转宗门。")
+        return "\n".join(out)
+    out.append("")
+    out.append(f"可转宗门（需 {core.faction_switch_cost(p):,} 金币）：")
+    for pool in ("hidden", "advanced", "starter"):
+        rows = [c for c in cands if c["pool"] == pool]
+        if not rows:
+            continue
+        out.append(f"〔{POOL_CN[pool]}〕")
+        line = "　"
+        for c in rows:
+            seg = f"{c['name']} {c['skills']}门"
+            if len(line) + len(seg) > 30:
+                out.append(line)
+                line = "　"
+            line += seg + " · "
+        if line.strip():
+            out.append(line.rstrip(" ·"))
+    out.append("")
+    out.append("用法：转宗 <宗门名>")
+    out.append("　只换师门并重配四槽，不发该派入道物品；已升技能等级按技名保留。")
     return "\n".join(out)
 
 

@@ -287,6 +287,19 @@ LOADOUT_SIZE = 4
 #: 武器普攻倍率（相对力量）——斗气耗尽后的兜底输出，故意压低
 WEAPON_BASE_MULT = 1.0
 
+#: 转宗（改换门庭）
+#: 为什么需要：入道只能进「新手池」8 派，而 25 派里 17 派是进阶/隐世池
+#: （unlock_lv 40 / 90）。没有转宗，这 17 派的 120+ 门斗技玩家一辈子见不到。
+#: 转宗只换师门、重配四槽，**不重新发该派的入道物品**（否则等于刷物品）；
+#: 已升的技能等级按技名保留，回到原派仍是原等级。
+FACTION_SWITCH_COST_BASE = 3000
+FACTION_SWITCH_COST_PER_LV = 200
+
+
+def faction_switch_cost(lv: int) -> int:
+    """转宗要多少金币：境界越高，越难改换门庭。"""
+    return int(FACTION_SWITCH_COST_BASE + FACTION_SWITCH_COST_PER_LV * max(1, int(lv)))
+
 
 # ---------------------------------------------------------------------------
 # 异火（5 种）  [实机]

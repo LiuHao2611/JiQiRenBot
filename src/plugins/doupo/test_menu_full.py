@@ -318,7 +318,7 @@ PREPS = {
 
 
 # ---------------------------------------------------------------------------
-# 菜单 27 条：逐条定义「正确回复」的语义
+# 菜单 29 条：逐条定义「正确回复」的语义
 #   img  = png / gif / None（None = 必须是纯文本）
 #   must = 至少命中一个（正向结果词，不用「完成」这类会被失败路径命中的模糊词）
 #   ban  = 一个都不能出现
@@ -364,6 +364,10 @@ CASES = [
     dict(id="26_skillinfo", text="斗技详情 狂狮怒罡", img=None,
          must=["出处：", "不属于你的宗门"], ban=[]),
     dict(id="27_loadout", text="上阵", img=None, must=["当前上阵"], ban=[]),
+    # 28/29：宗门查看与转宗（2026-11-15 补，进阶池/隐世池 17 派的入口）
+    dict(id="28_sect", text="宗门", img=None, must=["宗门：", "已开放卡池"], ban=[]),
+    dict(id="29_switch", text="转宗 云岚宗", img=None,
+         must=["已转投", "你已在", "没有这个宗门", "尚无"], ban=[]),
 ]
 
 
@@ -440,7 +444,7 @@ async def run_case(case):
 
 
 async def static_checks():
-    # 菜单唯一源 = 27 条，且每条口令都要出现在纯文本菜单里（格式无缺失）
+    # 菜单唯一源 = 29 条，且每条口令都要出现在纯文本菜单里（格式无缺失）
     menu_txt = cmds.menu_text()
     total = cmds.menu_total()
     ok = total == len(CASES)

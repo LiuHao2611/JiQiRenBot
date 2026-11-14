@@ -193,9 +193,29 @@ def test_every_entry_has_short_brief():
 # ---------------------------------------------------------------------------
 # 4. 可用性：四槽凑得满、进池即可学
 # ---------------------------------------------------------------------------
-def test_every_faction_can_fill_four_slots():
+def test_every_faction_has_at_least_four_skills():
     short = [(fid, len(ns)) for fid, ns in book.FACTION_SKILLS.items() if len(ns) < 4]
-    assert not short, "以下宗门斗技不足 4 门，凑不满四槽：%s" % short
+    assert not short, "以下宗门斗技不足 4 门，连目录都凑不齐：%s" % short
+
+
+#: 原著里斗技本来就少的门派，进池等级凑不满四槽是**数据真实性的代价**，不是 bug。
+#: （都只有 3 门普通/低阶技；慕兰谷更是只有 2 门兽人族族技 + 2 门地阶镇派绝学）
+SHORT_LOADOUT_OK = {"sherenzu", "duzong", "lianyao_gonghui", "mulangu"}
+
+
+def test_low_skill_factions_may_have_short_loadout():
+    """门规：除上述 4 派外，其余门派进池等级必须能凑满四槽；4 派也必须 ≥1 门。"""
+    fac = _load_factions()
+    bad = []
+    for fid in book.FACTION_SKILLS:
+        base = fac.POOL_UNLOCK.get(fac.FACTIONS[fid].get("pool"), 1)
+        learn = [r for r in book.skills_of(fid) if int(r["unlock"]) <= base]
+        if not learn:
+            bad.append("%s 一门都学不到" % fid)
+            continue
+        if len(learn) < 4 and fid not in SHORT_LOADOUT_OK:
+            bad.append("%s 只有 %d 门可上阵（不在豁免名单）" % (fid, len(learn)))
+    assert not bad, "；".join(bad)
 
 
 def test_every_faction_learnable_at_pool_unlock():

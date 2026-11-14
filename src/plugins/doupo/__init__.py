@@ -311,6 +311,18 @@ async def _(event: MessageEvent):
     await loadout.finish(await commands.cmd_loadout(store, str(event.user_id), _arg(event, kw)))
 
 
+sect = on_regex(_pat(r"(?:宗门|门派|转宗|换宗|改换门庭)") + r"\s*(.*)",
+                priority=PRI, block=True, rule=_mode_is("doupo"))
+
+
+@sect.handle()
+async def _(event: MessageEvent):
+    await _need_group(event, sect)
+    txt = _plain(event)
+    kw = next((k for k in ("改换门庭", "转宗", "换宗", "宗门", "门派") if k in txt), "宗门")
+    await sect.finish(await commands.cmd_faction(store, str(event.user_id), _arg(event, kw)))
+
+
 flames = on_regex(_pat(r"异火"), priority=PRI, block=True, rule=_mode_is("doupo"))
 
 
@@ -543,6 +555,10 @@ register_keywords("doupo", [
     "强化",
     "斗技",
     "技能",
+    "宗门",
+    "门派",
+    "转宗",
+    "换宗",
     "斗技详情",
     "技能详情",
     "功法详情",

@@ -133,6 +133,69 @@ def test_duel_returns_skill_based_result():
 
 
 # ---------------------------------------------------------------------------
+# 5. 转宗：进阶池 / 隐世池 17 派的唯一入口
+# ---------------------------------------------------------------------------
+def test_switch_blocked_below_pool_unlock():
+    """lv1 只能在新手池里转，不能跳级进进阶池（否则四槽全空、全程普攻）。"""
+    p = core.create_player("9301", "壬", "g1")
+    p["gold"] = 10 ** 7
+    res = core.change_faction(p, "迦南学院")
+    assert not res["ok"] and res["reason"] == "notfound", res
+    names = core.faction_candidates(p)
+    assert names and all(c["pool"] == "starter" for c in names), "lv1 不该出现进阶池"
+
+
+def test_switch_works_at_pool_level():
+    """lv45 能转迦南学院：扣金币、重配四槽，且四槽都属于新派。"""
+    p = core.create_player("9302", "癸", "g1")
+    p["lv"] = 45
+    p["gold"] = 500000
+    before = int(p["gold"])
+    res = core.change_faction(p, "迦南学院")
+    assert res["ok"], res
+    assert res["faction"] == "jianan"
+    assert int(p["gold"]) == before - res["cost"], "金币没按代价扣"
+    names = {e["name"] for e in sk.catalog("jianan")}
+    assert p["loadout"], "转宗后四槽不能为空"
+    assert all(n in names for n in p["loadout"]), "四槽混进了外派技能"
+
+
+def test_switch_does_not_grant_starter_items():
+    """转宗只换师门，不重发入道物品 —— 否则转一次刷一次。"""
+    p = core.create_player("9303", "甲", "g1")
+    p["lv"] = 45
+    p["gold"] = 500000
+    bag_before = dict(core.bag(p))
+    core.change_faction(p, "焚炎谷")
+    assert core.bag(p) == bag_before, "转宗动了背包（等于刷物品）"
+
+
+def test_switch_needs_gold_and_rejects_same():
+    p = core.create_player("9304", "乙", "g1")
+    p["lv"] = 45
+    p["gold"] = 0
+    res = core.change_faction(p, "花宗")
+    assert not res["ok"] and res["reason"] == "gold", res
+    p["gold"] = 500000
+    cur = p["faction_name"]
+    res2 = core.change_faction(p, cur)
+    assert not res2["ok"] and res2["reason"] == "same", res2
+
+
+def test_switch_keeps_skill_levels():
+    """技能等级按技名保留：转走再转回来，等级还在。"""
+    p = core.create_player("9305", "丙", "g1")
+    p["lv"] = 45
+    p["gold"] = 500000
+    first = sk.catalog(p["faction"])[0]["name"]
+    p.setdefault("skills", {})[first] = 4
+    old_fid = p["faction"]
+    core.change_faction(p, "丹塔")
+    core.change_faction(p, old_fid)
+    assert int(p["skills"][first]) == 4, "转宗把技能等级弄丢了"
+
+
+# ---------------------------------------------------------------------------
 # runner
 # ---------------------------------------------------------------------------
 def _run_all():
