@@ -45,6 +45,10 @@ BAR_H = 12
 BADGE_W = 40
 ROW_PAD = 14
 ROW_MIN = 58
+#: 主标题与副行说明之间的呼吸空间。2026-11-14 视觉验收发现：原来 cy 只比标题
+#: 底部多约 0.5px，斗技/宝库卡上「技能名」与「升一级伤害 +20%」几乎粘成一行。
+#: 行高与绘制位置必须同步加这个值，否则说明文字会被下一行盖住。
+TITLE_SUB_GAP = 8
 DESC_LH = FS_SMALL + 4
 ICON_STYLE = "line"
 
@@ -59,7 +63,7 @@ _DEMO = {
         {"badge": "3", "title": "天火三玄变　1/5", "sub": "焚炎附体，三段火劲贯体",
          "bar": {"cur": 1, "max": 5}},
     ],
-    "tip": "用法：dp升级 龙吟碎 · 现有 焚血散 ×3",
+    "tip": "用法：升级 龙吟碎 · 现有 焚血散 ×3",
 }
 
 
@@ -73,7 +77,7 @@ def _row_h(item: dict, content_w: int) -> int:
     sub = item.get("sub") or ""
     if sub:
         lines = Canvas.wrap(sub, FS_SMALL, "regular", content_w - BADGE_W - 14)
-        h += max(1, len(lines)) * DESC_LH
+        h += max(1, len(lines)) * DESC_LH + TITLE_SUB_GAP
     if item.get("bar"):
         h += BAR_H + 10
     return max(ROW_MIN, h)
@@ -163,7 +167,7 @@ def build(t: Theme, data: dict | None = None, width: int | None = None,
                    size=FS_ITEM, color=p["dim_color"], anchor="rm")
 
         # 副行（折行）
-        cy = ty + FS_ITEM // 2 + 8
+        cy = ty + FS_ITEM // 2 + 8 + TITLE_SUB_GAP
         sub = item.get("sub") or ""
         if sub:
             lines = Canvas.wrap(sub, FS_SMALL, "regular", (x0 + content_w) - title_x - 8)

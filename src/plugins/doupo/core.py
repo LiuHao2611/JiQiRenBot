@@ -154,7 +154,7 @@ def can_level(p) -> bool:
 
 
 def level_up(p, rng=random.random) -> dict:
-    """升一级。28 级 -> 29 级（斗帝）走机缘判定。"""
+    """升一级。102 级九星斗圣 -> 103 级（斗帝）走机缘判定。"""
     lv = int(p.get("lv", 1))
     if lv >= cfg.MAX_LV:
         return {"ok": False, "reason": "max"}

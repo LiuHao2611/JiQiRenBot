@@ -16,11 +16,11 @@
 | 分组 | 口令 | 说明 |
 |---|---|---|
 | 入门 | `斗破菜单` / `斗破口令` | 唯一切换口，设定「斗破模式」并出菜单卡 |
-| | `入道` / `开始` / `创建角色` | 建号：一星斗者，赠 10000 金 + 玄重尺 + 回灵丹×5 |
+| | `入道` / `开始` / `创建角色` | 建号：斗之气一段，赠 10000 金 + 玄重尺 + 回灵丹×5 |
 | | `人物` / `属性` / `面板` | 面板：境界星级 / 炼药师品阶 / 六维 / 装备 |
 | | `帮助` / `玩法` / `攻略` / `规则` | 全部数值公式 |
 | 修炼 | `修炼` / `静修` / `打坐` | 结算离线修为（6/分钟，陨落心炎每级 +50%） |
-| | `突破` / `晋升` / `升星` | 修为满晋升一星；28 级冲斗帝看机缘 |
+| | `突破` / `晋升` / `升星` | 修为满晋升一星；102 级九星斗圣冲 103 级斗帝看机缘 |
 | | `战斗` / `打怪` / `历练` | 遭遇同阶妖兽，回合制，CD 20 秒 |
 | 养成 | `强化` | 玄重尺十级蜕变为异火恒古尺 |
 | | `斗技` / `技能` | 4 门斗技（快捷键 1/3/7/9） |
@@ -76,18 +76,27 @@
 
 ```bash
 python src/plugins/doupo/test_core.py        # 纯函数层：31 项
-python src/plugins/doupo/test_commands.py    # 口令业务层：79 项
+python src/plugins/doupo/test_commands.py    # 口令业务层：85 项
 python src/plugins/doupo/test_card.py        # 人物卡渲染（含卡片内头像像素断言）：10 项
 python src/plugins/doupo/test_avatar.py      # 动图 + 静态头像四档：13 项
 python src/plugins/doupo/test_throttle.py    # 出图限流工具类（已停用，仅测工具本身）：10 项
 python src/plugins/doupo/test_e2e.py         # 真实 matcher + 真实事件（含人物回包结构）：75 项
+python src/plugins/doupo/test_menu_full.py   # 菜单 25 条口令全量严格验收：46 项
 python src/plugins/xiuxian/test_core.py      # 22 项
 python src/plugins/xiuxian/test_commands.py  # 61 项
 python src/plugins/xiuxian/test_e2e.py       # 59 项
 ```
 
-九个测试都自带 runner、自己把仓库根加进 `sys.path`（不依赖外部 `PYTHONPATH`），`exit 0 = 全绿`。
+十个测试都自带 runner、自己把仓库根加进 `sys.path`（不依赖外部 `PYTHONPATH`），`exit 0 = 全绿`。
 `_balance.py` 是数值平衡模拟（调参工具，非单测）：`python src/plugins/doupo/_balance.py`。
+
+`test_menu_full.py` 是 2026-11-14 新增的**菜单全量验收**：把 `MENU_GROUPS` 里 25 条口令
+逐条用真实 matcher 驱动，每条执行前注入「刚好够成功」的最小前置状态，断言恰好 1 条回包、
+回包是正向结果（不落入「用法 / 不足 / 未识别 / 兜底提示」）、文本无异常栈/未替换占位符/
+乱码/超长行、出图口令真的产出合法非空白 PNG/GIF、纯文本口令不夹带图片段。另含 13 阶
+境界名各一张人物卡渲染，以及列表卡「主标题↔说明」间距的像素级检测（含拒绝粘连的自举用例）。
+卡片产物与完整中文报告落在 `tmp/doupo_menu_cards/`（容器内 `/app/tmp` 即宿主 `./tmp`）。
+卡片磁盘缓存改道临时目录，既不污染线上 `data/pic_cache`，也不会命中旧图造成假通过。
 
 `_balance.py` 的判定口径（写在它自己的 docstring 里）：
 胜率下限 70%（不能有打不过的死局）、上限 99.5%（不能白给，1 级豁免）、
@@ -132,7 +141,7 @@ GIF 缺失时模板画剑形占位，卡片照常出图。
 | `store.py` | json 落盘 + asyncio.Lock 原子写 |
 | `commands.py` | 业务层，`MENU_GROUPS` 是菜单唯一源 |
 | `__init__.py` | 25 个 matcher，全部 `priority=5 + block=True`；除 3 个入口外均带 `rule=_mode_is("doupo")` |
-| `test_*.py` | 六套自带 runner 的测试（core / commands / card / avatar / throttle / e2e） |
+| `test_*.py` | 七套自带 runner 的测试（core / commands / card / avatar / throttle / e2e / menu_full） |
 | `_balance.py` | 平衡模拟（调参用） |
 | `data/doupo.json` | 存档（可用 `DOUPO_DATA_PATH` 改到别处） |
 | `src/game_mode.py` | 按 QQ 号记录当前游戏模式，落 `data/game_mode.json`（`GAME_MODE_PATH` 可改） |
