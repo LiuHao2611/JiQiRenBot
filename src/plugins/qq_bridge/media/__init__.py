@@ -31,6 +31,28 @@ from .. import history
 
 log = get_logger()
 
+# ---- B站小程序卡片配方（2026-11-15 实测，来源 qq-miniapp-ark 的可复现配方）----
+# 关键：get_mini_app_ark 有两条分支——
+#   · 传 type='bili' → NapCat 内置模板，jumpUrl 被当**网页地址**，且指向内测版
+#     （点开会提示「该小程序内测中」）；
+#   · 不传 type、自己给全字段 → **自定义 schema**，jumpUrl 按**页面路径**透传进签名，
+#     点开才能直达对应视频页。
+# 所以这里**绝不传 type**，走自定义 schema。
+_BILI_MINI_APP_ID = "1109937557"                                  # B站小程序 appid
+_BILI_MINI_VERSION_ID = "cfc5f7b05b44b5956502edaecf9d2240"        # 真卡里的 versionId（正式版）
+_BILI_MINI_SDK_ID = "V1_PC_MINISDK_99.99.99_1_APP_A"             # 必填，空则 retcode 1200
+_BILI_MINI_ICON = ("https://miniapp.gtimg.cn/public/appicon/"
+                   "51f90239b78a2e4994c11215f4c4ba15_200.jpg")    # B站小程序图标（取自真卡）
+# 自定义 schema 的其余软字段（服务端不校验，但缺 withShareTicket 会 retcode 1400）。
+_BILI_MINI_EXTRA = {
+    "scene": "1036",
+    "templateType": "1",
+    "businessType": "0",
+    "verType": "3",
+    "shareType": "0",
+    "withShareTicket": "0",
+}
+
 
 async def _download_bytes(url: str) -> bytes:
     """P1 回退：bridge 自下载图片 bytes（仅 http/https）。失败返回空。"""
@@ -250,6 +272,8 @@ async def send_bili_share_card(ctx: dict, *, title: str, desc: str = "",
     """把 B站视频以「原生小程序分享卡片」发出（像正常账号分享，不是文件/裸链接）。
 
     走协议端扩展 API `get_mini_app_ark` 建卡（SnowLuma / NapCat 支持），再用 json 段发送。
+    **必须走自定义 schema（不传 `type`）**：传 `type='bili'` 会走 NapCat 内置模板，
+    jumpUrl 被当成网页地址、且指向内测版 → 点开提示「该小程序内测中」。
     **关键**：jumpUrl 必须是小程序页面路径 `/pages/video/video?bvid=BV...`；
     填成 http 网址卡片虽能显示，但点开只会落到 B站首页（服务端不校验路径，社区实测坑）。
 
@@ -260,13 +284,19 @@ async def send_bili_share_card(ctx: dict, *, title: str, desc: str = "",
     bvid = str(bvid or "").strip()
     if not bvid:
         raise ValueError("send_bili_share_card 缺少 bvid")
-    res = await connector.call_action("get_mini_app_ark", {
-        "type": "bili",
-        "title": str(title or ""),
-        "desc": str(desc or ""),
+    # 自定义 schema（**不传 type**）：jumpUrl 才会按页面路径透传并被签名。
+    params = {
+        "title": str(title or "")[:60],
+        "desc": str(desc or "")[:80],
         "picUrl": str(pic_url or ""),
         "jumpUrl": "/pages/video/video?bvid=%s" % bvid,
-    })
+        "iconUrl": _BILI_MINI_ICON,
+        "appId": _BILI_MINI_APP_ID,
+        "versionId": _BILI_MINI_VERSION_ID,
+        "sdkId": _BILI_MINI_SDK_ID,
+    }
+    params.update(_BILI_MINI_EXTRA)
+    res = await connector.call_action("get_mini_app_ark", params)
     # connector.call_action 经 nonebot 适配器，成功时已解出响应外层 data：
     #   HTTP 原始: {"status":"ok","data":{"data":{ark}}}
     #   call_action 返回: {"data":{ark}}
@@ -275,6 +305,10 @@ async def send_bili_share_card(ctx: dict, *, title: str, desc: str = "",
         inner = inner["data"]
     if not isinstance(inner, dict) or not inner.get("app"):
         raise RuntimeError("get_mini_app_ark 未返回卡片数据: %r" % (str(res)[:200],))
+    # 没有 config.token = 服务端没签名，发出去会显示「发送者版本过低」，宁可不发破卡。
+    if not (inner.get("config") or {}).get("token"):
+        raise RuntimeError("get_mini_app_ark 未返回签名 token（卡片不可用）: %r"
+                           % (str(inner)[:200],))
     await send_card(ctx, "json", json.dumps(inner, ensure_ascii=False), at_user=at_user)
     log.info(jlog("bili_share_sent", bvid=bvid, title=str(title or "")[:40]))
     return inner

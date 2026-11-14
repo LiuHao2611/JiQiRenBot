@@ -20,6 +20,7 @@ from src.plugins.qq_bridge.video_parse.base import VideoParseResult
 
 ARK = {"app": "com.tencent.miniapp_01",
        "view": "view_8C8E89B49BE609866298ADDFF2DBABA4",
+       "config": {"token": "deadbeefdeadbeefdeadbeefdeadbeef"},
        "meta": {"detail_1": {"appid": "1109937557", "desc": "标题", "preview": "http://p"}},
        "prompt": "[QQ小程序]标题", "ver": "1.0.0.19"}
 
@@ -43,7 +44,12 @@ def test_send_bili_share_card_builds_ark_and_sends_json():
         pic_url="http://p", bvid="BV1GJ411x7h7"))
 
     ark_call = next(p for a, p in calls if a == "get_mini_app_ark")
-    assert ark_call["type"] == "bili"
+    # 必须走自定义 schema：不能带 type（带 type 走内置模板 → 内测提示/落首页）
+    assert "type" not in ark_call
+    assert ark_call["appId"] == "1109937557"
+    assert ark_call["sdkId"] == "V1_PC_MINISDK_99.99.99_1_APP_A"
+    assert ark_call["versionId"] == "cfc5f7b05b44b5956502edaecf9d2240"
+    assert ark_call["withShareTicket"] == "0"
     assert ark_call["jumpUrl"] == "/pages/video/video?bvid=BV1GJ411x7h7"
     assert ark_call["title"] == "标题" and ark_call["picUrl"] == "http://p"
 
