@@ -21,7 +21,6 @@ import asyncio
 import base64
 import json
 import random
-import time
 
 import httpx
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
@@ -33,12 +32,13 @@ from .. import history
 log = get_logger()
 
 # 备注（2026-11-15 深挖结论，勿再走弯路）：
-# B站 QQ 小程序（appid 1109937557）当前处于**内测**状态。用 get_mini_app_ark 生成的
-# `com.tencent.miniapp_01` 卡片，无论内置模板支（type=bili）还是自定义 schema 支，
-# 其 `meta.detail_1.url` 都是 `m.q.qq.com/a/s/<hash>`（拉起小程序），且服务端强制
-# `scene=0`、丢弃 `qqdocurl`/`webUrl` → 点开必然提示「该小程序内测中」。
-# 故 B站分享改用 `com.tencent.structmsg` 的 news 卡片（下方 send_bili_share_card），
-# 点开走网页版 B站视频页，是卡片形态、不是裸链接。
+# B站分享卡片的三条路，只有第三条能用：
+#   1) get_mini_app_ark（模板支/自定义 schema）→ 只能生成小程序卡，url 是
+#      m.q.qq.com/a/s/<hash>（拉起小程序），且强制 scene=0、丢弃 qqdocurl；
+#      而 B站 QQ 小程序（appid 1109937557）在**内测**→ 点开提示「该小程序内测中」。
+#   2) 手搓 com.tencent.structmsg → 没有腾讯签名 token → 「发送者版本过低」。
+#   3) **协议端 `send_tuwen_ark`（图文 Ark 卡片）** → QQ 侧签名，jump_url 直指视频网页，
+#      卡片能渲染、点开直达 B站 视频页。← 当前实现（见 send_bili_share_card）。
 
 
 async def _download_bytes(url: str) -> bytes:
@@ -258,45 +258,40 @@ async def send_bili_share_card(ctx: dict, *, title: str, desc: str = "",
                                at_user: bool = False) -> dict:
     """把 B站视频以「卡片」发出：点开直达 B站视频页（不是裸链接、不是视频文件）。
 
-    **为什么不用 B站小程序卡（2026-11-15 深挖结论）**：
-      · `get_mini_app_ark`（不论 `type=bili` 模板支还是自定义 schema 支）生成的卡，
-        `meta.detail_1.url` 一律是 `m.q.qq.com/a/s/<hash>` —— 一个**拉起小程序**的落地页；
-        且服务端强制 `scene=0`、丢弃 `qqdocurl`/`webUrl`，无法把点击引到网页；
-      · 而 B站 QQ 小程序（appid `1109937557`）当前处于**内测**状态，点开必提示
-        「该小程序内测中」。这是平台侧状态，参数改不动（模板支/自定义支实测都一样）。
-    所以改用 `com.tencent.structmsg` 的 news 卡片：标题 + 封面 + 简介 + 「哔哩哔哩」标签，
-    `jumpUrl` 直接指向视频网页，点开就是对应 B站 页面。仍是卡片形态，不是裸链接。
+    **为什么最终用 `send_tuwen_ark`（2026-11-15 深挖结论，勿再走弯路）**：
+      1) `get_mini_app_ark`（模板支/自定义 schema 支）只能生成 `com.tencent.miniapp_01`
+         小程序卡；其 `meta.detail_1.url` 是 `m.q.qq.com/a/s/<hash>`（拉起小程序），
+         服务端强制 `scene=0`、丢弃 `qqdocurl`/`webUrl`；而 B站 QQ 小程序
+         （appid `1109937557`）当前**内测**中 → 点开必提示「该小程序内测中」。
+      2) 手搓 `com.tencent.structmsg` 卡没有腾讯签名（`config.token`）→ QQ 显示
+         「发送者版本过低，无法显示内容」。
+      3) 协议端 SnowLuma 自带 **`send_tuwen_ark`**（发送图文 Ark 卡片）：由 QQ 侧签名，
+         参数 `title/desc/summary/preview_url/jump_url`，`jump_url` 直接指向视频网页
+         → 卡片形态、点开直达 B站 视频页。这是唯一既能渲染、又能跳对页的通道。
 
-    返回卡片字典（便于调用方记录/排障）。仅 NapCat / OneBot 通道支持。
+    返回发出去的参数（便于调用方记录/排障）。仅 NapCat / OneBot 通道支持。
     """
     if _foreign_channel(ctx):
-        raise RuntimeError("B站分享卡片仅支持 NapCat/OneBot 通道（官方通道无 json 卡片）")
+        raise RuntimeError("B站分享卡片仅支持 NapCat/OneBot 通道（官方通道无 Ark 图文卡）")
     bvid = str(bvid or "").strip()
     if not bvid:
         raise ValueError("send_bili_share_card 缺少 bvid")
-    url = "https://www.bilibili.com/video/%s" % bvid
     body_title = str(title or "")[:60]
-    card = {
-        "app": "com.tencent.structmsg",
-        "desc": "新闻",
-        "view": "news",
-        "ver": "0.0.0.1",
-        "prompt": "[分享]%s" % body_title,
-        "meta": {"news": {
-            "title": body_title,
-            "desc": str(desc or "")[:80],
-            "preview": str(pic_url or ""),
-            "jumpUrl": url,
-            "tag": "哔哩哔哩",
-            "layout": "2",
-            "appid": 200002,
-            "app_type": 1,
-        }},
-        "config": {"type": "normal", "ctime": int(time.time()), "forward": 1, "autosize": True},
+    params = {
+        "title": body_title,
+        "desc": str(desc or "")[:80],
+        "summary": "[分享]",
+        "preview_url": str(pic_url or ""),
+        "jump_url": "https://www.bilibili.com/video/%s" % bvid,
     }
-    await send_card(ctx, "json", json.dumps(card, ensure_ascii=False), at_user=at_user)
-    log.info(jlog("bili_share_sent", bvid=bvid, style="structmsg", title=body_title[:40]))
-    return card
+    gid = int(ctx.get("group_id") or 0)
+    if gid:
+        params["group_id"] = gid
+    else:
+        params["user_id"] = int(ctx.get("user_id") or 0)
+    await connector.call_action("send_tuwen_ark", params)
+    log.info(jlog("bili_share_sent", bvid=bvid, style="tuwen_ark", title=body_title[:40]))
+    return params
 
 
 async def send_video_link(ctx: dict, link: str, cover: str = "", at_user: bool = False) -> None:

@@ -31,30 +31,32 @@ def _install_fake_connector(calls):
     media_mod.history.record_outgoing = lambda *a, **k: None
 
 
-def test_send_bili_share_card_structmsg_news():
+def test_send_bili_share_card_uses_signed_tuwen_ark():
     calls = []
     _install_fake_connector(calls)
     asyncio.run(media_mod.send_bili_share_card(
         {"user_id": 1, "group_id": 0}, title="标题", desc="UP",
         pic_url="http://p", bvid="BV1GJ411x7h7"))
 
-    # 小程序卡已证明走不通（内测墙），不应再调 get_mini_app_ark
+    # 小程序卡撞内测墙、手搓 structmsg 无签名 → 必须走协议端签名的 send_tuwen_ark
+    assert any(a == "send_tuwen_ark" for a, _ in calls)
     assert not any(a == "get_mini_app_ark" for a, _ in calls)
+    assert not any(a in ("send_private_msg", "send_group_msg") for a, _ in calls)
 
-    send_call = next((a, p) for a, p in calls if a in ("send_private_msg", "send_group_msg"))
-    msg = send_call[1]["message"]
-    assert isinstance(msg, list) and len(msg) == 1  # Message 段数组，不是 CQ 字符串
+    ark = next(p for a, p in calls if a == "send_tuwen_ark")
+    assert ark["title"] == "标题"
+    assert "UP" in ark["desc"]
+    assert ark["summary"] == "[分享]"
+    assert ark["preview_url"] == "http://p"
+    assert ark["jump_url"] == "https://www.bilibili.com/video/BV1GJ411x7h7"
+    assert ark["user_id"] == 1 and "group_id" not in ark
 
-    from nonebot.adapters.onebot.v11.adapter import DataclassEncoder
-    ser = json.dumps(send_call[1], cls=DataclassEncoder)
-    assert '"type": "json"' in ser
-    # 卡片 JSON 在 data.data 里是转义字符串 → 解对象再断言
-    card = json.loads(msg[0].data["data"])
-    news = card["meta"]["news"]
-    assert card["app"] == "com.tencent.structmsg"
-    assert card["view"] == "news"
-    assert news["tag"] == "哔哩哔哩"
-    assert news["jumpUrl"] == "https://www.bilibili.com/video/BV1GJ411x7h7"
+    # 群聊 → group_id
+    calls.clear()
+    asyncio.run(media_mod.send_bili_share_card(
+        {"user_id": 1, "group_id": 99}, title="T", bvid="BV1GJ411x7h7"))
+    ark_g = next(p for a, p in calls if a == "send_tuwen_ark")
+    assert ark_g["group_id"] == 99 and "user_id" not in ark_g
 
 
 def test_share_bili_card_parses_then_sends(monkeypatch):
@@ -75,7 +77,7 @@ def test_share_bili_card_parses_then_sends(monkeypatch):
     ev = type("EV", (), {"user_id": 1, "group_id": 0, "message_type": "private"})()
     ok = asyncio.run(vp._share_bili_card(None, ev, "https://www.bilibili.com/video/BV1GJ411x7h7"))
     assert ok is True
-    assert any(a in ("send_private_msg", "send_group_msg") for a, _ in calls)
+    assert any(a == "send_tuwen_ark" for a, _ in calls)
     assert recorded and "BV1GJ411x7h7" in recorded[0]
 
 
