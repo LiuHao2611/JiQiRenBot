@@ -76,6 +76,11 @@ services:
       # --build 重建镜像层会清空镜像层，导致已生成的新数据丢失。QQ_DATA_DIR 是
       # queue.DATA_DIR 的官方覆盖入口，这里显式钉死到卷根（与代码默认值一致）。
       QQ_DATA_DIR: "/app/data"
+      # ★ 斗破存档也必须落在 bind 挂载卷里（2026-11-14 事故）。
+      #   原来用插件默认路径 /app/src/plugins/doupo/data/doupo.json —— 那是**镜像层**，
+      #   每次 `--build` 重建都会退回宿主那份旧副本：实测玩家打到 二星大斗师(8级)，
+      #   重建一次就回滚成 5 级，经验 102k 变 6k，白打。
+      DOUPO_DATA_PATH: "/app/data/doupo.json"
       TZ: "Asia/Shanghai"
       # 视频解析出片（2026-11-14）：协议端与 bridge 不共享文件系统，视频段传本地
       # 绝对路径协议端读不到（实测 ENOENT）。两个变量 + 下面那条 bind mount 一起，
