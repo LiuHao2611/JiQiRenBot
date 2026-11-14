@@ -702,6 +702,117 @@ def main_submit(p) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# 任务途中的机遇（原版世界地图随机事件，文案见 cfg.CHANCE_EVENTS）
+# ---------------------------------------------------------------------------
+#: 可注入的随机源。验收脚本用 set_chance_rng(lambda: 1.0) 关掉随机，
+#: 用 set_chance_rng(lambda: 0.0) 强制必触发，避免概率让测试变 flaky。
+_chance_rng = random.random
+
+
+def set_chance_rng(fn) -> None:
+    """注入机遇随机源（仅测试/调试用）；传 None 恢复 random.random。"""
+    global _chance_rng
+    _chance_rng = fn or random.random
+
+
+def _pick_chance(rng) -> dict:
+    total = sum(max(0, int(e.get("weight", 1))) for e in cfg.CHANCE_EVENTS)
+    pick = rng() * total
+    acc = 0
+    for e in cfg.CHANCE_EVENTS:
+        acc += max(0, int(e.get("weight", 1)))
+        if pick < acc:
+            return e
+    return cfg.CHANCE_EVENTS[-1]
+
+
+def _apply_chance(p, ev: dict, rng) -> dict:
+    """把一次机遇真正结算到玩家 dict，返回可展示的结果（不改存档 schema）。"""
+    text = str(ev.get("text") or "")
+    tone = str(ev.get("tone") or "neutral")
+
+    # 竞猜：从原版 5 组问答里抽一题展示，奖励按原版 1000 金币
+    quiz = ev.get("quiz")
+    if quiz:
+        text = "《斗破苍穹》有奖竞猜！" + str(rng_choice(quiz, rng)) + " 答案正确，获得1000金币奖励。"
+
+    # 条件：需要交出丹药。原版「丹不够，老者悻悻走开」是真实分支，不扣不奖。
+    need = ev.get("need") or {}
+    for name, n in need.items():
+        if count_item(p, name) < int(n):
+            return {"name": ev["name"], "text": str(ev.get("missing_text") or text),
+                    "tone": "neutral", "gain": "一无所获", "src": ev.get("src", ""),
+                    "reward": {}}
+    # 条件：破财事件金币不足 → 原版「匪头嫌你穷，踹走」分支，零损失
+    guard = int(ev.get("guard_gold") or 0)
+    if guard > 0 and int(p.get("gold", 0)) < guard:
+        return {"name": ev["name"], "text": str(ev.get("poor_text") or text),
+                "tone": "neutral", "gain": "毫发无伤", "src": ev.get("src", ""),
+                "reward": {}}
+
+    for name, n in need.items():
+        take_item(p, name, int(n))
+
+    rw = ev.get("reward") or {}
+    parts: list[str] = []
+    gold = int(rw.get("gold") or 0)
+    if gold:
+        p["gold"] = max(0, int(p.get("gold", 0)) + gold)
+        parts.append("金币 %+d" % gold)
+    exp = int(rw.get("exp") or 0)
+    if exp:
+        p["exp"] = int(p.get("exp", 0)) + exp
+        parts.append("修为 %+d" % exp)
+    luck = int(rw.get("luck") or 0)
+    if luck:
+        p["luck"] = min(9999, max(0, int(p.get("luck", 0)) + luck))
+        parts.append("机缘 %+d" % luck)
+    for name, n in (rw.get("item") or {}).items():
+        if int(n) > 0:
+            add_item(p, name, int(n))
+            parts.append("%s ×%d" % (name, int(n)))
+    if need:
+        parts.append("交出 " + "、".join("%s ×%d" % (k, int(v)) for k, v in need.items()))
+    return {"name": ev["name"], "text": text, "tone": tone,
+            "gain": " · ".join(parts) if parts else "无事发生",
+            "src": ev.get("src", ""), "reward": rw}
+
+
+def roll_chance(p, rng=None) -> dict | None:
+    """掷一次机遇；命中则**直接结算**奖励到 p 并返回展示数据。
+
+    只在「做任务途中」调用（见 advance_task），没任务时不触发。
+    """
+    if not cfg.CHANCE_EVENTS:
+        return None
+    r = rng or _chance_rng
+    if r() >= float(cfg.CHANCE_RATE):
+        return None
+    return _apply_chance(p, _pick_chance(r), r)
+
+
+def advance_task(p, kind, n: int = 1, rng=None) -> dict | None:
+    """推进任务进度，并在任务途中按概率触发一次机遇。
+
+    :param kind: 单个 kind 字符串；或 {kind: n} 一次推进多种（一次动作只掷一次机遇）。
+    :return: 命中的机遇 dict；没接支线且主线已通关 / 未命中则 None。
+
+    注意：core.task_progress() / main_progress() 保持纯进度语义不变（测试直接调它们），
+    机遇只在命令层走这个统一入口，避免一次动作被掷两次。
+    """
+    if isinstance(kind, dict):
+        for k, v in kind.items():
+            task_progress(p, k, v)
+            main_progress(p, k, v)
+    else:
+        task_progress(p, kind, n)
+        main_progress(p, kind, n)
+    if not (p.get("task") or current_main(p)):
+        return None
+    return roll_chance(p, rng)
+
+
+# ---------------------------------------------------------------------------
 # 战力榜
 # ---------------------------------------------------------------------------
 def rank(players) -> list:

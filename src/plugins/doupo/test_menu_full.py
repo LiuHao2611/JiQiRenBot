@@ -44,6 +44,8 @@ os.environ["DOUPO_DATA_PATH"] = os.path.join(TMP, "doupo.json")
 os.environ["XIUXIAN_DATA_PATH"] = os.path.join(TMP, "xiuxian.json")
 os.environ["GAME_MODE_PATH"] = os.path.join(TMP, "game_mode.json")
 os.environ["QQ_LOG_DIR"] = os.path.join(TMP, "logs")
+# 机遇是概率事件，会让严格回包断言变 flaky；专项验收见 test_chance.py
+os.environ["DOUPO_CHANCE_RATE"] = "0"
 
 OUT_DIR = os.path.join(ROOT, "tmp", "doupo_menu_cards")
 os.makedirs(OUT_DIR, exist_ok=True)

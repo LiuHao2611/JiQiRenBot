@@ -43,25 +43,27 @@ from ..theme import Theme
 
 # 与人物卡 / 菜单卡 / 通用列表卡共用同一套配色与度量工具
 from .doupo import _card_alpha, _fit, _pal, _w
+# 四张卡共用同一份字号/字重规范（本卡是首个按该规范落地的模板，数值不变）
+from . import doupo_style as S
 
 # ---- 排版（字比通用列表卡大一圈：用户 2026-11-14 要求「不放大图片也能看重点」）----
 PAD = 28
 FS_TITLE = 38
-FS_SUB = 18
+FS_SUB = S.FS_SUB + 1          # 18
 FS_ITEM_LABEL = 15
-FS_ITEM = 26           # 升级材料「焚血散 ×3」
-FS_RULE = 26           # 「每升一重 伤害 +20%」：与左侧材料同字号，够大才不会被伪粗糊掉
-FS_FORMULA = 15        # 统一伤害口径
-FS_NAME = 27           # 技能名
-FS_LV = 30             # Lv.3/5
-FS_BADGE = 19          # 快捷键
-FS_DESC = 17           # 技能描述
+FS_ITEM = S.FS_KEY + 2         # 26 升级材料「焚血散 ×3」
+FS_RULE = S.FS_KEY + 2         # 26 「每升一重 伤害 +20%」：够大才不会被伪粗糊掉
+FS_FORMULA = 15                # 统一伤害口径
+FS_NAME = S.FS_HERO - 3        # 27 技能名
+FS_LV = S.FS_HERO              # 30 Lv.3/5
+FS_BADGE = 19                  # 快捷键
+FS_DESC = S.FS_SUB             # 17 技能描述
 FS_SEG_LABEL = 15
-FS_SEG = 16            # 段内「一…五」
-FS_LABEL = 15          # 伤害面板标签
-FS_VALUE = 26          # 伤害面板大字
-FS_NEXT = 17           # 下级预估（小字不加粗，只靠字号与强调色）
-FS_TIP = 16
+FS_SEG = 16                    # 段内「一…五」
+FS_LABEL = 15                  # 伤害面板标签
+FS_VALUE = S.FS_KEY + 2        # 26 伤害面板大字
+FS_NEXT = S.FS_SUB             # 17 下级预估（小字不加粗，只靠字号与强调色）
+FS_TIP = S.FS_LABEL            # 16
 
 ICON = 22
 ICON_STYLE = "line"

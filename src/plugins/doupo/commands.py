@@ -36,6 +36,19 @@ def _fmt(n) -> str:
     return str(n)
 
 
+def _chance_lines(ch: dict | None) -> list[str]:
+    """把任务途中触发的机遇拼成回复末尾独立小段。
+
+    单独成段，不塞进战报/炼丹的语义行里，避免严格验收把机遇文案误判成
+    口令本身的失败提示；也方便玩家一眼看出「这不是任务奖励，是路上撞见的」。
+    """
+    if not ch:
+        return []
+    mark = {"good": "🍀", "bad": "⚡", "neutral": "🔎"}.get(ch.get("tone"), "✦")
+    return ["", f"{mark} 机遇 · {ch['name']}",
+            f"　{ch['text']}", f"　结算：{ch['gain']}"]
+
+
 # ---------------------------------------------------------------------------
 # 菜单（口令总览）
 # ---------------------------------------------------------------------------
@@ -68,7 +81,7 @@ MENU_GROUPS = (
         ("背包", "包裹（24 格）"),
     )),
     ("任务 · 江湖", (
-        ("任务", "看主线进度与当前支线"),
+        ("任务", "看主线进度与当前支线；途中概率触发机遇"),
         ("接任务", "随机接一条支线"),
         ("交任务", "支线达标后结算"),
         ("领主线", "主线达标后结算，推进章节"),
@@ -122,6 +135,10 @@ def cmd_help() -> str:
         "【斗帝】102 级九星斗圣冲 103 级：成功率 = 30% + 机缘/2000，帝炎 100%",
         "",
         "【挂机】每分钟自动 +6 修为，不登录也涨，不强制打卡。",
+        "",
+        "【机遇】推进任务进度时有 22% 概率撞见原版随机事件。",
+        "  天降炎星石 / 张大善人 / 神秘老者索丹 / 有奖竞猜 / 时空风暴…",
+        "  也有劫匪、深渊、女大王等破财事；金币不够时对方嫌你穷，不会倒扣。",
     ]
     return "\n".join(lines)
 
@@ -260,9 +277,15 @@ async def cmd_fight(store, qq) -> str:
     mon = core.monster_scaled(p, core.pick_monster(p))
     res = core.fight(p, mon)
     p["last_fight"] = now
+    chance = None
     if res["win"]:
-        core.task_progress(p, "kill", 1)
-        core.main_progress(p, "kill", 1)
+        # 一次动作只走一个统一入口：推进支线+主线，并在途中掷**一次**机遇。
+        # 打怪掉落的药材同时推进 herb 类任务（原支线「药农之托」就是采药）。
+        kinds = {"kill": 1}
+        herb_n = sum(int(c) for n, c in (res.get("drops") or []) if n in cfg.HERB_NAMES)
+        if herb_n > 0:
+            kinds["herb"] = herb_n
+        chance = core.advance_task(p, kinds)
     await store.put_player(p)
 
     # 战报：只取前 3 回合 + 末回合，避免刷屏
@@ -291,6 +314,7 @@ async def cmd_fight(store, qq) -> str:
     lv = int(p["lv"])
     if core.can_level(p):
         lines.append(f"⬆️ 修为已满（{cfg.full_realm(lv)}），发送「突破」晋升")
+    lines.extend(_chance_lines(chance))
     return "\n".join(lines)
 
 
@@ -315,6 +339,7 @@ async def cmd_enhance(store, qq) -> str:
         f"本次强化需要 {pv['cost']} 块炎星石（现有 {core.count_item(p, '炎星石')}）",
     ]
     res = core.enhance(p)
+    chance = core.advance_task(p, "weapon", 1) if res.get("ok") else None
     await store.put_player(p)
     if not res.get("ok"):
         head.append("❌ 炎星石不足，无法强化。")
@@ -327,6 +352,7 @@ async def cmd_enhance(store, qq) -> str:
         head.append("　力量 2000　敏捷 2000　斗气 1000　防御 1200")
     else:
         head.append(f"　现为 {res['display']} 级")
+    head.extend(_chance_lines(chance))
     return "\n".join(head)
 
 
@@ -404,6 +430,7 @@ async def cmd_feed(store, qq, name) -> str:
     if not hit:
         return "无此异火。可选：" + "、".join(cfg.FLAME_NAMES)
     res = core.feed_flame(p, hit)
+    chance = core.advance_task(p, "flame", 1) if res.get("ok") else None
     await store.put_player(p)
     if not res.get("ok"):
         if res.get("reason") == "nodross":
@@ -414,9 +441,12 @@ async def cmd_feed(store, qq, name) -> str:
             return f"【{hit}】已至 {res['lv']} 级圆满，再多药渣也烧不动了。"
         return "无可喂养。"
     if res["done"]:
-        return f"🔥 药渣尽数化入【{hit}】，晋为 {res['lv']} 级！"
-    return (f"🔥 投入 {res['give']} 份药渣，{hit} 距下一级还差 "
-            f"{_fmt(res['left'])}。")
+        out = [f"🔥 药渣尽数化入【{hit}】，晋为 {res['lv']} 级！"]
+    else:
+        out = [f"🔥 投入 {res['give']} 份药渣，{hit} 距下一级还差 "
+               f"{_fmt(res['left'])}。"]
+    out.extend(_chance_lines(chance))
+    return "\n".join(out)
 
 
 # ---------------------------------------------------------------------------
@@ -457,12 +487,18 @@ async def cmd_buy(store, qq, args) -> str:
                     n = max(1, min(99, int(rest)))
                 break
     res = core.shop_buy(p, name, n)
+    # 采办药材也算推进「药农之托」一类 herb 任务（买炎星石不算）。
+    herb_n = (int(res.get("n") or 0)
+              if (res.get("ok") and res.get("name") in cfg.HERB_NAMES) else 0)
+    chance = core.advance_task(p, "herb", herb_n) if herb_n else None
     await store.put_player(p)
     if not res.get("ok"):
         if res.get("reason") == "poor":
             return f"💰 金币不足：需要 {res['need']}，你有 {res['have']}。"
         return f"没有【{name}】这样货。发「宝库」看全部。"
-    return f"✅ 购入【{res['name']}】×{res['n']}，花费 {res['total']} 金，余 {p['gold']}。"
+    out = [f"✅ 购入【{res['name']}】×{res['n']}，花费 {res['total']} 金，余 {p['gold']}。"]
+    out.extend(_chance_lines(chance))
+    return "\n".join(out)
 
 
 async def cmd_recipes(store, qq) -> str:
@@ -501,6 +537,7 @@ async def cmd_craft(store, qq, name) -> str:
     if res.get("reason") == "cd":
         await store.put_player(p)
         return f"丹炉尚温，需再候 {res['left']} 秒。"
+    chance = core.advance_task(p, "craft", 1) if res.get("ok") else None
     await store.put_player(p)
     if not res.get("ok"):
         if res.get("reason") == "mat":
@@ -515,7 +552,9 @@ async def cmd_craft(store, qq, name) -> str:
     msg = f"⚗️ 丹成！【{hit}】×1（成功率 {int(res['rate'] * 100)}%）"
     if res.get("alch_up"):
         msg += f"\n　炼药经验积累，晋为【{res['alch_up']}炼药师】！"
-    return msg
+    out = [msg]
+    out.extend(_chance_lines(chance))
+    return "\n".join(out)
 
 
 async def cmd_bag(store, qq) -> str:

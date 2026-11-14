@@ -29,7 +29,7 @@
 | 炼药 | `宝库` / `商店` / `坊市`，`买 血灵草 2` | 随身商店 |
 | | `炼药` / `炼制 回灵丹` | 丹方与开炉，失败给药渣 |
 | | `服丹 回灵丹` / `背包` | 服药与包裹（24 格） |
-| 江湖 | `任务` / `接任务` / `交任务` / `领主线` | 主线 + 支线 |
+| 江湖 | `任务` / `接任务` / `交任务` / `领主线` | 主线 + 支线；推进途中概率触发「机遇」 |
 | | `排行` / `排行榜` | 本群战力榜前 10 |
 | | `抢 @某人` / `送 100 @某人` | 掠夺 / 赠金 |
 
@@ -83,12 +83,17 @@ python src/plugins/doupo/test_throttle.py    # 出图限流工具类（已停用
 python src/plugins/doupo/test_e2e.py         # 真实 matcher + 真实事件（含人物回包结构）：75 项
 python src/plugins/doupo/test_menu_full.py   # 菜单 25 条口令全量严格验收：46 项
 python src/plugins/doupo/test_skills_card.py # 斗技专用卡（描述/伤害/五段条/字重像素验收）：10 项
+python src/plugins/doupo/test_chance.py      # 任务机遇（概率/条件分支/文案格式）：11 项
+python src/plugins/doupo/test_typography.py  # 四张卡统一排版（字号/加粗/出图）：6 项
 python src/plugins/xiuxian/test_core.py      # 22 项
 python src/plugins/xiuxian/test_commands.py  # 61 项
 python src/plugins/xiuxian/test_e2e.py       # 59 项
 ```
 
-十一个测试都自带 runner、自己把仓库根加进 `sys.path`（不依赖外部 `PYTHONPATH`），`exit 0 = 全绿`。
+十三个测试都自带 runner、自己把仓库根加进 `sys.path`（不依赖外部 `PYTHONPATH`），`exit 0 = 全绿`。
+`test_core.py` / `test_commands.py` / `test_e2e.py` / `test_menu_full.py` 在 import 前置
+`DOUPO_CHANCE_RATE=0` 关掉概率，避免随机事件让既有断言 flaky；机遇本身由 `test_chance.py`
+用 `core.set_chance_rng()` 注入确定性随机源验证。
 `_balance.py` 是数值平衡模拟（调参工具，非单测）：`python src/plugins/doupo/_balance.py`。
 
 `test_menu_full.py` 是 2026-11-14 新增的**菜单全量验收**：把 `MENU_GROUPS` 里 25 条口令
@@ -141,6 +146,56 @@ python src/plugins/xiuxian/test_e2e.py       # 59 项
   且卡片 `(28,96)-(124,192)` 头像框里深色像素 >1500（像素级证明头像真的画进卡片）。
   断言前自清 `<root>/src/data/pic_cache`，防止命中旧缓存造成假通过。
 
+### 任务途中的「机遇」（2026-11-14）
+
+用户要求「做任务途中有概率触发机遇，去原版小游戏里爬取整理出来」。文案逐字整理自
+`D:\AI\doupo\hy_text\` 下反编译出的静态文本（用户指定目录 `主线剧情`）：
+
+| 资源 | 内容 |
+|---|---|
+| `主线剧情\任务脚本\s__d0.hy.txt` 37–146 行 | 世界地图随机事件表：天降炎星石、紫薇北斗、张大善人、劫匪、神秘老者索丹（6 种丹，其中生骨丹是骗局）、有奖竞猜（5 题）、时空风暴、无尽深渊、女大王… |
+| `任务名称表\s__t.hy.txt` 68/75/76 | 隐藏发现：散财童子、魂淡赠丹方、韩坑藏宝图 |
+| `主线剧情\任务脚本\s__d14.hy.txt` 58 | 试炼之塔稀有材料 |
+| `主线剧情\任务脚本\s__d0.hy.txt` 1 | 兽人藏匿宝藏的洞穴 |
+
+提取时去掉每行行首的 VM 控制字节与文案中的 `\1…\0` 颜色标记；共整理 **17 条事件**，
+分吉（12）/凶（3）/平（2），每条在 `config.CHANCE_EVENTS` 里都带 `src` 出处与
+`[源码]` / `[调参]` 标注（只调数值与丹名映射，不动事件形状与文案口径）。
+可读清单见 `tmp/doupo_chance_samples.txt`（`tmp/export_chance_samples.py` 生成）。
+
+- 触发：推进任务进度（战斗/采办药材/炼丹/强化/养火）时 `cfg.CHANCE_RATE = 22%`；
+  `core.advance_task()` 是统一入口，**一次动作只掷一次**，没在任务途中不触发。
+- 原版分支原样保留：交不出丹药 → 「老者悻悻走开」；金币不够赔 → 「匪头嫌你穷，踹走」，
+  **绝不倒扣金币**；`生骨丹骗局` 会真的骗走丹药。
+- 存档零 schema 变动（奖励只动 `gold/exp/luck/bag`）；既有 `core.task_progress()` /
+  `main_progress()` 保持纯进度语义，测试直接调它们不受影响。
+- 命令层用 `_chance_lines()` 把机遇拼成回复末尾独立小段，不塞进战报语义行；
+  `test_chance.py` 验证概率、条件分支、一次一掷、原版文案未被改坏、回复格式无异常。
+
+### 四张卡统一排版规范（2026-11-14）
+
+用户要求「字体问题不只是斗技这一个卡片，所有的斗破游戏卡片都要进行优化」。
+规范收敛在 `pic/templates/doupo_style.py`，四张卡共用：
+
+| 模板 | 卡片 | 重点文字（放大加粗） |
+|---|---|---|
+| `doupo.py` | 人物卡 | 角色名 32 / 境界 24 / LV 24 / 六维数值 32 / 修为 22 / 气血斗气 22 / 武器与炼药师 22 |
+| `doupo_menu.py` | 菜单卡 | 口令 24 / 分组名 22 |
+| `doupo_list.py` | 通用列表卡（异火/宝库/背包/排行） | 主标题与价格/战力/状态 24 |
+| `doupo_skills.py` | 斗技卡 | 等级 30 / 技能名 27 / 伤害与倍率 26 / 升级材料 26 |
+
+字号阶梯 `FS_HERO 30 > FS_KEY 24 > FS_BODY 20 > FS_SUB 17 > FS_LABEL 16`；
+`S.key()` 负责重点（>=22px 才真加粗），`S.small()` 负责次要（显式不加粗），
+绘制与度量同 role，右对齐不会溢出。
+
+两个必须知道的坑：`role="bold"` **本身不加粗**（只推断 kind），且容器 vendored
+`msyh.ttc` 只有两个 Regular face（见 `fonts._bold_face_index()`）；`<22px` 小字
+叠 1px 伪粗会把中文笔画缝隙填满，实测「已圆满」糊成一团，已由 `canvas.py` 禁止。
+
+`test_typography.py` 锁定四张卡同源、字号达标、重点真加粗、小字不糊、七张卡
+（人物/菜单/宝库/异火/背包/排行/斗技）真实出图合法且头像框不漂移；
+产物在 `tmp/doupo_typography/`。
+
 ### 人物卡头像怎么来的
 
 `avatar.py::HEADSHOT_BOXES` 给四档 idle GIF 各存一个经网格图目视校准的裁剪框，
@@ -166,7 +221,7 @@ GIF 缺失时模板画剑形占位，卡片照常出图。
 | `store.py` | json 落盘 + asyncio.Lock 原子写 |
 | `commands.py` | 业务层，`MENU_GROUPS` 是菜单唯一源 |
 | `__init__.py` | 25 个 matcher，全部 `priority=5 + block=True`；除 3 个入口外均带 `rule=_mode_is("doupo")` |
-| `test_*.py` | 八套自带 runner 的测试（core / commands / card / avatar / throttle / e2e / menu_full / skills_card） |
+| `test_*.py` | 十套自带 runner 的测试（core / commands / card / avatar / throttle / e2e / menu_full / skills_card / chance / typography） |
 | `_balance.py` | 平衡模拟（调参用） |
 | `data/doupo.json` | 存档（可用 `DOUPO_DATA_PATH` 改到别处） |
 | `src/game_mode.py` | 按 QQ 号记录当前游戏模式，落 `data/game_mode.json`（`GAME_MODE_PATH` 可改） |

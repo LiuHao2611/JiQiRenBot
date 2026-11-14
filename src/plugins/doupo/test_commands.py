@@ -26,6 +26,10 @@ for _p in (REPO_ROOT, PLUGINS_DIR):
     if _p not in sys.path:
         sys.path.insert(0, _p)
 
+# 机遇是概率事件，会让既有金币/文本断言变 flaky；这里默认关掉，
+# 随机逻辑本身由 test_chance.py 用注入 rng 做确定性验收。
+os.environ["DOUPO_CHANCE_RATE"] = "0"
+
 
 def _stub_nonebot():
     nb = types.ModuleType("nonebot")
