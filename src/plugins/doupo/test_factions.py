@@ -167,6 +167,30 @@ def test_community_key_skills_attributed():
             assert n in blob, "%s 缺少社区归属斗技 %s" % (fid, n)
 
 
+def test_every_faction_has_core_combat_skills():
+    """主角必备的 4 个战斗斗技（游戏核心）必须作为独立条目存在于每个门派，
+    否则随机分到的玩家无任何可释放战斗技能。"""
+    core = ["龙吟碎", "天火三玄变", "八极崩", "五轮离火法"]
+    for fid, f in F.FACTIONS.items():
+        for c in core:
+            assert any(s == c + "[游戏核心]" for s in f["skills"]), \
+                "%s 缺少核心战斗斗技 %s" % (fid, c)
+
+
+def test_playable_factions_meet_minimum_bar():
+    """可入游戏的门派最低门槛：特殊斗技≥2；非稀疏派需有异火/灵焰且至少 1 件特殊物品；
+    稀疏派至少 1 件特殊物品（以物品线替代战斗资源）。"""
+    for fid, f in F.FACTIONS.items():
+        sp = f["special_skills"]; fl = f["flames"]; it = f["items"]
+        sparse = f.get("sparse")
+        assert len(sp) >= 2, "%s 特殊斗技不足(%d)" % (fid, len(sp))
+        if not sparse:
+            assert len(fl) >= 1, "%s 非稀疏派却无异火/灵焰" % fid
+            assert len(it) >= 1, "%s 非稀疏派却无特殊物品" % fid
+        else:
+            assert len(it) >= 1, "%s 稀疏派无特殊物品" % fid
+
+
 # ---------------------------------------------------------------------------
 # runner
 # ---------------------------------------------------------------------------
