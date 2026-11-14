@@ -26,7 +26,8 @@ _spec = importlib.util.spec_from_file_location("doupo_factions_standalone", str(
 F = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(F)
 
-VALID_SOURCES = {"S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "G1"}
+VALID_SOURCES = {"S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "G1",
+                "C1", "C2", "C3"}
 
 
 def test_validate_is_clean():
@@ -135,6 +136,35 @@ def test_no_protagonist_gear_in_faction_starters():
         kit = " ".join(str(v) for v in f["starter"].values())
         for b in banned:
             assert b not in kit, "%s 的 starter 混入主角装备 %s" % (fid, b)
+
+
+def test_community_sources_are_used():
+    """用户要求补全社区/论坛/大佬帖子数据：C1/C2/C3 必须真正进入数据。"""
+    blob = str(F.FACTIONS)
+    for tag in ("C1", "C2", "C3"):
+        assert ("[%s]" % tag) in blob, "社区来源 %s 未进入 factions 数据" % tag
+    # 至少 50 处社区标注，证明不是空壳
+    assert blob.count("[C") >= 50, "社区标注过少：%d" % blob.count("[C")
+
+
+def test_community_key_skills_attributed():
+    """抽查关键门派斗技来自社区整理（人物/门派归属），而非主角个人配置。"""
+    checks = {
+        "yunlanzong": ("玄岩盾", "风火木壁", "大悲撕风手"),
+        "tianmingzong": ("嗜血化骨手", "大裂风", "天冥掌"),
+        "hundian": ("九幽魂手", "碎魂冥掌", "黑色骷髅"),
+        "jianan": ("血裂斩", "大裂山", "卸力水镜"),
+        "xuezong": ("血裂斩", "雷蝠天翼"),
+        "taixugulong": ("屠龙剑", "龙皇钟"),
+        "jiuyou": ("黄泉大印", "枯叶大毒掌"),
+        "guzu": ("龙蛇步法", "万兽枪法"),
+        "fenyangu": ("纯阳绵手", "太乙火罗掌"),
+        "fengleige": ("风雷爪", "圣像妖凰钟"),
+    }
+    for fid, needles in checks.items():
+        blob = str(F.FACTIONS[fid])
+        for n in needles:
+            assert n in blob, "%s 缺少社区归属斗技 %s" % (fid, n)
 
 
 # ---------------------------------------------------------------------------
