@@ -193,7 +193,9 @@ async def render_menu() -> bytes | None:
 
 
 # ---------------------------------------------------------------------------
-# 通用列表卡（斗技 / 异火 / 宝库 / 背包 / 排行）
+# 通用列表卡（异火 / 宝库 / 背包 / 排行）
+# 斗技自 2026-11-14 起走 doupo_skills 专用模板（描述/伤害/五段条/重点大字），
+# 不再与上面四张共用 doupo_list。
 # ---------------------------------------------------------------------------
 async def _render_list(template: str, data: dict, card_name: str) -> bytes | None:
     """渲染任意斗破列表卡：主题链路 → 内置 light 兜底 → None（调用方回纯文本）。"""
@@ -214,23 +216,52 @@ async def _render_list(template: str, data: dict, card_name: str) -> bytes | Non
 
 
 def build_skills_data(p: dict) -> dict:
-    """斗技列表 → doupo_list 模板参数。"""
+    """斗技 → doupo_skills 专用模板参数（完整技能描述 + 详细伤害口径）。
+
+    伤害数字与 core.damage_schedule() / core._player_hit() 同源：
+        raw = (力量×0.5 + 斗气×1.5) × cfg.skill_dmg_mult(name, lv)
+        期望单击 = raw × (1 + 暴击率/100 × 0.5)   # 暴击 1.5 倍的期望
+    这里展示的是**期望单击（未计目标防御）**，与战斗内实际单次命中的差别只有
+    mitigation(目标防御) 与暴击随机，故不会图文说两回事。
+    """
     sk = p.get("skills") or {}
+    st = core.stats(p)
+    raw_base = st["力量"] * 0.5 + st["斗气"] * 1.5
+    crit_mult = 1.0 + core.crit_rate(p) / 100.0 * 0.5
+    item = cfg.SKILL_UP_ITEM
+    have = core.count_item(p, item)
+
     rows = []
     for s in cfg.SKILLS:
-        lv = int(sk.get(s["name"], 1))
+        name = s["name"]
+        mx = int(s["max"])
+        lv = max(1, min(mx, int(sk.get(name, 1))))
+        maxed = lv >= mx
+        base_mult = float(s["dmg_mult"])
+        cur_mult = cfg.skill_dmg_mult(name, lv)
+        next_mult = cur_mult if maxed else cfg.skill_dmg_mult(name, lv + 1)
         rows.append({
             "badge": str(s["key"]),
-            "title": f"{s['name']}　{lv}/{s['max']}",
-            "sub": "升一级伤害 +20%",
-            "bar": {"cur": lv, "max": s["max"]},
+            "name": name,
+            "lv": lv, "max": mx, "maxed": maxed,
+            "desc": str(s["desc"]),                       # 完整技能描述，不做截断
+            "base_mult": round(base_mult, 2),
+            "cur_mult": round(cur_mult, 2),
+            "next_mult": round(next_mult, 2),
+            "dmg": int(round(raw_base * cur_mult * crit_mult)),
+            "next_dmg": int(round(raw_base * next_mult * crit_mult)),
+            "segments": mx, "lit": lv,                    # 五段斗气条：一级亮一段
+            "item": item,
+            "item_need": 0 if maxed else cfg.skill_up_cost(lv),
         })
-    item = cfg.SKILL_UP_ITEM
+
     return {
         "icon": "bolt", "title": "斗技",
-        "subtitle": "快捷键 1/3/7/9 · 升一级伤害 +20%",
+        "subtitle": "四门斗技 · 五重斗气 · 快捷键 1/3/7/9",
+        "item": item, "item_count": have,
+        "formula": "伤害口径：(力量×0.5 + 斗气×1.5) × 当前倍率 × 暴击期望（未计目标防御）",
         "rows": rows,
-        "tip": f"用法：升级 龙吟碎 · 现有 {item} ×{core.count_item(p, item)}",
+        "tip": f"用法：升级 龙吟碎 · 现有 {item} ×{have} · 升一重伤害 +20%",
     }
 
 
@@ -309,7 +340,9 @@ def build_rank_data(top: list) -> dict:
 
 
 async def render_skills(p: dict) -> bytes | None:
-    return await _render_list("doupo_list", build_skills_data(p), "斗破斗技")
+    # 专用模板：技能描述 + 详细伤害 + 五段斗气条 + 重点大字粗体。
+    # 不再复用 doupo_list，避免把异火/宝库/背包/排行一起改坏。
+    return await _render_list("doupo_skills", build_skills_data(p), "斗破斗技")
 
 
 async def render_flames(p: dict) -> bytes | None:

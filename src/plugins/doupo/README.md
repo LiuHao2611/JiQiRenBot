@@ -82,12 +82,13 @@ python src/plugins/doupo/test_avatar.py      # 动图 + 静态头像四档：13 
 python src/plugins/doupo/test_throttle.py    # 出图限流工具类（已停用，仅测工具本身）：10 项
 python src/plugins/doupo/test_e2e.py         # 真实 matcher + 真实事件（含人物回包结构）：75 项
 python src/plugins/doupo/test_menu_full.py   # 菜单 25 条口令全量严格验收：46 项
+python src/plugins/doupo/test_skills_card.py # 斗技专用卡（描述/伤害/五段条/字重像素验收）：10 项
 python src/plugins/xiuxian/test_core.py      # 22 项
 python src/plugins/xiuxian/test_commands.py  # 61 项
 python src/plugins/xiuxian/test_e2e.py       # 59 项
 ```
 
-十个测试都自带 runner、自己把仓库根加进 `sys.path`（不依赖外部 `PYTHONPATH`），`exit 0 = 全绿`。
+十一个测试都自带 runner、自己把仓库根加进 `sys.path`（不依赖外部 `PYTHONPATH`），`exit 0 = 全绿`。
 `_balance.py` 是数值平衡模拟（调参工具，非单测）：`python src/plugins/doupo/_balance.py`。
 
 `test_menu_full.py` 是 2026-11-14 新增的**菜单全量验收**：把 `MENU_GROUPS` 里 25 条口令
@@ -97,6 +98,30 @@ python src/plugins/xiuxian/test_e2e.py       # 59 项
 境界名各一张人物卡渲染，以及列表卡「主标题↔说明」间距的像素级检测（含拒绝粘连的自举用例）。
 卡片产物与完整中文报告落在 `tmp/doupo_menu_cards/`（容器内 `/app/tmp` 即宿主 `./tmp`）。
 卡片磁盘缓存改道临时目录，既不污染线上 `data/pic_cache`，也不会命中旧图造成假通过。
+
+### 斗技专用卡（2026-11-14）
+
+`斗技 / 技能` 不再复用 `doupo_list`，改走专用模板 `pic/templates/doupo_skills.py`，
+避免把异火/宝库/背包/排行四张列表卡一起改坏。卡片内容：
+
+- 完整技能描述（`cfg.SKILLS[*].desc`，不截断）；
+- 详细伤害：基础倍率、当前倍率、期望单击、下级倍率/伤害、下级所需 `焚血散`，
+  顶部统一写出口径 `(力量×0.5 + 斗气×1.5) × 倍率 × 暴击期望（未计目标防御）`，
+  与 `core.damage_schedule()` / `core._player_hit()` 同源；
+- **五条独立斗气段**（一/二/三/四/五），一级亮一段、二级亮两段……五级全亮；
+- 重点文字（等级 Lv、技能名、伤害、倍率、升级物品）用 26~30px 大字 + 真粗体 + 朱红/暗金强调色。
+
+字重有个必须知道的坑：`role="bold"` **本身不会加粗**，它只推断 `kind`；字重由
+`Canvas.text(..., bold=...)` 决定。容器内 vendored `msyh.ttc` 实测只有两个 face
+（`Microsoft YaHei Regular` / `Microsoft YaHei UI Regular`，字形 mask 完全相同），
+旧代码盲用 TTC index=1 当粗体是错的。现由 `fonts._bold_face_index()` 按 face 名探测
+真粗体，找不到时 `Canvas.text` 补伪粗描边，且 **<22px 小字禁止伪粗**（1px 描边会把
+中文笔画缝隙填满，实测「已圆满」糊成一团）。`bold=None` 保持旧行为逐像素不变。
+
+`test_skills_card.py` 是像素级验收：用模板同源的 `segment_positions()` 取五段条坐标，
+对 1~5 级逐段采样点亮状态（并含「涂亮第 4 段必须被检出」的自举反例），
+校验粗体墨迹、小字未糊化、字号放大、描述不被截断、PNG 合法；产物落在
+`tmp/doupo_skills_cards/`。缓存同样改道「每次新建的临时目录」，防止命中旧图假通过。
 
 `_balance.py` 的判定口径（写在它自己的 docstring 里）：
 胜率下限 70%（不能有打不过的死局）、上限 99.5%（不能白给，1 级豁免）、
@@ -141,7 +166,7 @@ GIF 缺失时模板画剑形占位，卡片照常出图。
 | `store.py` | json 落盘 + asyncio.Lock 原子写 |
 | `commands.py` | 业务层，`MENU_GROUPS` 是菜单唯一源 |
 | `__init__.py` | 25 个 matcher，全部 `priority=5 + block=True`；除 3 个入口外均带 `rule=_mode_is("doupo")` |
-| `test_*.py` | 七套自带 runner 的测试（core / commands / card / avatar / throttle / e2e / menu_full） |
+| `test_*.py` | 八套自带 runner 的测试（core / commands / card / avatar / throttle / e2e / menu_full / skills_card） |
 | `_balance.py` | 平衡模拟（调参用） |
 | `data/doupo.json` | 存档（可用 `DOUPO_DATA_PATH` 改到别处） |
 | `src/game_mode.py` | 按 QQ 号记录当前游戏模式，落 `data/game_mode.json`（`GAME_MODE_PATH` 可改） |
