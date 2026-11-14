@@ -197,14 +197,19 @@ def test_no_cross_faction_high_tier_skills():
         assert name not in str(F.FACTIONS[wrong]), "%s 误挂 %s（违反不跨门派原则）" % (name, wrong)
 
 
-def test_every_faction_has_core_combat_skills():
-    """主角必备的 4 个战斗斗技（游戏核心）必须作为独立条目存在于每个门派，
-    否则随机分到的玩家无任何可释放战斗技能。"""
+def test_xiaojia_keeps_protagonist_core_only():
+    """萧家是用户豁免的默认主角门派，保留 4 个 [游戏核心] 主角战斗斗技；
+    其余 28 派一律按原著，不得再注入主角通用斗技（高级斗技不跨门派）。"""
     core = ["龙吟碎", "天火三玄变", "八极崩", "五轮离火法"]
+    for c in core:
+        assert any(s == c + "[游戏核心]" for s in F.FACTIONS["xiaojia"]["skills"]), \
+            "萧家缺少核心战斗斗技 %s" % c
     for fid, f in F.FACTIONS.items():
+        if fid == "xiaojia":
+            continue
         for c in core:
-            assert any(s == c + "[游戏核心]" for s in f["skills"]), \
-                "%s 缺少核心战斗斗技 %s" % (fid, c)
+            assert not any(s == c + "[游戏核心]" for s in f["skills"]), \
+                "%s 不应含有主角通用斗技 %s（违反高级斗技不跨门派）" % (fid, c)
 
 
 def test_playable_factions_meet_minimum_bar():
