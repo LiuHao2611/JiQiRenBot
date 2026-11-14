@@ -152,7 +152,7 @@ def test_community_key_skills_attributed():
     checks = {
         "yunlanzong": ("玄岩盾", "风火木壁", "大悲撕风手"),
         "tianmingzong": ("嗜血化骨手", "大裂风", "天冥掌"),
-        "hundian": ("九幽魂手", "碎魂冥掌", "黑色骷髅"),
+        "hundian": ("九幽魂手", "黑色骷髅"),
         "jianan": ("血裂斩", "大裂山", "卸力水镜"),
         "xuezong": ("嗜血印", "雷蝠天翼"),
         "taixugulong": ("屠龙剑", "龙皇钟"),
@@ -180,6 +180,21 @@ def test_c1_attribution_guard():
     assert "大寂灭指" not in str(F.FACTIONS["hunzu"]), "大寂灭指不是魂族的，误挂魂族"
     assert "化血大法" in str(F.FACTIONS["hunzu"]), "化血大法应属魂殿(魂族明面势力)"
     assert "赤毒掌" in str(F.FACTIONS["tianfu"]), "赤毒掌属神农老人，其为本盟 NPC"
+
+
+def test_no_cross_faction_high_tier_skills():
+    """原著原则：高级斗技一般只属一门派（[游戏核心] 主角通用注入不在此列）。
+    下列斗技经 C1/百科逐条核对后各有唯一正主，不得跨门派重复。"""
+    checks = [
+        ("惊蛰雷法", "moyangu", "xiaojia"),        # 魔炎谷/萧厉(923章)，非萧家
+        ("碎魂冥掌", "hunzu", "hundian"),          # 魂族魂厉(1349章)，非魂殿
+        ("风之极·落日耀", "yunlanzong", "huazong"),  # 云岚宗云韵/纳兰嫣然(338章)
+        ("飞絮", "yunlanzong", "huazong"),          # 云岚宗系(305章)
+        ("碧蛇三花瞳", "tianshefu", "sherenzu"),     # 天蛇府圣女青鳞，非蛇人族
+    ]
+    for name, correct, wrong in checks:
+        assert name in str(F.FACTIONS[correct]), "%s 应属 %s" % (name, correct)
+        assert name not in str(F.FACTIONS[wrong]), "%s 误挂 %s（违反不跨门派原则）" % (name, wrong)
 
 
 def test_every_faction_has_core_combat_skills():
