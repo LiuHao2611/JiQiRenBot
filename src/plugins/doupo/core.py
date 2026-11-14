@@ -13,6 +13,8 @@ import random
 import time
 
 from . import config as cfg
+from . import factions as fac
+from . import skills as sk_mod
 
 
 # ---------------------------------------------------------------------------
@@ -44,7 +46,7 @@ def create_player(qq, name, group) -> dict:
         "gold": cfg.START_GOLD, "luck": cfg.START_LUCK,
         "weapon": 0,
         "hp": 0, "mp": 0,
-        "skills": {n: 1 for n in cfg.SKILL_NAMES},
+        "skills": {},
         "flames": {n: 0 for n in cfg.FLAME_NAMES},
         "bag": {"回灵丹": cfg.START_HP_POTION, "炎星石": cfg.START_STONES},
         "alch": cfg.ALCH_START, "alch_exp": 0,
@@ -56,6 +58,18 @@ def create_player(qq, name, group) -> dict:
     }
     st["hp"] = stats(st)["体力"]
     st["mp"] = mp_max(st)
+
+    # 入道随机宗门 + 自动配四槽（斗技三阶四槽骨架）
+    # 按 qq 定种子：每个玩家分到一个"随机但稳定"的宗门（不可反复重掷）
+    try:
+        fac.assign_faction(st, rng=random.Random("faction:" + str(qq)).random)
+    except Exception:
+        st.setdefault("faction", "")
+        st.setdefault("faction_name", "")
+    try:
+        sk_mod.ensure_loadout(st)
+    except Exception:
+        st["loadout"] = []
     return st
 
 
@@ -220,26 +234,34 @@ def rng_choice(seq, rng=random.random):
 
 
 def damage_schedule(p, rounds: int = 15) -> list:
-    """逐回合的期望输出（已算暴击期望，未乘减伤）。
+    """逐回合的期望输出（四槽模型 · 已算暴击期望，未乘减伤）。
 
-    为什么不用"平均值 × 回合数"：玩家的蓝只够放 5 次斗技（cost = mp_max//5），
-    第 6 回合起只能普攻，单回合输出掉到 42%。若按 4 回合均值外推，
-    高等级的怪血量会被高估一倍，实测表现为"22 级要 11 回合才杀得死"，
-    而目标是 4~5 回合 —— 这正是之前 22/26 级胜率 20% 的根因。
+    与 `fight` 同口径：每回合在已上阵四槽里**随机释放**，期望≈四槽平均；
+    斗气按阶扣除，不足以释放任一技时转武器普攻。用于反解同阶怪血量，
+    使「几回合打完」保持为设计值（TTK_PLAYER）。
     """
     st = stats(p)
-    best = _best_skill(p)
-    sk_lv = int((p.get("skills") or {}).get(best, 1))
-    skill_raw = (st["力量"] * 0.5 + st["斗气"] * 1.5) * cfg.skill_dmg_mult(best, sk_lv)
-    normal_raw = st["力量"] * 1.0
+    normal_raw = st["力量"] * float(cfg.WEAPON_BASE_MULT)
+    entries = _loadout_entries(p)
+    if not entries:
+        return [normal_raw] * max(1, rounds)
 
-    pool = mp_max(p)                     # 每场战斗蓝是满的（_refill / 升级回满）
-    cost = max(1, mp_max(p) // 5)
+    mpmax = mp_max(p)
+    lv_map = p.get("skills") or {}
+    slots = []
+    for e in entries:
+        lv = int(lv_map.get(e["name"], 1))
+        raw = (st["力量"] * 0.5 + st["斗气"] * 1.5) * sk_mod.skill_mult(e, lv)
+        slots.append((raw, sk_mod.tier_cost(e["tier"], mpmax)))
+    avg_dmg = sum(d for d, _ in slots) / len(slots)
+    avg_cost = sum(c for _, c in slots) / len(slots)
+
+    pool = mpmax
     out = []
     for _ in range(max(1, rounds)):
-        if pool >= cost:
-            out.append(skill_raw)
-            pool -= cost
+        if pool >= avg_cost:
+            out.append(avg_dmg)
+            pool -= avg_cost
         else:
             out.append(normal_raw)
     mult = 1.0 + crit_rate(p) / 100.0 * 0.5
@@ -290,31 +312,102 @@ def monster_scaled(p, mon) -> dict:
     }
 
 
-def _player_hit(p, target_def, use_skill, rng) -> dict:
+def _legacy_entries() -> list[dict]:
+    """无宗门旧档的兜底：沿用原 4 门核心斗技（按普通阶计）。"""
+    return [{
+        "name": s["name"], "tier": "普通", "faction": "",
+        "mp": cfg.SKILL_TIER_MP_FRAC["普通"], "dmg": float(s["dmg_mult"]),
+        "unlock": 1, "desc": s.get("desc", ""),
+    } for s in cfg.SKILLS]
+
+
+def _ensure_faction(p) -> bool:
+    """旧存档没有 faction 时惰性补一个（入道分宗的兜底）。"""
+    if p.get("faction"):
+        return True
+    try:
+        fac.assign_faction(p)
+    except Exception:
+        return False
+    return bool(p.get("faction"))
+
+
+def _loadout_entries(p) -> list[dict]:
+    """当前上阵四槽的完整技能对象；无宗门旧档退回原 4 核心。"""
+    _ensure_faction(p)
+    ents = sk_mod.loadout_entries(p)
+    return ents if ents else _legacy_entries()
+
+
+def _pick_skill(p, mp: int, rng=random.random):
+    """在「已上阵且斗气足够」的技中随机挑一个；都不够 -> (None, 0) 转普攻。"""
+    entries = _loadout_entries(p)
+    if not entries:
+        return None, 0
+    mpmax = mp_max(p)
+    options = []
+    for e in entries:
+        c = sk_mod.tier_cost(e["tier"], mpmax)
+        if c <= mp:
+            options.append((e, c))
+    if not options:
+        return None, 0
+    e, c = options[min(len(options) - 1, int(rng() * len(options)))]
+    return e, c
+
+
+def _hit(p, target_def, entry, rng) -> dict:
+    """一次出手：entry 为 None 时用武器普攻，否则按该斗技算伤害。"""
     st = stats(p)
     crit = rng() * 100 < crit_rate(p)
-    if use_skill:
-        name = _best_skill(p)
-        lv = int((p.get("skills") or {}).get(name, 1))
-        raw = (st["力量"] * 0.5 + st["斗气"] * 1.5) * cfg.skill_dmg_mult(name, lv)
-        kind = name
+    if entry is not None:
+        lv = int((p.get("skills") or {}).get(entry["name"], 1))
+        raw = (st["力量"] * 0.5 + st["斗气"] * 1.5) * sk_mod.skill_mult(entry, lv)
+        kind = entry["name"]
     else:
-        raw = st["力量"] * 1.0
+        raw = st["力量"] * float(cfg.WEAPON_BASE_MULT)
         kind = "普攻"
     dmg = max(1, int(raw * mitigation(target_def) * (1.5 if crit else 1.0)))
-    return {"dmg": dmg, "crit": crit, "kind": kind, "skill": use_skill}
+    return {"dmg": dmg, "crit": crit, "kind": kind, "skill": entry is not None}
 
 
 def _best_skill(p) -> str:
-    """选当前等级最高（同等级取倍率最高）的技能。"""
-    sk = p.get("skills") or {}
-    best, best_score = cfg.SKILL_NAMES[0], -1
-    for n in cfg.SKILL_NAMES:
-        lv = int(sk.get(n, 1))
-        score = lv * 10 + cfg.SKILL_BY_NAME[n]["dmg_mult"]
-        if score > best_score:
-            best, best_score = n, score
-    return best
+    """兼容旧接口：取上阵四槽里期望伤害最高的一门。"""
+    entries = _loadout_entries(p)
+    if not entries:
+        return cfg.SKILL_NAMES[0]
+    st = stats(p)
+    lv_map = p.get("skills") or {}
+    best = max(entries, key=lambda e: (st["力量"] * 0.5 + st["斗气"] * 1.5)
+               * sk_mod.skill_mult(e, int(lv_map.get(e["name"], 1))))
+    return best["name"]
+
+
+def skill_pool(p) -> list[dict]:
+    """本宗全部斗技（含未解锁），带 unlocked / equipped 标记。"""
+    _ensure_faction(p)
+    ents = sk_mod.entries_for(p) or _legacy_entries()
+    lv = int(p.get("lv", 1))
+    lo = set(sk_mod.ensure_loadout(p))
+    out = []
+    for e in ents:
+        d = dict(e)
+        d["unlocked"] = int(d["unlock"]) <= lv
+        d["equipped"] = d["name"] in lo
+        out.append(d)
+    return out
+
+
+def loadout_entries(p) -> list[dict]:
+    """公开版：当前上阵四槽的完整技能对象。"""
+    return _loadout_entries(p)
+
+
+def set_loadout(p, names) -> list[str]:
+    """设置四槽：只保留本宗已解锁技能，最多 4 个。"""
+    allowed = {e["name"] for e in skill_pool(p) if e["unlocked"]}
+    p["loadout"] = [n for n in names if n in allowed][:cfg.LOADOUT_SIZE]
+    return sk_mod.ensure_loadout(p)
 
 
 def fight(p, mon, rng=random.random) -> dict:
@@ -329,7 +422,6 @@ def fight(p, mon, rng=random.random) -> dict:
     m_hp = int(mon["hp"])
     m_atk = int(mon["atk"])
     m_def = int(mon["def"])
-    cost = max(1, mp_max(p) // 5)
 
     rounds, dmg_log, taken = 0, [], 0
     dodge = dodge_rate(p)
@@ -338,9 +430,9 @@ def fight(p, mon, rng=random.random) -> dict:
 
     while rounds < 15 and m_hp > 0 and hp > 0:
         rounds += 1
-        use_skill = mp >= cost
-        hit = _player_hit(p, m_def, use_skill, rng)
-        if use_skill:
+        entry, cost = _pick_skill(p, mp, rng)   # 随机释放「已上阵且斗气够」的技
+        hit = _hit(p, m_def, entry, rng)
+        if entry is not None:
             mp -= cost
         m_hp -= hit["dmg"]
         dmg_log.append(hit)
@@ -380,6 +472,37 @@ def fight(p, mon, rng=random.random) -> dict:
         p["hp"] = int(st["体力"] * (1 - cfg.LOSE_HP_ON_DEFEAT))
         res["hp_after"] = p["hp"]
     return res
+
+
+def duel(p, vic, rng=random.random) -> dict:
+    """掠夺：双方各用自己四槽随机互殴（p 先手）。斗气不足转武器普攻。
+
+    只算胜负与战报，不改双方 hp/gold（结算由 commands.cmd_rob 负责），
+    与 `fight` 共用四槽 / 按阶斗气 / 普攻兜底逻辑。
+    """
+    sp, sv = stats(p), stats(vic)
+    hp_p, hp_v = int(sp["体力"]), int(sv["体力"])
+    mp_p, mp_v = mp_max(p), mp_max(vic)
+    log, rounds = [], 0
+    while rounds < 15 and hp_p > 0 and hp_v > 0:
+        rounds += 1
+        e, c = _pick_skill(p, mp_p, rng)
+        hit = _hit(p, int(sv["防御"]), e, rng)
+        if e is not None:
+            mp_p -= c
+        hp_v -= hit["dmg"]
+        log.append({"who": "p", **hit})
+        if hp_v <= 0:
+            break
+        e2, c2 = _pick_skill(vic, mp_v, rng)
+        hit2 = _hit(vic, int(sp["防御"]), e2, rng)
+        if e2 is not None:
+            mp_v -= c2
+        hp_p -= hit2["dmg"]
+        log.append({"who": "v", **hit2})
+    win = hp_v <= 0 and hp_p > 0
+    return {"win": win, "rounds": rounds, "log": log,
+            "hp_p": max(0, hp_p), "hp_v": max(0, hp_v)}
 
 
 def _roll_drops(p, rng) -> list:
@@ -570,10 +693,12 @@ def use_item(p, name) -> dict:
 # 斗技升级
 # ---------------------------------------------------------------------------
 def skill_up(p, name) -> dict:
-    if name not in cfg.SKILL_BY_NAME:
+    # 允许上阵四槽里的任意斗技（不再限原 4 核心）；旧 4 核心始终兼容
+    allowed = {e["name"] for e in skill_pool(p)} | set(cfg.SKILL_NAMES)
+    if name not in allowed:
         return {"ok": False, "reason": "noskill"}
     cur = int((p.get("skills") or {}).get(name, 1))
-    mx = cfg.SKILL_BY_NAME[name]["max"]
+    mx = int(cfg.SKILL_BY_NAME.get(name, {}).get("max", 5))
     if cur >= mx:
         return {"ok": False, "reason": "max", "lv": cur}
     cost = cfg.skill_up_cost(cur)

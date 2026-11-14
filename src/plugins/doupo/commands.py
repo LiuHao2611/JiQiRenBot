@@ -363,16 +363,23 @@ async def cmd_skills(store, qq) -> str:
     p = await _player(store, qq)
     if not p:
         return NOT_ENTERED
-    sk = p.get("skills") or {}
-    out = ["📜 斗技（快捷键 1/3/7/9）"]
-    for s in cfg.SKILLS:
-        lv = int(sk.get(s["name"], 1))
-        bar = "●" * lv + "○" * (s["max"] - lv)
-        out.append(f"　[{s['key']}] {s['name']}　{bar} {lv}/{s['max']}")
+    pool = core.skill_pool(p)
+    lo = core.loadout_entries(p)
+    fac_name = p.get("faction_name") or "无宗门"
+    out = [f"📜 {fac_name} · 斗技三阶（上阵 {len(lo)}/{cfg.LOADOUT_SIZE}）"]
+    for tier in cfg.SKILL_TIERS:
+        rows = [e for e in pool if e["tier"] == tier]
+        if not rows:
+            continue
+        out.append(f"〔{tier}〕斗气 {int(cfg.SKILL_TIER_MP_FRAC[tier] * 100)}%·mp_max")
+        for e in rows:
+            lv = int((p.get("skills") or {}).get(e["name"], 1))
+            mark = "★上阵" if e["equipped"] else ("可学" if e["unlocked"] else "🔒未解锁")
+            out.append(f"　{e['name']} Lv{lv}（lv{e['unlock']} 解锁·{mark}）")
     out.append("")
-    out.append("　升一级伤害 +20%，消耗 " + cfg.SKILL_UP_ITEM)
-    out.append(f"　现有 {cfg.SKILL_UP_ITEM} ×{core.count_item(p, cfg.SKILL_UP_ITEM)}")
-    out.append("　用法：升级 龙吟碎")
+    out.append("上阵：" + "、".join(f"{e['name']}[{e['tier']}]" for e in lo))
+    out.append("　斗气不足将强制武器普攻（伤害大减、持续掉血）")
+    out.append(f"　升一级伤害 +20%，消耗 {cfg.SKILL_UP_ITEM}；用法：升级 <技名> / 上阵 <4 技名>")
     return "\n".join(out)
 
 
@@ -381,11 +388,15 @@ async def cmd_skill_up(store, qq, name) -> str:
     if not p:
         return NOT_ENTERED
     name = (name or "").strip()
+    names = [e["name"] for e in core.skill_pool(p) if e["unlocked"]] or list(cfg.SKILL_NAMES)
     if not name:
-        return "用法：升级 龙吟碎（可选：" + "、".join(cfg.SKILL_NAMES) + "）"
-    hit = next((n for n in cfg.SKILL_NAMES if name in n or n in name), None)
+        return "用法：升级 <技名>（可选：" + "、".join(names) + "）"
+    hit = next((n for n in names if n == name), None) or next(
+        (n for n in names if name in n or n in name), None)
     if not hit:
-        return "无此斗技。可选：" + "、".join(cfg.SKILL_NAMES)
+        hit = next((n for n in cfg.SKILL_NAMES if name in n or n in name), None)
+    if not hit:
+        return "无此斗技。可选：" + "、".join(names)
     res = core.skill_up(p, hit)
     await store.put_player(p)
     if not res.get("ok"):
@@ -394,6 +405,34 @@ async def cmd_skill_up(store, qq, name) -> str:
         return (f"❌ {res['item']}不足：需要 {res['need']} 份，你有 {res['have']}。\n"
                 f"　去「炼制 {cfg.SKILL_UP_ITEM}」自己炼。")
     return f"✅【{hit}】升至 {res['lv']}/{res['max']} 级，技能伤害再进一层。"
+
+
+async def cmd_loadout(store, qq, args) -> str:
+    """上阵：从本宗三阶斗技里自由选 ≤4 门。"""
+    p = await _player(store, qq)
+    if not p:
+        return NOT_ENTERED
+    pool = [e for e in core.skill_pool(p) if e["unlocked"]]
+    raw = (args or "").replace("，", ",").replace("、", ",").replace("/", ",").replace(" ", ",")
+    names = [x.strip() for x in raw.split(",") if x.strip()]
+    if not names:
+        cur = core.loadout_entries(p)
+        return ("当前上阵：" + "、".join(f"{e['name']}[{e['tier']}]" for e in cur)
+                + "\n可上阵：" + "、".join(e["name"] for e in pool)
+                + f"\n用法：上阵 <技1> <技2> <技3> <技4>（最多 {cfg.LOADOUT_SIZE} 门，三阶任意搭配）")
+    chosen = []
+    for n in names:
+        hit = next((e for e in pool if e["name"] == n), None) or next(
+            (e for e in pool if n in e["name"] or e["name"] in n), None)
+        if not hit:
+            return f"「{n}」不可上阵（未解锁或非本宗）。可上阵：" + "、".join(e["name"] for e in pool)
+        if hit["name"] not in chosen:
+            chosen.append(hit["name"])
+    if len(chosen) > cfg.LOADOUT_SIZE:
+        return f"最多上阵 {cfg.LOADOUT_SIZE} 门，你给了 {len(chosen)} 门。"
+    core.set_loadout(p, chosen)
+    await store.put_player(p)
+    return "✅ 已上阵：" + "、".join(f"{e['name']}[{e['tier']}]" for e in core.loadout_entries(p))
 
 
 async def cmd_flames(store, qq) -> str:
@@ -695,22 +734,31 @@ async def cmd_rob(store, qq, target) -> str:
         return "对方尚未入道。"
     if int(vic.get("gold", 0)) <= 0:
         return "对方囊中空空。"
-    pa, pb = core.power(p), core.power(vic)
-    import random as _r
-    win = pa >= pb * (0.75 + 0.5 * _r.random())
-    if win:
+    # 掠夺也走四槽：双方各用自己上阵的 4 门斗技随机互殴（核心模块骨架）
+    res = core.duel(p, vic)
+    seq = res["log"]
+    show = seq[:4] + (["..."] if len(seq) > 6 else []) + (seq[-2:] if len(seq) > 6 else [])
+    lines = [f"⚔️ 与对手交手 {res['rounds']} 回合"]
+    for it in show:
+        if it == "...":
+            lines.append("　…")
+            continue
+        who = "你" if it.get("who") == "p" else "对方"
+        tag = it["kind"] + ("（暴击！）" if it.get("crit") else "")
+        lines.append(f"　{who}·{tag} {it['dmg']}")
+    if res["win"]:
         amt = max(1, int(int(vic["gold"]) * 0.10))
         vic["gold"] = int(vic["gold"]) - amt
         p["gold"] = int(p.get("gold", 0)) + amt
-        msg = f"😈 你以战力 {pa} 压过 {pb}，夺得 {amt} 金币。"
+        lines.append(f"😈 夺得 {amt} 金币。")
     else:
         amt = max(1, int(int(p["gold"]) * 0.10))
         p["gold"] = int(p.get("gold", 0)) - amt
         vic["gold"] = int(vic["gold"]) + amt
-        msg = f"💢 反被击退（战力 {pa} vs {pb}），赔了 {amt} 金币。"
+        lines.append(f"💢 反被击退，赔了 {amt} 金币。")
     await store.put_player(p)
     await store.put_player(vic)
-    return msg
+    return "\n".join(lines)
 
 
 async def cmd_give(store, qq, target, amount) -> str:

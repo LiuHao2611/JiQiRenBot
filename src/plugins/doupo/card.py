@@ -230,38 +230,41 @@ def build_skills_data(p: dict) -> dict:
     crit_mult = 1.0 + core.crit_rate(p) / 100.0 * 0.5
     item = cfg.SKILL_UP_ITEM
     have = core.count_item(p, item)
+    frac = cfg.SKILL_TIER_MP_FRAC
 
     rows = []
-    for s in cfg.SKILLS:
-        name = s["name"]
-        mx = int(s["max"])
+    for e in core.loadout_entries(p):
+        name = e["name"]
+        tier = e["tier"]
+        mx = 5
         lv = max(1, min(mx, int(sk.get(name, 1))))
         maxed = lv >= mx
-        base_mult = float(s["dmg_mult"])
-        cur_mult = cfg.skill_dmg_mult(name, lv)
-        next_mult = cur_mult if maxed else cfg.skill_dmg_mult(name, lv + 1)
+        base_mult = float(e["dmg"])
+        cur_mult = base_mult * (1 + 0.2 * (lv - 1))
+        next_mult = cur_mult if maxed else base_mult * (1 + 0.2 * lv)
         rows.append({
-            "badge": str(s["key"]),
+            "badge": tier[0],
             "name": name,
             "lv": lv, "max": mx, "maxed": maxed,
-            "desc": str(s["desc"]),                       # 完整技能描述，不做截断
+            "desc": f"[{tier}] 斗气 {int(frac[tier] * 100)}%·mp_max ｜ {e.get('desc', '')}",
             "base_mult": round(base_mult, 2),
             "cur_mult": round(cur_mult, 2),
             "next_mult": round(next_mult, 2),
             "dmg": int(round(raw_base * cur_mult * crit_mult)),
             "next_dmg": int(round(raw_base * next_mult * crit_mult)),
-            "segments": mx, "lit": lv,                    # 五段斗气条：一级亮一段
+            "segments": mx, "lit": lv,
             "item": item,
             "item_need": 0 if maxed else cfg.skill_up_cost(lv),
         })
 
+    fac_name = p.get("faction_name") or "无宗门"
     return {
         "icon": "bolt", "title": "斗技",
-        "subtitle": "四门斗技 · 五重斗气 · 快捷键 1/3/7/9",
+        "subtitle": f"{fac_name} · 三阶斗技 · 四槽上阵（{len(rows)}/{cfg.LOADOUT_SIZE}）",
         "item": item, "item_count": have,
-        "formula": "伤害口径：(力量×0.5 + 斗气×1.5) × 当前倍率 × 暴击期望（未计目标防御）",
+        "formula": "伤害口径：(力量×0.5 + 斗气×1.5) × 阶倍率 ×(1+0.2/级) × 暴击期望（未计目标防御）",
         "rows": rows,
-        "tip": f"用法：升级 龙吟碎 · 现有 {item} ×{have} · 升一重伤害 +20%",
+        "tip": f"用法：上阵 <4技名> · 斗气不足转武器普攻 · 现有 {item} ×{have}",
     }
 
 

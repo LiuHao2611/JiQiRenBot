@@ -151,28 +151,32 @@ def test_template_registered():
 def test_build_skills_data_details():
     p = core.create_player("10001", "测试", "20001")
     p["lv"] = 40
-    p["skills"] = {"龙吟碎": 3, "天火三玄变": 1, "八极崩": 5, "五轮离火法": 2}
+    core.skill_pool(p)                      # 确保四槽就绪
+    lo = core.loadout_entries(p)
+    levels = [3, 1, 5, 2]
+    p["skills"] = {e["name"]: levels[i % 4] for i, e in enumerate(lo)}
     core.add_item(p, cfg.SKILL_UP_ITEM, 7)
 
     d = card.build_skills_data(p)
     assert d["title"] == "斗技"
     assert d["item"] == "焚血散" and d["item_count"] == 7
-    assert len(d["rows"]) == len(cfg.SKILLS) == 4
+    assert len(d["rows"]) == len(lo)        # 四槽（不足则按实际）
     assert "力量" in d["formula"] and "暴击期望" in d["formula"]
 
     st = core.stats(p)
     raw_base = st["力量"] * 0.5 + st["斗气"] * 1.5
     crit_mult = 1.0 + core.crit_rate(p) / 100.0 * 0.5
-    for r, s in zip(d["rows"], cfg.SKILLS):
-        assert r["name"] == s["name"]
-        assert r["desc"] == s["desc"], "技能描述必须与配置逐字一致，不能截断"
-        assert r["base_mult"] == round(float(s["dmg_mult"]), 2)
-        mult = cfg.skill_dmg_mult(s["name"], r["lv"])
+    for r, e in zip(d["rows"], lo):
+        assert r["name"] == e["name"]
+        assert e["tier"] in r["desc"] and "斗气" in r["desc"]
+        assert r["base_mult"] == round(float(e["dmg"]), 2)
+        mult = float(e["dmg"]) * (1 + 0.2 * (r["lv"] - 1))
         assert r["cur_mult"] == round(mult, 2)
         assert r["dmg"] == int(round(raw_base * mult * crit_mult)), "伤害须与战斗公式同源"
         assert r["max"] == 5 and r["segments"] == 5 and r["lit"] == r["lv"]
-    assert d["rows"][2]["maxed"] is True and d["rows"][2]["item_need"] == 0
-    assert d["rows"][0]["item_need"] == cfg.skill_up_cost(3)
+    assert any(r["maxed"] for r in d["rows"])
+    for r in d["rows"]:
+        assert r["item_need"] == (0 if r["maxed"] else cfg.skill_up_cost(r["lv"]))
 
 
 # ---------------------------------------------------------------------------
