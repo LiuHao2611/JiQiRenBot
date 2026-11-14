@@ -229,7 +229,17 @@ async def cmd_break(store, qq) -> str:
     if res.get("reason") == "tiandi_fail":
         return (f"💥 冲击斗帝失败（成功率 {int(res['rate'] * 100)}%）！\n"
                 "斗气倒灌，修为折损。多积机缘（支线任务 / 九幽散）再来。")
-    return f"✨ 突破成功！晋入【{res['name']}】。气血斗气已满。"
+    # 跨大境界时「三星X → 一星Y」看着像掉级（用户 2026-11-14 实测提过：
+    # 「怎么会从三星斗师突破到一星斗师」——其实日志原文是一星**大斗师**，
+    # 但三星跳到一星确实容易被读成降级）。所以把起点终点一起写清楚：
+    #   同境界：突破成功！由【一星斗者】晋入【二星斗者】
+    #   跨境界：境界突破！由【三星斗师】晋入【一星大斗师】
+    old_name = cfg.full_realm(lv)
+    new_lv = int(p.get("lv", lv))
+    new_name = res.get("name") or cfg.full_realm(new_lv)
+    if cfg.realm_name(new_lv) != cfg.realm_name(lv):
+        return f"✨ 境界突破！由【{old_name}】晋入【{new_name}】。气血斗气已满。"
+    return f"✨ 突破成功！由【{old_name}】晋入【{new_name}】。气血斗气已满。"
 
 
 # ---------------------------------------------------------------------------
