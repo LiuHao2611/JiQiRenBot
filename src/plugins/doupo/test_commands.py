@@ -153,17 +153,26 @@ async def main():
     check("突破后等级 =2", int(p["lv"]) == 2, f"lv={p['lv']}")
     check("突破后回满血", p["hp"] == core.stats(p)["体力"])
 
-    # 跨大境界的文案（2026-11-14 用户实测反馈：三星斗师 → 一星大斗师 看着像掉级）：
-    # 必须把「由哪 → 到哪」写清楚，别只写终点。
+    # 跨大境界的文案（2026-11-14 用户实测反馈：跨境界时星数归零容易看成掉级）：
+    # 九星制下 九星斗者(9) → 一星斗师(10)，文案必须把「由哪 → 到哪」写清楚。
     p = await store.get_player(A)
-    p["lv"] = 6                       # 三星斗师（斗师境顶点）
-    p["exp"] = cfg.exp_need(6) + 10
+    p["lv"] = 9                       # 九星斗者（斗者境最后一星）
+    p["exp"] = cfg.exp_need(9) + 10
     await store.put_player(p)
     r = await commands.cmd_break(store, A)
-    check("跨境界 文案含起终点", "三星斗师" in r and "一星大斗师" in r, r[:80])
+    check("跨境界 文案含起终点", "九星斗者" in r and "一星斗师" in r, r[:80])
     check("跨境界 用境界突破措辞", "境界突破" in r, r[:40])
     p = await store.get_player(A)
-    check("跨境界 等级 =7", int(p["lv"]) == 7, f"lv={p['lv']}")
+    check("跨境界 等级 =10", int(p["lv"]) == 10, f"lv={p['lv']}")
+    # 境界内晋升：三星斗师(12) → 四星斗师(13)，这才是用户要的顺序
+    p["lv"] = 12
+    p["exp"] = cfg.exp_need(12) + 10
+    await store.put_player(p)
+    r = await commands.cmd_break(store, A)
+    check("同境界 三星→四星", "三星斗师" in r and "四星斗师" in r, r[:80])
+    check("同境界 用突破成功措辞", "突破成功" in r, r[:40])
+    p = await store.get_player(A)
+    check("同境界 等级 =13", int(p["lv"]) == 13, f"lv={p['lv']}")
     # 还原成 2 级，别把后面的战斗/数值断言带偏
     p["lv"] = 2
     await store.put_player(p)

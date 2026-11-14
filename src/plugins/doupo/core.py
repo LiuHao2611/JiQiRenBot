@@ -37,6 +37,7 @@ def create_player(qq, name, group) -> dict:
     st = {
         "qq": str(qq), "name": name, "group": str(group),
         "lv": 1, "exp": 0,
+        "lv_ver": 2,          # 九星制存档标记（store 用它判断要不要迁移）
         "gold": cfg.START_GOLD, "luck": cfg.START_LUCK,
         "weapon": 0,
         "hp": 0, "mp": 0,
@@ -193,10 +194,20 @@ def mitigation(defence: int) -> float:
 
 
 def pick_monster(p, rng=random.random) -> dict:
-    """按玩家等级挑选一个"够得着但不算白给"的怪（等级差 ≤2）。"""
+    """按玩家等级挑选一个"够得着但不算白给"的怪。
+
+    九星制把等级轴拉到 83，而物种表只有 7 只，用原来的「等级差 ≤2」会大面积
+    选不到（中高等级玩家一直掉回最弱的地鬼）。改成两步：
+      1) 先只留「同一大境界内」的物种（等级差 ≤ LV_PER_REALM），保证不会
+         让 1 级新手撞上 27 级的赤炎狼（等级差修正会把战斗拖成 9 回合）；
+      2) 再在窗口内取等级最接近的 3 只随机，保留一点随机性。
+    窗口内一只都没有（物种表没覆盖到）时退到全表最近的一只。
+    """
     lv = int(p.get("lv", 1))
-    cand = [m for m in cfg.MONSTERS if abs(m["lv"] - lv) <= 2] or cfg.MONSTERS[:1]
-    return rng_choice(cand, rng)
+    window = [m for m in cfg.MONSTERS if abs(int(m["lv"]) - lv) <= cfg.LV_PER_REALM]
+    pool = window or cfg.MONSTERS
+    cand = sorted(pool, key=lambda m: abs(int(m["lv"]) - lv))[:3]
+    return rng_choice(cand or cfg.MONSTERS[:1], rng)
 
 
 def rng_choice(seq, rng=random.random):
