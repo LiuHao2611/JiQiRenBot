@@ -36,8 +36,8 @@ def test_validate_is_clean():
 
 
 def test_pool_sizes_and_tiers():
-    assert len(F.FACTIONS) >= 25, "门派太少"
-    for pool, minimum in (("starter", 10), ("advanced", 10), ("hidden", 8)):
+    assert len(F.FACTIONS) >= 25, "门派太少（剔除薄门派后应为 25）"
+    for pool, minimum in (("starter", 8), ("advanced", 10), ("hidden", 6)):
         n = len(F.by_pool(pool))
         assert n >= minimum, "%s 池只有 %d 个" % (pool, n)
     for tier in F.TIERS:
@@ -124,8 +124,8 @@ def test_key_factions_keep_authoritative_config():
 
 def test_game_original_skills_are_marked():
     """游戏自造的绝学必须显式标注，不能被当原著设定。"""
-    blob = str(F.FACTIONS["yunlanzong"]) + str(F.FACTIONS["motie"]) + str(F.FACTIONS["mojia"])
-    for word in ("天道神雷剑诀", "寒冰屏障", "灭生门", "游戏原创"):
+    blob = str(F.FACTIONS["yunlanzong"]) + str(F.FACTIONS["motie"])
+    for word in ("天道神雷剑诀", "寒冰屏障", "游戏原创"):
         assert word in blob, "游戏原创标注丢失：%s" % word
 
 
@@ -190,11 +190,13 @@ def test_no_cross_faction_high_tier_skills():
         ("碎魂冥掌", "hunzu", "hundian"),          # 魂族魂厉(1349章)，非魂殿
         ("风之极·落日耀", "yunlanzong", "huazong"),  # 云岚宗云韵/纳兰嫣然(338章)
         ("飞絮", "yunlanzong", "huazong"),          # 云岚宗系(305章)
-        ("碧蛇三花瞳", "tianshefu", "sherenzu"),     # 天蛇府圣女青鳞，非蛇人族
     ]
     for name, correct, wrong in checks:
         assert name in str(F.FACTIONS[correct]), "%s 应属 %s" % (name, correct)
         assert name not in str(F.FACTIONS[wrong]), "%s 误挂 %s（违反不跨门派原则）" % (name, wrong)
+    # 碧蛇三花瞳 属天蛇府圣女青鳞（C1/百科一致），曾误挂蛇人族；天蛇府已移出游戏，
+    # 此处钉死它不得回潮到蛇人族（防再次张冠李戴）。
+    assert "碧蛇三花瞳" not in str(F.FACTIONS["sherenzu"]), "碧蛇三花瞳不得再误挂蛇人族"
 
 
 def test_xiaojia_keeps_protagonist_core_only():

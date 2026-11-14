@@ -226,45 +226,6 @@ FACTIONS = {
         ],
         'sparse': False,
     },
-    "mojia": {
-        'name': "墨家（云岚宗外门）",
-        'tier': "early",
-        'pool': "starter",
-        'base': "帝都·墨家",
-        'npcs': [
-            "墨承（云岚宗外门执事）",
-            "墨冉"
-        ],
-        'skills': [
-        ],
-        'special_skills': [
-            {"name": "灭生门机关", "rank": "—", "note": "[游戏原创] 凑齐 4 枚太极残片方可开启 [G1]", "unlock_lv": 20},
-            {"name": "裂地手", "note": "莫家镇族斗技，掌力裂土 [C1]", "rank": "玄阶", "unlock_lv": 30}
-        ],
-        'items': [
-            "4 枚太极残片 [G1]",
-            "莫家令牌（莫家嫡系身份凭证）[游戏原创]"
-        ],
-        'relics': [
-            "灭生门 [G1]",
-            "墨家暗道 [G1]",
-            "墨承之殿 [G1]"
-        ],
-        'flames': [],
-        'starter': {
-            "skill": "墨家暗道身法",
-            "special": "灭生门机关",
-            "item": "太极残片",
-            "relic": "灭生门"
-        },
-        'weight': 8,
-        'unlock_lv': 1,
-        'sources': [
-            "G1",
-            "S7"
-        ],
-        'sparse': True,
-    },
     "sherenzu": {
         'name': "蛇人族",
         'tier': "early",
@@ -446,45 +407,6 @@ FACTIONS = {
             "C2"
         ],
         'sparse': False,
-    },
-    "tianshefu": {
-        'name': "天蛇府（天蛇帝国）",
-        'tier': "early",
-        'pool': "starter",
-        'base': "天蛇帝国",
-        'npcs': [
-            "青鳞（圣女）",
-            "青长老"
-        ],
-        'skills': [
-            "蛇技·分化（天蛇府斗技）[C2]",
-        ],
-        'special_skills': [
-            {"name": "碧蛇三花瞳", "rank": "瞳术", "note": "圣女专属，可收服蛇类魔兽 [S4]", "unlock_lv": 40},
-            {"name": "天蛇手", "note": "天蛇府秘传蛇形擒拿斗技 [C1]", "rank": "玄阶", "unlock_lv": 30}
-        ],
-        'items': [
-            "阴阳玄龙丹（七品，被血宗范痨抢走）[S3]",
-            "天蛇府圣物（天蛇府传承信物）[C1]"
-        ],
-        'relics': [
-            "天蛇府圣殿 [S4]"
-        ],
-        'flames': [],
-        'starter': {
-            "skill": "蛇系驭兽术",
-            "special": "碧蛇三花瞳",
-            "item": "阴阳玄龙丹",
-            "relic": "天蛇府圣殿"
-        },
-        'weight': 8,
-        'unlock_lv': 1,
-        'sources': [
-            "S3",
-            "S4",
-            "C2"
-        ],
-        'sparse': True,
     },
     "mulangu": {
         'name': "慕兰谷（慕兰帝国）",
@@ -1114,48 +1036,6 @@ FACTIONS = {
         ],
         'sparse': False,
     },
-    "xiaozu": {
-        'name': "萧族 / 天墓",
-        'tier': "late",
-        'pool': "hidden",
-        'base': "萧界 → 乌坦城",
-        'npcs': [
-            "萧玄（前族长）",
-            "萧晨"
-        ],
-        'skills': [
-            "天火三玄变（萧玄所创，四步含族纹修法）[S8][S9]",
-        ],
-        'special_skills': [
-            {"name": "萧族族纹", "rank": "—", "note": "九笔暗红，危急时血脉暴涨 [S8]", "unlock_lv": 60},
-            {"name": "斗帝血脉觉醒", "rank": "—", "note": "天墓萧玄血线传承 [S8][G1]", "unlock_lv": 90}
-        ],
-        'items': [
-            "陀舍古帝玉·萧族碎片 [S8]",
-            "远古虫皇衣（萧玄赠）[S9]"
-        ],
-        'relics': [
-            "天墓 [G1]",
-            "萧界（与古界相接）[S8]"
-        ],
-        'flames': [
-            "萧族三种传承异火（紫/赤/黑白，萧玄自爆引爆）[S8]"
-        ],
-        'starter': {
-            "skill": "天火三玄变",
-            "special": "萧族族纹",
-            "item": "陀舍古帝玉碎片",
-            "relic": "天墓"
-        },
-        'weight': 2,
-        'unlock_lv': 90,
-        'sources': [
-            "S8",
-            "S9",
-            "G1"
-        ],
-        'sparse': False,
-    },
     "yanzu": {
         'name': "炎族",
         'tier': "late",
@@ -1199,50 +1079,6 @@ FACTIONS = {
             "S8",
             "S9",
             "C1"
-        ],
-        'sparse': False,
-    },
-    "yaozu": {
-        'name': "药族",
-        'tier': "late",
-        'pool': "hidden",
-        'base': "药界",
-        'npcs': [
-            "药丹（族长，七星斗圣）",
-            "药天",
-            "药星极"
-        ],
-        'skills': [
-            "药典 / 炼药传承 [S4]",
-        ],
-        'special_skills': [
-            {"name": "化天药阵", "rank": "—", "note": "可召斗帝先祖残魂（药帝残魂）[S9]", "unlock_lv": 90},
-            {"name": "炼药天术", "note": "药族上古炼药秘传 [S8]", "rank": "秘法", "unlock_lv": 55}
-        ],
-        'items': [
-            "陀舍古帝玉·药族碎片 [S8]",
-            "药鼎 [S9]"
-        ],
-        'relics': [
-            "药界 [S4]"
-        ],
-        'flames': [
-            "九幽风炎(10)：药星极；龟灵地火(13)：药天 [S5]"
-        ],
-        'starter': {
-            "skill": "药典",
-            "special": "化天药阵",
-            "item": "药族丹方",
-            "relic": "药鼎"
-        },
-        'weight': 2,
-        'unlock_lv': 90,
-        'sources': [
-            "S4",
-            "S5",
-            "S8",
-            "S9",
-            "C2"
         ],
         'sparse': False,
     },
