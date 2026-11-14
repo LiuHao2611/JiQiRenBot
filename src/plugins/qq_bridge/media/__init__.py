@@ -206,6 +206,26 @@ async def send_file(ctx: dict, file: str, at_user: bool = False) -> None:
                         % type(e).__name__, at_user=at_user)
 
 
+async def send_card(ctx: dict, seg_type: str, data: str, at_user: bool = False) -> None:
+    """回呈分享卡片（OneBot v11 json/xml 富媒体段，如 B站视频/直播间卡片）。
+
+    原样回呈：把收到的卡片 data 用 MessageSegment.json/xml 再发出去，由 QQ 客户端
+    把它渲染成结构化卡片（而非退化成链接或文本）。这是「分享卡片」语义的核心——
+    手机端分享到 QQ 的是卡片，机器人收到后也当作卡片原样回给对话，不扒链接、不下载视频。
+
+    仅 NapCat/OneBot 通道支持：官方通道没有 json/xml 卡片概念，直接跳过（由调用方
+    降级为文字说明），不强行发（贴了也发不出去）。
+    """
+    if _foreign_channel(ctx):
+        log.warning(jlog("card_send_unsupported_channel", channel=_foreign_channel(ctx)))
+        return
+    if str(seg_type or "").lower() == "xml":
+        seg = MessageSegment.xml(str(data))
+    else:
+        seg = MessageSegment.json(str(data))
+    await _send(ctx, str(seg), at_user=at_user)
+
+
 async def send_video_link(ctx: dict, link: str, cover: str = "", at_user: bool = False) -> None:
     """§7.3：视频超限（或端点暂不支持直传）时改发下载链接 + 封面。
 

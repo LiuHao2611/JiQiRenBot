@@ -310,6 +310,12 @@ class Config:
     VIDEO_PARSE_OWNERS: list[str] = [
         s.strip() for s in (os.environ.get("VIDEO_PARSE_OWNERS") or "").split(",") if s.strip()
     ]
+    # B站分享卡片回呈（2026-11-15）：手机端把 B站视频/直播间「分享到 QQ」过来的是一张
+    # 结构化富媒体卡片（OneBot v11 的 json/xml 段），不是纯链接、也不是视频文件。
+    # 收到后**原样回呈为卡片**（MessageSegment.json/xml），不扒链接、不下载视频。
+    # 独立于上面的下载总开关 VIDEO_PARSE_ENABLED——卡片回呈与「解析链接+下载视频」是两件事，
+    # 用户明确要前者、不要后者。默认开启。
+    VIDEO_PARSE_BILI_CARD_ECHO: bool = _as_bool(os.environ.get("VIDEO_PARSE_BILI_CARD_ECHO"), True)
 
     # ---- QQ 官方机器人通道（docs/qq_official_bot_migration_plan.md §6.2）----
     # 双轨并行：本组配置只影响官方通道，**关掉 OFFICIAL_ENABLE 时 NapCat 零影响**。

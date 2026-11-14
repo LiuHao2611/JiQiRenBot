@@ -34,6 +34,75 @@ URL_RE = re.compile(r"https?://[^\s一-鿿，。、！？；：""''（）【】\
 # 手机 QQ 的 B站分享卡片偶尔使用 bilibili:// 私有协议（而非 http 链接）
 BILI_PRIVATE_RE = re.compile(r"bilibili://(?:video|bangumi|play)/?(?:BV[0-9A-Za-z]+|av\d+)", re.I)
 
+# B站分享卡片的域名特征（手机端分享到 QQ 的视频/直播间卡片，json/xml 段里带这些域名）。
+# 仅用于「识别这是不是 B站卡片」，绝不用于下载——识别后由主路由原样回呈为卡片。
+BILI_DOMAINS = ("bilibili.com", "b23.tv", "live.bilibili.com", "bilibili.tv")
+# 已知 B站分享卡片的 app id（OneBot json 段的 `app` 字段）。覆盖不到时靠域名/标题兜底。
+_BILI_APP_IDS = {"100951776", "1109937537", "101949115", "1109937537"}
+
+
+def _extract_bili_title(parsed) -> str:
+    """从 B站卡片结构里抽标题（优先 meta.detail_1 / meta.news 的 title/desc）。"""
+    if not isinstance(parsed, dict):
+        return ""
+    meta = parsed.get("meta") or {}
+    if isinstance(meta, dict):
+        for node in (meta.get("detail_1") or {}, meta.get("news") or {}):
+            if isinstance(node, dict):
+                for k in ("title", "desc", "brief", "content"):
+                    v = node.get(k)
+                    if isinstance(v, str) and v.strip():
+                        return v.strip()
+    p = parsed.get("prompt")
+    if isinstance(p, str) and p.strip():
+        return p.strip()
+    return ""
+
+
+def bili_card_info(seg_type: str, data) -> tuple[bool, str, str]:
+    """判断一段 json/xml 卡片是不是 B站分享卡片。
+
+    返回 (is_bilibili_card, kind('video'|'live'|''), title)。
+    kind 仅在 is_bilibili_card=True 时有意义；直播靠 live.bilibili.com 域名判定。
+    识别依据（任一命中即判为 B站）：
+      1) 卡片结构里出现 bilibili.com / b23.tv / live.bilibili.com 等域名链接；
+      2) `app` 字段是已知 B站 app id；
+      3) 标题/prompt 含「哔哩」或 bilibili。
+    """
+    if str(seg_type or "") not in ("json", "xml"):
+        return False, "", ""
+    if not data:
+        return False, "", ""
+    parsed = data
+    if isinstance(data, str):
+        try:
+            parsed = json.loads(data)
+        except Exception:
+            parsed = data  # 退化：当作纯文本扫描
+    urls: list[str] = []
+    _collect_bili_urls(parsed, urls)
+    is_bili = any(any(d in u for d in BILI_DOMAINS) for u in urls)
+    if not is_bili and isinstance(parsed, dict):
+        meta = parsed.get("meta") or {}
+        d1 = meta.get("detail_1") or {} if isinstance(meta, dict) else {}
+        cands = [str(parsed.get("app") or ""),
+                 str(d1.get("appid") or ""), str(d1.get("app") or "")]
+        if any(c in _BILI_APP_IDS for c in cands):
+            is_bili = True
+    if not is_bili and isinstance(parsed, dict):
+        blob = " ".join(str(parsed.get(k) or "") for k in ("prompt", "title", "desc", "text", "brief"))
+        if "哔哩" in blob or "bilibili" in blob.lower():
+            is_bili = True
+    if not is_bili:
+        return False, "", ""
+    kind = "live" if any("live.bilibili.com" in u for u in urls) else "video"
+    return True, kind, _extract_bili_title(parsed)
+
+
+def _is_bili_card_seg(seg) -> bool:
+    """便捷：直接对 onebot 消息段判断是不是 B站卡片。"""
+    return bili_card_info(getattr(seg, "type", ""), (getattr(seg, "data", None) or {}).get("data"))[0]
+
 
 def _collect_bili_urls(obj, out: list[str]) -> None:
     """递归从 json/xml 卡片结构中收集所有 bilibili 链接（http 短链/网页链/私有协议）。"""
@@ -90,6 +159,11 @@ async def _handle(bot: Bot, event: MessageEvent) -> None:
     if plain:
         sources.append(plain)
     for seg in event.message:
+        # B站分享卡片由主路由原样回呈（不下载）。这里跳过，避免旧逻辑去扒 b23.tv
+        # 链接 + 下载视频，破坏「分享卡片」语义（2026-11-15）。
+        if _is_bili_card_seg(seg):
+            logger.info("video_parse_skip_bili_card user=%s", event.user_id)
+            continue
         if seg.type in ("json", "xml"):
             payload = seg.data.get("data")
             parsed = payload
@@ -130,6 +204,9 @@ async def _handle(bot: Bot, event: MessageEvent) -> None:
     logger.info(f"video_parse_handle scene={scene} user={event.user_id} urls={urls} raw_len={len(raw_text)}")
     if not urls:
         for seg in event.message:
+            # B站卡片已被主路由处理（原样回呈），这里不再告警，避免误导
+            if _is_bili_card_seg(seg):
+                continue
             if seg.type in ("json", "xml"):
                 d = seg.data.get("data")
                 logger.warning(f"video_parse_no_url seg_type={seg.type} data_type={type(d).__name__} data_repr={repr(d)[:2000]}")
