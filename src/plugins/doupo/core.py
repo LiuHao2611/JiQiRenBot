@@ -19,13 +19,16 @@ from . import config as cfg
 # 等级成长  [源码 ah.java:165]
 # ---------------------------------------------------------------------------
 def c_stat(base: int, lv: int) -> int:
-    """原版成长公式：base*10 + 阶²*base*10 + base*lv，阶=(lv-1)/9。
+    """原版成长公式：base*10 + 阶²*base*10 + base*lv。
 
+    2026-11-14：阶改成按**大境界下标**取（cfg.realm_index），
+    不再写死 (lv-1)//9 —— 原著补全 斗之气/斗尊巅峰/半圣 后各境界小段数不同
+    （半圣 3 段、斗帝 1 级），用除法会把斗圣前五星算成半圣阶。
     实机校验（形象 0 / 玄重尺 +0 / 等级 1）：
       体力 880  力量 275  斗气 165  敏捷 220  防御 132
     与人物面板显示逐格吻合。
     """
-    k = (max(1, int(lv)) - 1) // 9
+    k = cfg.realm_index(lv)
     return int(base) * 10 + k * k * int(base) * 10 + int(base) * int(lv)
 
 
@@ -37,7 +40,7 @@ def create_player(qq, name, group) -> dict:
     st = {
         "qq": str(qq), "name": name, "group": str(group),
         "lv": 1, "exp": 0,
-        "lv_ver": 2,          # 九星制存档标记（store 用它判断要不要迁移）
+        "lv_ver": 3,          # 原著13阶存档标记（store 用它判断要不要迁移）
         "gold": cfg.START_GOLD, "luck": cfg.START_LUCK,
         "weapon": 0,
         "hp": 0, "mp": 0,
@@ -265,7 +268,11 @@ def monster_scaled(p, mon) -> dict:
     """
     st = stats(p)
     lv = int(p.get("lv", 1))
-    delta = max(-0.6, min(0.8, (int(mon["lv"]) - lv) * cfg.LV_DELTA_STEP))
+    # 等级差只微调"几回合打完"，上下限收紧到 ±20%（原 ±60%/+80%）：
+    # 原著 13 阶补齐后，物种表(7 只)不可能覆盖 103 级，总有些等级只能遇到
+    # 隔了十几级的怪；旧钳位会把这种战斗压成 2.9 回合秒杀或拖到 9 回合，
+    # 越过 test_monster_scaled_tracks_player 的 3~8 回合设计窗口。
+    delta = max(-0.2, min(0.2, (int(mon["lv"]) - lv) * cfg.LV_DELTA_STEP))
     m_def = max(20, int(st["防御"] * cfg.MON_DEF_RATIO))
 
     # 玩家打完需要几回合（等级差只影响时长，不影响难度）

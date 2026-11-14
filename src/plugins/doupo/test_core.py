@@ -86,16 +86,24 @@ def test_c_stat_matches_source():
 
 
 def test_realm_and_star():
-    # 九星制（2026-11-14）：每个大境界 9 星，满级 83
-    assert cfg.full_realm(1) == "一星斗者"
-    assert cfg.full_realm(9) == "九星斗者"
-    assert cfg.full_realm(10) == "一星斗师"
-    assert cfg.full_realm(12) == "三星斗师"
-    assert cfg.full_realm(13) == "四星斗师"     # 三星→四星，不再跨境界归零
-    assert cfg.full_realm(28) == "一星斗灵"
-    assert cfg.full_realm(81) == "九星斗圣"
-    assert cfg.full_realm(82) == "斗圣巅峰"
-    assert cfg.full_realm(83) == "斗帝"
+    # 原著 13 阶（2026-11-14 补全 斗之气 / 斗尊巅峰 / 半圣）
+    assert cfg.full_realm(1) == "斗之气一段"
+    assert cfg.full_realm(3) == "斗之气三段"      # 萧炎开局就是这个
+    assert cfg.full_realm(9) == "斗之气九段"
+    assert cfg.full_realm(10) == "一星斗者"
+    assert cfg.full_realm(18) == "九星斗者"
+    assert cfg.full_realm(19) == "一星斗师"
+    assert cfg.full_realm(21) == "三星斗师"
+    assert cfg.full_realm(22) == "四星斗师"       # 三星→四星，不再跨境界归零
+    assert cfg.full_realm(27) == "九星斗师"
+    assert cfg.full_realm(28) == "一星大斗师"
+    assert cfg.full_realm(81) == "九星斗尊"
+    assert cfg.full_realm(82) == "一转斗尊巅峰"
+    assert cfg.full_realm(91) == "半圣·低阶"
+    assert cfg.full_realm(93) == "半圣·高阶"
+    assert cfg.full_realm(94) == "一星斗圣"
+    assert cfg.full_realm(102) == "九星斗圣"
+    assert cfg.full_realm(103) == "斗帝"
 
 
 # ---------------------------------------------------------------------------
@@ -298,18 +306,18 @@ def test_level_up_flow():
 
 
 def test_tiandi_needs_luck():
-    p = _p(82)
-    p["exp"] = cfg.exp_need(82)
+    p = _p(102)
+    p["exp"] = cfg.exp_need(102)
     p["luck"] = 0
     r = core.level_up(p, rng=lambda: 0.99)     # 超不过成功率 -> 失败
     assert r["ok"] is False and r["reason"] == "tiandi_fail"
 
-    q = _p(82)
-    q["exp"] = cfg.exp_need(82)
+    q = _p(102)
+    q["exp"] = cfg.exp_need(102)
     q["luck"] = 0
     q["diyan"] = True                          # 帝炎 -> 100%
     r = core.level_up(q, rng=lambda: 0.999)
-    assert r["ok"] and q["lv"] == 83
+    assert r["ok"] and q["lv"] == 103
 
 
 def test_tiandi_rate():
@@ -335,7 +343,7 @@ def test_fight_always_terminates():
     """任意随机序列都必须在 15 回合内结束（防死循环）。"""
     import random
     rnd = random.Random(7)
-    for lv in (1, 5, 10, 20, 82):
+    for lv in (1, 5, 18, 45, 102):
         for mon in cfg.MONSTERS:
             p = _p(lv)
             p["hp"] = core.stats(p)["体力"]
@@ -374,7 +382,7 @@ def test_monster_scaled_tracks_player():
 
 def test_out_of_pool_monster_still_killable():
     """越级怪（生产里抽不到，但防呆）也必须在 15 回合内打得死，不能变成死局。"""
-    for lv in (1, 10, 20, 82):
+    for lv in (1, 20, 60, 102):
         p = _p(lv)
         for sp in cfg.MONSTERS:
             m = core.monster_scaled(p, sp)

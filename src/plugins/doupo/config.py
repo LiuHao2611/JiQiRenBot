@@ -24,78 +24,144 @@ DATA_PATH = os.environ.get(
 
 # ---------------------------------------------------------------------------
 # 境界 / 星级  [原著小说]
-# 原著《斗破苍穹》修为体系（自下而上，共 10 大境界）：
-#   斗者 → 斗师 → 大斗师 → 斗灵 → 斗王 → 斗皇 → 斗宗 → 斗尊 → 斗圣 → 斗帝
-# 斗圣之后另有「斗圣巅峰 / 半圣」过渡，再进阶斗帝。
+# 原著《斗破苍穹》完整修为体系（据百度百科 / 360 百科 / 互动百科「修炼体系」表，
+# 三处一致）：
+#   斗之气 一至九段        （入门，滋润筋骨；萧炎开局就是「斗之气三段」）
+#   斗者   一至九星        内视，聚气成气旋
+#   斗师   一至九星        斗气纱衣，聚气化液态
+#   大斗师 一至九星        斗气铠甲，斗气外放，聚气化固态
+#   斗灵   一至九星        斗气凝物，固态，形似海胆
+#   斗王   一至九星        斗气化翼，调动外界少量能量
+#   斗皇   一至九星        斗气化翼，可大量调动外界同属性能量
+#   斗宗   一至九星        不借外力停留虚空，可造空间锁
+#   斗尊   一至九星        掌握并运用空间之力
+#   斗尊巅峰 一至九转      斗尊之巅，面临入圣困境（每一转≈斗尊一至九星所需斗气）
+#   半圣   低阶 / 中阶 / 高阶   初入圣境，远胜尊境
+#   斗圣   一至九星        开辟空间；六星标志是空间挪位
+#   斗帝                  改变血脉，纳天地入体
 #
-# 2026-11-14 改回**原著九星制**：
-#   此前为了「29 级总进度不变」把每个大境界压成 3 星（一星/二星/三星），
-#   结果「三星斗师」突破后变成「一星大斗师」—— 星数归零，看着像掉级。
-#   用户实测反馈：「三星晋升到一星，又晋级到二星？这顺序不对啊」。
-#   原著每个大境界就是九星（一星斗师…九星斗师，再进一星大斗师），
-#   而且 core.c_stat 的阶公式本来写的就是 (lv-1)//9，压成 3 星后
-#   「大斗师 / 斗灵…」全都拿到 k=0 的斗者面板，属实的 bug。
-#   现在：
-#     斗者 1-9    斗师 10-18   大斗师 19-27
-#     斗灵 28-36  斗王 37-45   斗皇 46-54
-#     斗宗 55-63  斗尊 64-72   斗圣 73-81
-#     斗圣巅峰 82     斗帝 83
+# 版本沿革（勿再走回头路）：
+#   最初照搬 J2ME 手游 5 境界压缩模型 → 与原著不符；
+#   2026-11-14 上午为「29 级总量不变」压成每境界 3 星 → 三星斗师突破成
+#   「一星大斗师」，星数归零像掉级（用户实测否掉）；
+#   同日下午改回九星制，但漏了 斗之气 / 斗尊巅峰 / 半圣 三段（用户质问
+#   「原著是这样的吗」）→ 现按原著补全为 13 阶，见 REALM_TABLE。
+#   斗帝原著不分星（个别百科写「一至九星」无出处），此处按单级处理。
 # ---------------------------------------------------------------------------
-REALM_NAMES = ["斗者", "斗师", "大斗师", "斗灵", "斗王", "斗皇", "斗宗", "斗尊", "斗圣"]
-LV_PER_REALM = 9
-MAX_LV = 83
-TIANDI_LV = 83          # 斗帝等级
-PEAK_LV = 82            # 斗圣巅峰（进阶斗帝的起点）
-
 STAR_NAMES = ["一星", "二星", "三星", "四星", "五星", "六星", "七星", "八星", "九星"]
+DUAN_NAMES = ["一段", "二段", "三段", "四段", "五段", "六段", "七段", "八段", "九段"]
+ZHUAN_NAMES = ["一转", "二转", "三转", "四转", "五转", "六转", "七转", "八转", "九转"]
+BANSHENG_NAMES = ["低阶", "中阶", "高阶"]
+
+#: (境界名, 该境界的小段数, 小段名表, 展示格式)
+#:   sub_first   → 三星斗师 / 七转斗尊巅峰
+#:   realm_first → 斗之气三段（原著就写成这样）
+#:   dot         → 半圣·低阶
+#:   solo        → 斗帝（无小段）
+REALM_TABLE: list[tuple[str, int, list[str], str]] = [
+    ("斗之气", 9, DUAN_NAMES, "realm_first"),
+    ("斗者", 9, STAR_NAMES, "sub_first"),
+    ("斗师", 9, STAR_NAMES, "sub_first"),
+    ("大斗师", 9, STAR_NAMES, "sub_first"),
+    ("斗灵", 9, STAR_NAMES, "sub_first"),
+    ("斗王", 9, STAR_NAMES, "sub_first"),
+    ("斗皇", 9, STAR_NAMES, "sub_first"),
+    ("斗宗", 9, STAR_NAMES, "sub_first"),
+    ("斗尊", 9, STAR_NAMES, "sub_first"),
+    ("斗尊巅峰", 9, ZHUAN_NAMES, "sub_first"),
+    ("半圣", 3, BANSHENG_NAMES, "dot"),
+    ("斗圣", 9, STAR_NAMES, "sub_first"),
+    ("斗帝", 1, [""], "solo"),
+]
+
+REALM_NAMES = [t[0] for t in REALM_TABLE]
+LV_PER_REALM = 9                        # 除半圣(3)/斗帝(1)外的通例
+_TOTAL = sum(t[1] for t in REALM_TABLE)
+MAX_LV = _TOTAL                         # 103
+TIANDI_LV = MAX_LV                      # 斗帝
+PEAK_LV = MAX_LV - 1                    # 九星斗圣（冲击斗帝的起点）
+
+#: 每个等级所属的 (境界下标, 段内下标)，启动时算一次
+_LEVEL_INDEX: list[tuple[int, int]] = []
+for _ri, (_name, _cnt, _subs, _fmt) in enumerate(REALM_TABLE):
+    for _si in range(_cnt):
+        _LEVEL_INDEX.append((_ri, _si))
+
+
+def _clamp_lv(lv) -> int:
+    try:
+        n = int(lv)
+    except (TypeError, ValueError):
+        return 1
+    return max(1, min(MAX_LV, n))
+
+
+def realm_index(lv: int) -> int:
+    """等级 -> 大境界下标（0=斗之气 … 12=斗帝）。属性成长的「阶」用它。"""
+    ri, _ = _LEVEL_INDEX[_clamp_lv(lv) - 1]
+    return ri
 
 
 def realm_name(lv: int) -> str:
-    """等级 -> 境界名（按原著 10 大境界顺序）。82=斗圣巅峰，83=斗帝。"""
-    if lv >= TIANDI_LV:
-        return "斗帝"
-    if lv >= PEAK_LV:
-        return "斗圣巅峰"
-    idx = (lv - 1) // LV_PER_REALM
-    if idx >= len(REALM_NAMES):
-        idx = len(REALM_NAMES) - 1
-    return REALM_NAMES[idx]
+    """等级 -> 境界名（原著 13 阶）。"""
+    return REALM_TABLE[realm_index(lv)][0]
 
 
 def star_name(lv: int) -> str:
-    """1~81 级返回星级（一星..九星，每境界 9 级）；82/83 级无星。"""
-    if lv >= PEAK_LV:
-        return ""
-    return STAR_NAMES[(lv - 1) % LV_PER_REALM]
+    """等级 -> 小段名（一段…九段 / 一星…九星 / 一转…九转 / 低中高阶 / 空）。"""
+    ri, si = _LEVEL_INDEX[_clamp_lv(lv) - 1]
+    return REALM_TABLE[ri][2][si]
 
 
 def full_realm(lv: int) -> str:
-    s = star_name(lv)
-    return (s + realm_name(lv)) if s else realm_name(lv)
+    """完整称呼，按原著写法：「斗之气三段」「三星斗师」「七转斗尊巅峰」「半圣·低阶」「斗帝」。"""
+    n = _clamp_lv(lv)
+    ri, si = _LEVEL_INDEX[n - 1]
+    name, _cnt, subs, fmt = REALM_TABLE[ri]
+    sub = subs[si]
+    if fmt == "solo" or not sub:
+        return name
+    if fmt == "realm_first":
+        return f"{name}{sub}"
+    if fmt == "dot":
+        return f"{name}·{sub}"
+    return f"{sub}{name}"
 
 
-def migrate_lv(old_lv: int) -> int:
-    """旧存档（每境界 3 星，满级 29）→ 新九星制等级。
+def migrate_lv(old_lv: int, src_ver: int = 1) -> int:
+    """旧存档等级 → 当前（13 阶九星制）等级。
 
-    保留「境界 + 境界内第几星」不变，所以玩家看到的称呼一字不变：
-      一/二/三星斗师（旧 4/5/6）→ 一/二/三星斗师（新 10/11/12），
-      下次突破就是「四星斗师」，不会再出现星数归零。
-    旧 28（斗圣巅峰）→ 82，旧 29（斗帝）→ 83。
+    src_ver=1：最初「每境界 3 星 / 满级 29」；
+    src_ver=2：上午的九星制但缺 斗之气/斗尊巅峰/半圣（满级 83）。
+
+    两种都按「境界 + 境界内第几星」换算，玩家看到的称呼一字不变，
+    例如旧 3 星制 6 级「三星斗师」→ 2 版 12 级 → 现版 21 级「三星斗师」。
     """
     try:
         old = int(old_lv)
     except (TypeError, ValueError):
         return 1
-    if old >= 29:
+    if int(src_ver) <= 1:
+        # 1 版：斗者=1-3 … 斗圣=25-27，28 斗圣巅峰，29 斗帝
+        if old >= 29:
+            v2 = 83
+        elif old >= 28:
+            v2 = 82
+        elif old <= 1:
+            v2 = 1
+        else:
+            v2 = ((old - 1) // 3) * LV_PER_REALM + (old - 1) % 3 + 1
+    else:
+        v2 = old
+    # 2 版：斗者 1-9 … 斗圣 73-81，82 斗圣巅峰，83 斗帝
+    if v2 >= 83:
         return TIANDI_LV
-    if old >= 28:
+    if v2 >= 82:
         return PEAK_LV
-    if old <= 1:
+    if v2 <= 0:
         return 1
-    realm_idx = (old - 1) // 3          # 旧：每境界 3 星
-    star_idx = (old - 1) % 3            # 0/1/2 -> 一/二/三星
-    return realm_idx * LV_PER_REALM + star_idx + 1
-
+    # 2 版第 1-9 级是斗者；现版前面多了 9 级斗之气 → 整体后移 9 级
+    return min(MAX_LV, v2 + LV_PER_REALM)
 
 
 # ---------------------------------------------------------------------------
@@ -308,16 +374,16 @@ CRAFT_EXP = 60
 #: 表里只保留物种难度，避免"固定数值 + 玩家每 9 级平方跃升"造成的断崖。
 #:   hard = 物种难度，直接等于「怪斩杀玩家所需回合 ÷ 玩家斩杀怪所需回合」，越小越难。
 #:   exp_mul / gold_mul 只影响产出，越凶的怪给得越多。
-#: lv 是「这个物种出现在哪一档玩家面前」，2026-11-14 九星改版时按新等级轴重排
-#: （旧 2/5/9/14/19/24/28 → 每境界末端各放一只）。
+#: lv 是「这个物种出现在哪一档玩家面前」，2026-11-14 补全 13 阶后按新等级轴重排
+#: （对应 斗之气九段 / 九星斗者 / 九星斗师 / 九星斗灵 / 九星斗皇 / 九星斗尊 / 九星斗圣）。
 MONSTERS = [
-    {"name": "地鬼", "lv": 6, "hard": 0.92, "exp_mul": 1.00, "gold_mul": 0.80},
-    {"name": "巡山妖", "lv": 15, "hard": 0.90, "exp_mul": 1.00, "gold_mul": 1.00},
+    {"name": "地鬼", "lv": 9, "hard": 0.92, "exp_mul": 1.00, "gold_mul": 0.80},
+    {"name": "巡山妖", "lv": 18, "hard": 0.90, "exp_mul": 1.00, "gold_mul": 1.00},
     {"name": "赤炎狼", "lv": 27, "hard": 0.89, "exp_mul": 1.00, "gold_mul": 1.10},
-    {"name": "紫晶翼狮王", "lv": 42, "hard": 0.87, "exp_mul": 1.00, "gold_mul": 1.20},
-    {"name": "天山雪蟒", "lv": 57, "hard": 0.86, "exp_mul": 1.00, "gold_mul": 1.30},
-    {"name": "云岚山守山兽", "lv": 72, "hard": 0.85, "exp_mul": 1.00, "gold_mul": 1.40},
-    {"name": "魂殿执事", "lv": 82, "hard": 0.83, "exp_mul": 1.00, "gold_mul": 1.60},
+    {"name": "紫晶翼狮王", "lv": 45, "hard": 0.87, "exp_mul": 1.00, "gold_mul": 1.20},
+    {"name": "天山雪蟒", "lv": 63, "hard": 0.86, "exp_mul": 1.00, "gold_mul": 1.30},
+    {"name": "云岚山守山兽", "lv": 81, "hard": 0.85, "exp_mul": 1.00, "gold_mul": 1.40},
+    {"name": "魂殿执事", "lv": 102, "hard": 0.83, "exp_mul": 1.00, "gold_mul": 1.60},
 ]
 
 #: 玩家斩杀怪物所需回合。血量按此反解，"几回合打完"是设计值而不是副产品。
