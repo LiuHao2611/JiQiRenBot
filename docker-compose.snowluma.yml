@@ -77,6 +77,12 @@ services:
       # queue.DATA_DIR 的官方覆盖入口，这里显式钉死到卷根（与代码默认值一致）。
       QQ_DATA_DIR: "/app/data"
       TZ: "Asia/Shanghai"
+      # 视频解析出片（2026-11-14）：协议端与 bridge 不共享文件系统，视频段传本地
+      # 绝对路径协议端读不到（实测 ENOENT）。两个变量 + 下面那条 bind mount 一起，
+      # 让成片先落到协议端自己的 /app/data/media 里，再把该路径交给视频段。
+      # 留空两个变量 = 同机部署原行为（直接把 bridge 路径给协议端）。
+      VIDEO_PARSE_PROTO_MEDIA_DIR: "/app/proto-media"
+      VIDEO_PARSE_PROTO_MEDIA_SEEN: "/app/data/media"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
@@ -85,6 +91,9 @@ services:
       - ./logs:/app/logs
       - ./tmp:/app/tmp
       - ./downloads:/downloads
+      # 视频解析成片的落地点：宿主 ./snowluma/data 同时是协议端的 /app/data，
+      # 所以 bridge 写这里，协议端立刻能按 /app/data/media/<name> 读到同一份文件。
+      - ./snowluma/data/media:/app/proto-media
     healthcheck:
       test: ["CMD", "python", "-c", "import socket;socket.create_connection(('127.0.0.1',8082),3)"]
       interval: 30s

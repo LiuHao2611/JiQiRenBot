@@ -75,8 +75,8 @@ from .intent import all_intents as _intents_all
 from .intent import all_intents as _intents_all
 from .intent import route as route_intent
 from .intent import validate_prompt, truncate_prompt
-from .media import (send_card, send_image, send_images, send_pic, send_record, send_text,
-                     send_video, send_video_link, send_file)
+from .media import (send_image, send_images, send_pic, send_record, send_text, send_video,
+                     send_video_link, send_file)
 from .ratelimit import rate_limiter
 
 from src.group_switch import group_enabled, group_send_whitelist
@@ -136,10 +136,6 @@ from .emotion import (EmotionError, EmotionManager, EmotionStore,  # noqa: F401
 # group_style / budget 包同款零主包依赖。
 from .group_style import (GroupStyleError,  # noqa: F401
                           GroupStyleManager, group_style_manager)
-# 视频链接解析插件（抖音/小红书/B站链接解析 + 下载）；同时导出 B站卡片识别函数，
-# 供主路由做「B站分享卡片原样回呈」。video_parse 包不 import 主包（仅依赖 config/
-# ai_mode/history），无循环 import 风险。
-from .video_parse import bili_card_info  # noqa: E402
 from .budget import (BudgetError, BudgetManager,  # noqa: F401
                      budget_manager)
 # 签到模块（2026-10-30）：每日签到 + 激励 + 排行榜
@@ -6023,42 +6019,6 @@ async def _handle_voice_message(ev, trace_id: str) -> None:
     await _reply(ctx, sess, "（听到）%s" % text[:200], title="语音转写")
 
 
-async def _handle_bilibili_card(ev, card: dict, trace_id: str) -> None:
-    """B站分享卡片：识别 + 原样回呈为卡片（不扒链接、不下载视频）。
-
-    手机端把 B站视频/直播间「分享到 QQ」过来的是一张结构化富媒体卡片（json/xml 段），
-    不是纯链接、也不是视频文件。收到后直接把卡片 data 用 MessageSegment.json/xml 再
-    发回去，由 QQ 客户端渲染成同样的卡片；附带一句简短说明。绝不抽 b23.tv 链接去解析、
-    绝不下载视频——那会破坏「分享卡片」的语义（用户 2026-11-15 明确要卡片、不要链接/视频）。
-    """
-    ctx = _ctx(ev)
-    sess = session_store.get(ev.user_id)
-    seg_type = card.get("type") or "json"
-    data = card.get("data") or ""
-    is_bili, kind, title = bili_card_info(seg_type, data)
-    if not is_bili:
-        # 非 B站卡片不应走到这里（路由已过滤），但防御性兜底：不回呈、不报错
-        log.warning(jlog("bili_card_not_bili", trace_id=trace_id))
-        return
-    label = "直播" if kind == "live" else "视频"
-    cap = "收到 B站分享%s" % label + ("：《%s》" % title if title else "")
-    # 1) 原样回呈卡片（核心：让 QQ 客户端渲染成卡片）。
-    # 不 @ 人：@ 段拼在 json 卡片前会改变消息结构，保守只发纯卡片，减少渲染不确定性。
-    try:
-        await send_card(ctx, seg_type, data, at_user=False)
-    except Exception as e:  # noqa: BLE001 — 如实上报，绝不静默
-        log.warning(jlog("bili_card_echo_failed", error=type(e).__name__,
-                         detail=str(e)[:160], trace_id=trace_id))
-    # 2) 简短说明（卡片渲染失败也有这句兜底，不至于完全静默）
-    try:
-        await _reply(ctx, sess, cap, title="B站卡片")
-    except Exception as e:  # noqa: BLE001
-        log.warning(jlog("bili_card_caption_failed", error=type(e).__name__,
-                         detail=str(e)[:160], trace_id=trace_id))
-    log.info(jlog("bili_card_echo", kind=kind, title=title, user_id=ev.user_id,
-                  group_id=ev.group_id, trace_id=trace_id))
-
-
 async def _handle_media_command(ev, trace_id: str) -> None:
     """/看图 命令族（M4 2026-10-20）：看图 / 列表 / 看第N张 / 说 / 状态。
 
@@ -6514,21 +6474,6 @@ async def _route(ev, trace_id: str) -> None:
     allowed, reason = allow(ev)
     if not allowed:
         return  # 黑名单/非白名单 → 静默，不回任何提示（§8）
-
-    # ---- B站分享卡片（2026-11-15）：手机端分享的视频/直播间卡片（json/xml 富媒体段）----
-    # 收到即原样回呈为卡片（MessageSegment.json/xml），不扒链接、不下载视频。
-    # 位置：紧随权限闸、在语音/自动看图/AI 模式之前——卡片是明确内容，
-    # 且部分卡片可能自带封面图段，若不前置会被 MM_AUTO_LOOK 当成"纯图"多调一次视觉模型。
-    # 与全局 @门禁一致：群消息需 @机器人（dispatcher 已放行），私聊仅主人（allow 已把关）。
-    # 独立于视频下载总开关 VIDEO_PARSE_ENABLED——这是用户明确要的能力。
-    # 若消息主体是指令（以 / 开头），则不抢占，留给下方命令路由。
-    if Config.VIDEO_PARSE_BILI_CARD_ECHO and getattr(ev, "cards", None):
-        _rt0 = (ev.raw_text or "").strip()
-        if not _rt0.startswith("/"):
-            for _c in ev.cards:
-                if bili_card_info(_c.get("type"), _c.get("data"))[0]:
-                    await _handle_bilibili_card(ev, _c, trace_id)
-                    return
 
     # ---- M4 语音（2026-10-20）：主人私聊语音 → ASR 转写 → 当普通文字消息继续 ----
     # 只改 ev.raw_text（dataclass 字段可写），后续命令/关键词/AI 流程零改动，

@@ -43,10 +43,6 @@ class QQEvent:
     # M4 语音（2026-10-20）：本条消息里的语音段 dict{file,url}（record 类型）。
     # 默认空列表——不影响既有调用方；ASR 转写在 __init__.py 做。
     voices: list = field(default_factory=list)
-    # 分享卡片段（2026-11-15）：OneBot v11 的 json/xml 富媒体段（如手机端分享到 QQ 的
-    # B站视频/直播间卡片）。每条 dict{type, data}，data 为卡片原始字符串（json 是 JSON
-    # 字符串、xml 是 XML 字符串）。本模块只做通用抽取，不做平台识别；平台判定在 __init__.py。
-    cards: list = field(default_factory=list)
     self_id: str = ""
     trace_id: str = ""
     raw: Any = None
@@ -66,22 +62,19 @@ class QQEvent:
         return self.scope_key
 
 
-def _extract(segments) -> tuple[str, bool, list, str, list, list, list]:
-    """提取 (纯文本, 是否@机器人, 图片url列表, self_id_at, 文件段列表, 语音段列表, 卡片段列表)。
+def _extract(segments) -> tuple[str, bool, list, str, list, list]:
+    """提取 (纯文本, 是否@机器人, 图片url列表, self_id_at, 文件段列表, 语音段列表)。
 
     采用 duck typing 读取，便于单元测试直接喂假对象。
     文件段（OneBot v11 `file` 类型，NapCat 好友文件/群文件以消息段投递）提取为
     dict{file(文件id), name, size, url} —— 落盘与下载由 __init__.py 处理。
     语音段（`record` 类型，M4 2026-10-20）提取为 dict{file,url} —— 转码与
     ASR 由 __init__.py 处理（本模块只做提取，不碰 IO）。
-    卡片段（2026-11-15，`json`/`xml` 富媒体段，如 B站分享卡片）提取为
-    dict{type, data}，data 为卡片原始字符串；平台识别在 __init__.py 做。
     """
     texts: list = []
     images: list = []
     files: list = []
     voices: list = []
-    cards: list = []
     at_bot = False
     self_id_at = ""
     for seg in segments or []:
@@ -105,13 +98,9 @@ def _extract(segments) -> tuple[str, bool, list, str, list, list, list]:
                 "size": int(data.get("size") or 0),
                 "url": str(data.get("url") or ""),
             })
-        elif seg_type in ("json", "xml"):  # 2026-11-15：分享卡片（B站等富媒体段）
-            raw = data.get("data")
-            if raw:
-                cards.append({"type": seg_type, "data": raw})
         elif seg_type == "at":
             self_id_at = str(data.get("qq") or "")
-    return "".join(texts).strip(), at_bot, images, self_id_at, files, voices, cards
+    return "".join(texts).strip(), at_bot, images, self_id_at, files, voices
 
 
 def normalize(event: Any, self_id: str = "", trace_id: str = "") -> QQEvent | None:
@@ -137,7 +126,7 @@ def normalize(event: Any, self_id: str = "", trace_id: str = "") -> QQEvent | No
     )
     self_id = self_id or str(getattr(event, "self_id", "") or "")
 
-    raw_text, _, images, at_qq, files, voices, cards = _extract(segments)
+    raw_text, _, images, at_qq, files, voices = _extract(segments)
     at_bot = bool(at_qq) and (at_qq == "all" or at_qq == self_id)
 
     if message_type == "group" and not at_bot:
@@ -183,7 +172,6 @@ def normalize(event: Any, self_id: str = "", trace_id: str = "") -> QQEvent | No
         images=images,
         files=files,
         voices=voices,
-        cards=cards,
         self_id=self_id,
         trace_id=trace_id,
         raw=event,

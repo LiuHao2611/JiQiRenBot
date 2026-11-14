@@ -310,20 +310,17 @@ class Config:
     VIDEO_PARSE_OWNERS: list[str] = [
         s.strip() for s in (os.environ.get("VIDEO_PARSE_OWNERS") or "").split(",") if s.strip()
     ]
-    # B站分享卡片回呈（2026-11-15）：手机端把 B站视频/直播间「分享到 QQ」过来的是一张
-    # 结构化富媒体卡片（OneBot v11 的 json/xml 段），不是纯链接、也不是视频文件。
-    # 收到后**原样回呈为卡片**（MessageSegment.json/xml），不扒链接、不下载视频。
-    # 独立于上面的下载总开关 VIDEO_PARSE_ENABLED——卡片回呈与「解析链接+下载视频」是两件事，
-    # 用户明确要前者、不要后者。默认开启。
-    VIDEO_PARSE_BILI_CARD_ECHO: bool = _as_bool(os.environ.get("VIDEO_PARSE_BILI_CARD_ECHO"), True)
-    # B站视频「分享卡片」（2026-11-15）。**默认关闭**：读 SnowLuma 源码 + 逐条实测后确认，
-    # 本部署（Linux QQ / SnowLuma）发不出「既能渲染成卡片、又点开直达视频页」的 B站 卡片：
-    #   · getMiniAppArk 的 protobuf body 只有 {appid,title,desc,picUrl,jumpUrl,iconUrl}，
-    #     appid 写死内测版 1109937557，无 scene/qqdocurl 字段 → 点开必「该小程序内测中」；
-    #   · send_tuwen_ark 的 OIDB 0xDC2_34 在本账号被静默拒绝（只收 action、不发消息）；
-    #   · 手搓 xml 卡被 QQ NT 降级成链接；手搓 structmsg 无签名 → 「发送者版本过低」。
-    # 唯一可行的是「手机 QQ 签出的真卡」：拿到真卡后再定方案，先关自动回复避免发错。
-    BILI_SHARE_CARD: bool = _as_bool(os.environ.get("BILI_SHARE_CARD"), False)
+    # ---- 出片落地目录（2026-11-14：SnowLuma 双容器部署必需）----
+    # 协议端和 bridge 是**两个容器、不共享文件系统**：视频段直接传本地绝对路径，
+    # 协议端 realpath 直接 ENOENT（实测 "no such file or directory, realpath
+    # '/app/tmp/test_video.mp4'"），用户一条都收不到。所以约定一个双方都看得见的
+    # 目录：bridge 写 PROTO_MEDIA_DIR，协议端在同一份宿主目录上看到的是 PROTO_MEDIA_SEEN。
+    # 两个都留空 = 同机部署（NapCat 时代）原行为：直接把 bridge 的绝对路径交给协议端。
+    # 只设一个属于配置错误，会在发片时报错，绝不猜。
+    VIDEO_PARSE_PROTO_MEDIA_DIR: str = os.environ.get("VIDEO_PARSE_PROTO_MEDIA_DIR") or ""
+    VIDEO_PARSE_PROTO_MEDIA_SEEN: str = os.environ.get("VIDEO_PARSE_PROTO_MEDIA_SEEN") or ""
+    # 落地文件保留时长（秒）：到期由下一次发片顺手清理，避免目录无限膨胀。
+    VIDEO_PARSE_PROTO_MEDIA_TTL: int = int(os.environ.get("VIDEO_PARSE_PROTO_MEDIA_TTL") or 7200)
 
     # ---- QQ 官方机器人通道（docs/qq_official_bot_migration_plan.md §6.2）----
     # 双轨并行：本组配置只影响官方通道，**关掉 OFFICIAL_ENABLE 时 NapCat 零影响**。

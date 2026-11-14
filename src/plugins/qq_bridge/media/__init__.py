@@ -19,30 +19,16 @@ from __future__ import annotations
 
 import asyncio
 import base64
-import json
 import random
-from xml.sax.saxutils import escape as _xml_escape, quoteattr as _xml_quoteattr
 
 import httpx
-from nonebot.adapters.onebot.v11 import Message, MessageSegment
+from nonebot.adapters.onebot.v11 import MessageSegment
 
 from ..config import Config, get_logger, jlog
 from ..connector import connector
 from .. import history
 
 log = get_logger()
-
-# 备注（2026-11-15 深挖结论，勿再走弯路）：
-# B站分享卡片的四条路，只有最后一条实测能真正发出去：
-#   1) get_mini_app_ark（模板支/自定义 schema）→ 小程序卡，url 是 m.q.qq.com/a/s/<hash>
-#      （拉起小程序），且强制 scene=0、丢弃 qqdocurl；B站 QQ 小程序在内测 → 「内测中」。
-#   2) 手搓 com.tencent.structmsg → 无腾讯签名 token → 「发送者版本过低」。
-#   3) 协议端 send_tuwen_ark → **空实现**：日志只收 action，不产生任何消息记录（实测）。
-#   4) **手搓 `xml` 段（老式图文卡，走 action=web + url）** → 走普通 send_private_msg，
-#      实测协议端日志 `发送：[XML消息]`、消息库有 message_sent 记录、无报错。
-#      ← 当前实现（见 send_bili_share_card）。点开按 url 打开 B站视频网页。
-_BILI_ICON = ("https://miniapp.gtimg.cn/public/appicon/"
-               "51f90239b78a2e4994c11215f4c4ba15_200.jpg")
 
 
 async def _download_bytes(url: str) -> bytes:
@@ -75,22 +61,11 @@ def _target(ctx: dict) -> tuple[str, dict]:
     return "send_private_msg", {"user_id": user_id}
 
 
-async def _send(ctx: dict, message, at_user: bool = False) -> None:
-    """发消息。message 可以是 CQ 字符串，也可以是 Message/MessageSegment 对象。
-
-    卡片（json/xml）必须传 Message 对象：`str(MessageSegment.json(...))` 会拼成
-    `[CQ:json,data={...}]`，而卡片 JSON 里必然有逗号，CQ 字符串解析会按逗号截断。
-    传 Message 时适配器用 DataclassEncoder 序列化成段数组（`message:[{type,data}]`），
-    协议端按结构解析，不经过 CQ 文本解析。
-    """
+async def _send(ctx: dict, message: str, at_user: bool = False) -> None:
     action, params = _target(ctx)
     if at_user and int(ctx.get("group_id") or 0):
         # 群聊回传时 @发起人（§5.2 示例）
-        _at = MessageSegment.at(int(ctx["user_id"]))
-        if isinstance(message, str):
-            message = str(_at) + " " + message
-        else:
-            message = Message(_at) + " " + message
+        message = str(MessageSegment.at(int(ctx["user_id"]))) + " " + message
     params = dict(params, message=message)
 
     await asyncio.sleep(_delay())
@@ -116,7 +91,7 @@ async def _send(ctx: dict, message, at_user: bool = False) -> None:
         bot = connector.first_bot()
         self_id = str(getattr(bot, "self_id", "") or "")
         msg_id = (ret or {}).get("message_id") if isinstance(ret, dict) else None
-        await asyncio.to_thread(history.record_outgoing, ctx, str(params.get("message") or ""), self_id, int(msg_id or 0))
+        await asyncio.to_thread(history.record_outgoing, ctx, params.get("message") or "", self_id, int(msg_id or 0))
     except Exception as e:  # noqa: BLE001
         log.warning(jlog("history_out_failed", error=type(e).__name__, detail=str(e)[:120]))
 
@@ -229,84 +204,6 @@ async def send_file(ctx: dict, file: str, at_user: bool = False) -> None:
         log.warning(jlog("file_send_failed", detail=str(e)[:160]))
         await send_text(ctx, "文件发不出去（%s）。可能路径不对或 QQ 端不支持该类型。"
                         % type(e).__name__, at_user=at_user)
-
-
-async def send_card(ctx: dict, seg_type: str, data: str, at_user: bool = False) -> None:
-    """回呈分享卡片（OneBot v11 json/xml 富媒体段，如 B站视频/直播间卡片）。
-
-    原样回呈：把收到的卡片 data 用 MessageSegment.json/xml 再发出去，由 QQ 客户端
-    把它渲染成结构化卡片（而非退化成链接或文本）。这是「分享卡片」语义的核心——
-    手机端分享到 QQ 的是卡片，机器人收到后也当作卡片原样回给对话，不扒链接、不下载视频。
-
-    注意：**必须以 Message 对象发送**，不能拼成 CQ 字符串——卡片 JSON 含逗号，
-    `[CQ:json,data=...]` 会被 CQ 解析器按逗号截断而失效（实测确认）。
-
-    仅 NapCat/OneBot 通道支持：官方通道没有 json/xml 卡片概念，直接跳过（由调用方
-    降级为文字说明），不强行发（贴了也发不出去）。
-    """
-    if _foreign_channel(ctx):
-        log.warning(jlog("card_send_unsupported_channel", channel=_foreign_channel(ctx)))
-        return
-    if not isinstance(data, str):
-        data = json.dumps(data, ensure_ascii=False) if str(seg_type).lower() != "xml" else str(data)
-    if str(seg_type or "").lower() == "xml":
-        seg = MessageSegment.xml(data)
-    else:
-        seg = MessageSegment.json(data)
-    await _send(ctx, Message(seg), at_user=at_user)
-    log.info(jlog("card_sent", kind=str(seg_type), bytes=len(data)))
-
-
-def build_bili_share_xml(*, title: str, desc: str = "", pic_url: str = "",
-                         bvid: str = "") -> str:
-    """构造 B站视频的 `xml` 图文卡（action=web，点开走 url）。纯函数，便于单测与真机验证。"""
-    bvid = str(bvid or "").strip()
-    if not bvid:
-        raise ValueError("build_bili_share_xml 缺少 bvid")
-    url = "https://www.bilibili.com/video/%s" % bvid
-    body_title = str(title or "")[:60]
-    body_desc = str(desc or "")[:80]
-    return (
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        '<msg serviceID="1" templateID="1" action="web" brief=%s sourceMsgId="0" '
-        'url=%s flag="0" adverSign="0" multiMsgFlag="0">'
-        '<item layout="2"><picture cover=%s w="0" h="0"/>'
-        '<title>%s</title><summary>%s</summary></item>'
-        '<source name="哔哩哔哩" icon="%s" action="" appid="0" url=""/>'
-        '</msg>'
-    ) % (
-        _xml_quoteattr("[分享]%s" % body_title),
-        _xml_quoteattr(url),
-        _xml_quoteattr(str(pic_url or "")),
-        _xml_escape(body_title),
-        _xml_escape(body_desc),
-        _BILI_ICON,
-    )
-
-
-async def send_bili_share_card(ctx: dict, *, title: str, desc: str = "",
-                               pic_url: str = "", bvid: str = "",
-                               at_user: bool = False) -> str:
-    """把 B站视频以「卡片」发出：点开直达 B站视频页（不是裸链接、不是视频文件）。
-
-    **为什么最终用手搓 `xml` 段（2026-11-15 逐条实测，勿再走弯路）**：
-      1) `get_mini_app_ark` → 小程序卡；url 是 `m.q.qq.com/a/s/<hash>`（拉起小程序），
-         而 B站 QQ 小程序（appid 1109937557）在**内测** → 点开提示「该小程序内测中」；
-      2) 手搓 `com.tencent.structmsg` → 无腾讯签名 token → 「发送者版本过低」；
-      3) 协议端 `send_tuwen_ark` → **空实现**：日志只收 action，协议端不产生发送记录；
-      4) **手搓 `xml` 富媒体段** → 走普通 send_private_msg/send_group_msg，实测协议端
-         日志 `发送：[XML消息]`、消息库有 message_sent 记录、无报错；`action="web"` +
-         `url` 让点击按 URL 打开 B站视频网页。← 当前实现
-
-    返回 XML 字符串（便于调用方记录/排障）。仅 NapCat / OneBot 通道支持。
-    """
-    if _foreign_channel(ctx):
-        raise RuntimeError("B站分享卡片仅支持 NapCat/OneBot 通道（官方通道无 xml 卡）")
-    xml = build_bili_share_xml(title=title, desc=desc, pic_url=pic_url, bvid=bvid)
-    await send_card(ctx, "xml", xml, at_user=at_user)
-    log.info(jlog("bili_share_sent", bvid=str(bvid).strip(), style="xml",
-                  title=str(title or "")[:40]))
-    return xml
 
 
 async def send_video_link(ctx: dict, link: str, cover: str = "", at_user: bool = False) -> None:

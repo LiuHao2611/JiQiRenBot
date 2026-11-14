@@ -9,6 +9,8 @@ import asyncio
 import json
 import os
 import re
+import shutil
+import time
 
 from nonebot import on_message
 from nonebot.adapters.onebot.v11 import Bot, MessageEvent, Message, MessageSegment
@@ -16,9 +18,6 @@ from nonebot.log import logger
 
 from .. import history
 from ..config import Config
-# B站「分享卡片」出口：协议端 get_mini_app_ark 建原生小程序卡 → json 段发送。
-# media 只依赖 config/connector/history，不 import 本包，无循环 import。
-from ..media import send_bili_share_card
 # AI 模式（2026-10-19）：本模块也是独立 matcher，与主流程并行收消息；
 # 会话开着大模型陪聊时视频链接归 AI 回，避免解析卡 + AI 回复双重刷屏
 # （与 game_tools / 主流程 _route 的豁免口径一致）。
@@ -33,78 +32,9 @@ from .kuaishou import KuaishouParser  # noqa: F401
 from .xiaohongshu import XiaohongshuParser  # noqa: F401
 
 # 消息文本里的 URL（排除中文与常见中文标点，避免截断）
-URL_RE = re.compile(r"https?://[^\s一-鿿，。、！？；：""''（）【】\]]+")
+URL_RE = re.compile(r"""https?://[^\s一-鿿，。、！？；："''（）【】\]]+""")
 # 手机 QQ 的 B站分享卡片偶尔使用 bilibili:// 私有协议（而非 http 链接）
 BILI_PRIVATE_RE = re.compile(r"bilibili://(?:video|bangumi|play)/?(?:BV[0-9A-Za-z]+|av\d+)", re.I)
-
-# B站分享卡片的域名特征（手机端分享到 QQ 的视频/直播间卡片，json/xml 段里带这些域名）。
-# 仅用于「识别这是不是 B站卡片」，绝不用于下载——识别后由主路由原样回呈为卡片。
-BILI_DOMAINS = ("bilibili.com", "b23.tv", "live.bilibili.com", "bilibili.tv")
-# 已知 B站分享卡片的 app id（OneBot json 段的 `app` 字段）。覆盖不到时靠域名/标题兜底。
-_BILI_APP_IDS = {"100951776", "1109937537", "101949115", "1109937537"}
-
-
-def _extract_bili_title(parsed) -> str:
-    """从 B站卡片结构里抽标题（优先 meta.detail_1 / meta.news 的 title/desc）。"""
-    if not isinstance(parsed, dict):
-        return ""
-    meta = parsed.get("meta") or {}
-    if isinstance(meta, dict):
-        for node in (meta.get("detail_1") or {}, meta.get("news") or {}):
-            if isinstance(node, dict):
-                for k in ("title", "desc", "brief", "content"):
-                    v = node.get(k)
-                    if isinstance(v, str) and v.strip():
-                        return v.strip()
-    p = parsed.get("prompt")
-    if isinstance(p, str) and p.strip():
-        return p.strip()
-    return ""
-
-
-def bili_card_info(seg_type: str, data) -> tuple[bool, str, str]:
-    """判断一段 json/xml 卡片是不是 B站分享卡片。
-
-    返回 (is_bilibili_card, kind('video'|'live'|''), title)。
-    kind 仅在 is_bilibili_card=True 时有意义；直播靠 live.bilibili.com 域名判定。
-    识别依据（任一命中即判为 B站）：
-      1) 卡片结构里出现 bilibili.com / b23.tv / live.bilibili.com 等域名链接；
-      2) `app` 字段是已知 B站 app id；
-      3) 标题/prompt 含「哔哩」或 bilibili。
-    """
-    if str(seg_type or "") not in ("json", "xml"):
-        return False, "", ""
-    if not data:
-        return False, "", ""
-    parsed = data
-    if isinstance(data, str):
-        try:
-            parsed = json.loads(data)
-        except Exception:
-            parsed = data  # 退化：当作纯文本扫描
-    urls: list[str] = []
-    _collect_bili_urls(parsed, urls)
-    is_bili = any(any(d in u for d in BILI_DOMAINS) for u in urls)
-    if not is_bili and isinstance(parsed, dict):
-        meta = parsed.get("meta") or {}
-        d1 = meta.get("detail_1") or {} if isinstance(meta, dict) else {}
-        cands = [str(parsed.get("app") or ""),
-                 str(d1.get("appid") or ""), str(d1.get("app") or "")]
-        if any(c in _BILI_APP_IDS for c in cands):
-            is_bili = True
-    if not is_bili and isinstance(parsed, dict):
-        blob = " ".join(str(parsed.get(k) or "") for k in ("prompt", "title", "desc", "text", "brief"))
-        if "哔哩" in blob or "bilibili" in blob.lower():
-            is_bili = True
-    if not is_bili:
-        return False, "", ""
-    kind = "live" if any("live.bilibili.com" in u for u in urls) else "video"
-    return True, kind, _extract_bili_title(parsed)
-
-
-def _is_bili_card_seg(seg) -> bool:
-    """便捷：直接对 onebot 消息段判断是不是 B站卡片。"""
-    return bili_card_info(getattr(seg, "type", ""), (getattr(seg, "data", None) or {}).get("data"))[0]
 
 
 def _collect_bili_urls(obj, out: list[str]) -> None:
@@ -123,6 +53,49 @@ def _collect_bili_urls(obj, out: list[str]) -> None:
 _matcher = None
 
 
+def _sweep_media(dir_path: str, ttl: int) -> None:
+    """清掉落地目录里超过 ttl 的旧片（下一次发片时顺手做，不另起定时任务）。"""
+    cutoff = time.time() - max(60, ttl)
+    try:
+        for name in os.listdir(dir_path):
+            p = os.path.join(dir_path, name)
+            try:
+                if os.path.isfile(p) and os.path.getmtime(p) < cutoff:
+                    os.remove(p)
+            except OSError:
+                continue
+    except OSError as e:  # noqa: BLE001 — 清理失败绝不能挡发片
+        logger.warning(f"video_media_sweep_failed dir={dir_path} err={e}")
+
+
+def _stage_for_protocol(path: str) -> str:
+    """把下载好的成片搬到协议端读得到的路径，返回要填进视频段的 file 值。
+
+    同机部署（VIDEO_PARSE_PROTO_MEDIA_DIR/_SEEN 都留空）→ 原样返回绝对路径。
+    双容器部署（SnowLuma）→ 拷贝到 bridge 侧 PROTO_MEDIA_DIR，返回协议端
+    视角的 PROTO_MEDIA_SEEN/<name>（同一份宿主目录的两个挂载点）。
+    配置只设一半属于配置错误：显式 raise，不猜、不降级。
+    """
+    src_dir = getattr(Config, "VIDEO_PARSE_PROTO_MEDIA_DIR", "") or ""
+    seen_dir = getattr(Config, "VIDEO_PARSE_PROTO_MEDIA_SEEN", "") or ""
+    if not src_dir and not seen_dir:
+        return path
+    if not (src_dir and seen_dir):
+        raise RuntimeError(
+            "VIDEO_PARSE_PROTO_MEDIA_DIR 与 VIDEO_PARSE_PROTO_MEDIA_SEEN 必须同时设置"
+            f"（当前 {src_dir!r} / {seen_dir!r}）"
+        )
+    os.makedirs(src_dir, exist_ok=True)
+    _sweep_media(src_dir, getattr(Config, "VIDEO_PARSE_PROTO_MEDIA_TTL", 7200))
+    name = f"{int(time.time())}_{os.path.basename(path)}"
+    dst = os.path.join(src_dir, name)
+    shutil.copyfile(path, dst)
+    # 协议端是另一个容器的另一个用户，显式给读权限
+    os.chmod(dst, 0o644)
+    logger.info(f"video_stage_ok src={path} seen={seen_dir}/{name} size={os.path.getsize(dst)}")
+    return os.path.join(seen_dir, name)
+
+
 def register():
     """在 qq_bridge 的 register() 里调用，注册消息监听。幂等。"""
     global _matcher
@@ -135,8 +108,9 @@ def register():
 
 
 async def _handle(bot: Bot, event: MessageEvent) -> None:
-    # 注意：下载总开关 VIDEO_PARSE_ENABLED 的检查已下移到「B站分享卡片」分支之后——
-    # 卡片分享与下载是两件事，关掉下载也应当能发卡片（2026-11-15）。
+    if not Config.VIDEO_PARSE_ENABLED:
+        return
+
     scene = getattr(event, "message_type", "private")
     if scene == "group":
         if not Config.VIDEO_PARSE_GROUP_AUTO:
@@ -161,11 +135,6 @@ async def _handle(bot: Bot, event: MessageEvent) -> None:
     if plain:
         sources.append(plain)
     for seg in event.message:
-        # B站分享卡片由主路由原样回呈（不下载）。这里跳过，避免旧逻辑去扒 b23.tv
-        # 链接 + 下载视频，破坏「分享卡片」语义（2026-11-15）。
-        if _is_bili_card_seg(seg):
-            logger.info("video_parse_skip_bili_card user=%s", event.user_id)
-            continue
         if seg.type in ("json", "xml"):
             payload = seg.data.get("data")
             parsed = payload
@@ -203,24 +172,9 @@ async def _handle(bot: Bot, event: MessageEvent) -> None:
     # 去重，保持顺序
     urls = list(dict.fromkeys(urls))
 
-    # ---- B站视频 → 原生「分享卡片」（2026-11-15，bot → 用户）----
-    # 用户发 B站链接，机器人回一张小程序卡片（像正常账号分享，点开直达对应视频页），
-    # 不发视频文件、不发裸链接。开关 BILI_SHARE_CARD 独立于下载总开关。
-    if Config.BILI_SHARE_CARD:
-        for u in urls:
-            if _is_bili_video_url(u) and await _share_bili_card(bot, event, u):
-                return
-
-    # 下载总开关：B站卡片分支之后才检查（关下载 ≠ 关卡片）
-    if not Config.VIDEO_PARSE_ENABLED:
-        return
-
     logger.info(f"video_parse_handle scene={scene} user={event.user_id} urls={urls} raw_len={len(raw_text)}")
     if not urls:
         for seg in event.message:
-            # B站卡片已被主路由处理（原样回呈），这里不再告警，避免误导
-            if _is_bili_card_seg(seg):
-                continue
             if seg.type in ("json", "xml"):
                 d = seg.data.get("data")
                 logger.warning(f"video_parse_no_url seg_type={seg.type} data_type={type(d).__name__} data_repr={repr(d)[:2000]}")
@@ -249,9 +203,12 @@ async def _handle(bot: Bot, event: MessageEvent) -> None:
                         if size > 50 * 1024 * 1024:
                             logger.warning(f"video_too_large_skip size={size}")
                         else:
-                            sent_v = await bot.send(event, Message(MessageSegment.video(file=path)))
-                            await _record_out(event, f"[CQ:video,file={path}]", sent_v)
-                            logger.info(f"video_send_ok platform={result.platform} path={path}")
+                            # 协议端在另一个容器里，本地绝对路径它读不到（ENOENT），
+                            # 先搬到双方都能看见的目录，再发协议端视角的路径。
+                            seg_file = await asyncio.to_thread(_stage_for_protocol, path)
+                            sent_v = await bot.send(event, Message(MessageSegment.video(file=seg_file)))
+                            await _record_out(event, f"[CQ:video,file={seg_file}]", sent_v)
+                            logger.info(f"video_send_ok platform={result.platform} path={seg_file}")
                 except Exception as e:  # noqa: BLE001
                     logger.error(f"video_send_failed platform={result.platform} error={type(e).__name__}: {e}")
             break  # 一条消息只回一个解析卡片，避免刷屏
@@ -286,54 +243,11 @@ async def _try_parse_one(url: str) -> VideoParseResult | None:
         try:
             return await cls().parse(keyword, m)
         except Exception as e:  # noqa: BLE001
-            logger.error("video_parse_failed platform=%s: %s", getattr(cls.platform, "name", "?"), e)
+            # loguru 用 {} 占位，原来的 "%s" 不会格式化（线上只看到字面量 %s），改 f-string。
+            logger.error("video_parse_failed platform={}: {}".format(
+                getattr(cls.platform, "name", "?"), e))
             continue
     return None
-
-
-def _is_bili_video_url(u: str) -> bool:
-    """是否 B站**视频**链接（bv/av 页或 b23.tv 短链）；直播间/番剧不走本分支。"""
-    low = (u or "").lower()
-    return ("bilibili.com/video/" in low) or ("b23.tv/" in low)
-
-
-async def _share_bili_card(bot: Bot, event: MessageEvent, url: str) -> bool:
-    """解析一条 B站视频链接，并以原生小程序「分享卡片」发给用户。成功返回 True。
-
-    卡片由协议端 get_mini_app_ark 生成（app=com.tencent.miniapp_01，
-    jumpUrl=/pages/video/video?bvid=BV...），点开直达对应 B站视频页。
-    """
-    try:
-        result = await _try_parse_one(url)
-    except Exception as e:  # noqa: BLE001 — 显式上报，绝不静默
-        logger.error("bili_share_parse_failed url=%s err=%s", url, e)
-        return False
-    if not result or result.platform != "bilibili":
-        return False
-    bvid = str((result.extra or {}).get("bvid") or "").strip()
-    if not bvid:
-        logger.warning("bili_share_no_bvid url=%s", url)
-        return False
-    ctx = {
-        "user_id": int(getattr(event, "user_id", 0) or 0),
-        "group_id": int(getattr(event, "group_id", 0) or 0),
-    }
-    desc = str(result.author_name or "")
-    if result.stats:
-        _st = " · ".join("%s %s" % (k, v) for k, v in result.stats.items())
-        desc = (desc + " · " + _st).strip(" ·")
-    try:
-        await send_bili_share_card(
-            ctx, title=str(result.title or ""), desc=desc,
-            pic_url=str(result.cover_url or ""), bvid=bvid,
-            at_user=bool(ctx["group_id"]),
-        )
-    except Exception as e:  # noqa: BLE001 — 显式上报，绝不静默
-        logger.error("bili_share_send_failed bvid=%s err=%s", bvid, e)
-        return False
-    await _record_out(event, "[CQ:json B站分享卡片 bvid=%s]" % bvid, None)
-    logger.info("bili_share_card_sent bvid=%s title=%s", bvid, str(result.title or "")[:40])
-    return True
 
 
 def render_card(r: VideoParseResult) -> str:

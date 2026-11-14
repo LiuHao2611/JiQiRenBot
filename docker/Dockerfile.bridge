@@ -33,6 +33,12 @@ ENV PATH="/opt/venv/bin:$PATH" \
     PYTHONDONTWRITEBYTECODE=1 \
     TZ=Asia/Shanghai
 WORKDIR /app
+# 视频解析（video_parse）下载 B站 dash 流（音视频分离）后需要用 ffmpeg 合并成 mp4。
+# 原 Windows/NapCat 部署用的是宿主 ffmpeg；容器里没有 → 解析卡能出、视频出不来。
+# 实测本构建环境 apt 可达（Debian trixie），故直接装进镜像（非 sidecar，避免跨容器路径问题）。
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
 # 只拷贝运行所需内容（不 COPY . ，否则 docker/wheels 的 171MB 也会进最终镜像）
 # data/ 与 .env 在 compose 里以 volume 挂载，不烘进镜像。
 COPY bot.py pyproject.toml requirements.txt ./
