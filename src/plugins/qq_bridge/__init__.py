@@ -6515,6 +6515,21 @@ async def _route(ev, trace_id: str) -> None:
     if not allowed:
         return  # 黑名单/非白名单 → 静默，不回任何提示（§8）
 
+    # ---- B站分享卡片（2026-11-15）：手机端分享的视频/直播间卡片（json/xml 富媒体段）----
+    # 收到即原样回呈为卡片（MessageSegment.json/xml），不扒链接、不下载视频。
+    # 位置：紧随权限闸、在语音/自动看图/AI 模式之前——卡片是明确内容，
+    # 且部分卡片可能自带封面图段，若不前置会被 MM_AUTO_LOOK 当成"纯图"多调一次视觉模型。
+    # 与全局 @门禁一致：群消息需 @机器人（dispatcher 已放行），私聊仅主人（allow 已把关）。
+    # 独立于视频下载总开关 VIDEO_PARSE_ENABLED——这是用户明确要的能力。
+    # 若消息主体是指令（以 / 开头），则不抢占，留给下方命令路由。
+    if Config.VIDEO_PARSE_BILI_CARD_ECHO and getattr(ev, "cards", None):
+        _rt0 = (ev.raw_text or "").strip()
+        if not _rt0.startswith("/"):
+            for _c in ev.cards:
+                if bili_card_info(_c.get("type"), _c.get("data"))[0]:
+                    await _handle_bilibili_card(ev, _c, trace_id)
+                    return
+
     # ---- M4 语音（2026-10-20）：主人私聊语音 → ASR 转写 → 当普通文字消息继续 ----
     # 只改 ev.raw_text（dataclass 字段可写），后续命令/关键词/AI 流程零改动，
     # 也不产生递归（本分支在路由最前，只跑一次）。
@@ -6545,19 +6560,6 @@ async def _route(ev, trace_id: str) -> None:
             and _pc_last_file_get(ev.user_id)):
         await _pc_save_last_file(ev, trace_id)
         return
-
-    # ---- B站分享卡片（2026-11-15）：手机端分享的视频/直播间卡片（json/xml 富媒体段）----
-    # 收到即原样回呈为卡片（MessageSegment.json/xml），不扒链接、不下载视频。
-    # 与全局 @门禁/权限一致：群消息需 @机器人（dispatcher 已放行），私聊仅主人（allow 已把关）。
-    # 独立于视频下载总开关 VIDEO_PARSE_ENABLED——这是用户明确要的能力。
-    # 若消息主体是指令（以 / 开头），则不抢占，留给下方命令路由。
-    if Config.VIDEO_PARSE_BILI_CARD_ECHO and getattr(ev, "cards", None):
-        _rt0 = (ev.raw_text or "").strip()
-        if not _rt0.startswith("/"):
-            for _c in ev.cards:
-                if bili_card_info(_c.get("type"), _c.get("data"))[0]:
-                    await _handle_bilibili_card(ev, _c, trace_id)
-                    return
 
     # ---- §新增：生图通道交互式选择 —— 优先处理对 pending 的回答 ----
     ans = choice_sessions.answer(ev.user_id, ev.raw_text)
