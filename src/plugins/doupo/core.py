@@ -322,11 +322,16 @@ def _legacy_entries() -> list[dict]:
 
 
 def _ensure_faction(p) -> bool:
-    """旧存档没有 faction 时惰性补一个（入道分宗的兜底）。"""
+    """旧存档没有 faction 时惰性补一个（入道分宗的兜底）。
+
+    ⚠️ 必须按 qq 定种子，与 create_player 同一套种子：否则旧档每次读出来都现抽一个，
+    玩家会看到「宗门」每次问都不一样（实测 lv47 老档 faction=None，走的就是这条路径）。
+    """
     if p.get("faction"):
         return True
     try:
-        fac.assign_faction(p)
+        seed = "faction:" + str(p.get("qq") or "")
+        fac.assign_faction(p, rng=random.Random(seed).random)
     except Exception:
         return False
     return bool(p.get("faction"))

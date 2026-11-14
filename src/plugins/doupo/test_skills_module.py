@@ -195,6 +195,25 @@ def test_switch_keeps_skill_levels():
     assert int(p["skills"][first]) == 4, "转宗把技能等级弄丢了"
 
 
+def test_legacy_save_gets_stable_faction():
+    """老档（入道时还没有分宗功能，faction=None）每次读都要补到同一个宗门。
+
+    2026-11-15 实测宿主存档 lv47 的玩家 faction 就是 None，`_ensure_faction`
+    当时用无种子 random，问一次变一次；必须与 create_player 用同一套 qq 种子。
+    """
+    base = {"qq": "1743124119", "name": "老档", "group": "g", "lv": 47,
+            "gold": 50000, "skills": {}, "bag": {}, "flames": {}}
+    got = []
+    for _ in range(3):
+        p = dict(base)
+        core._ensure_faction(p)
+        sk.ensure_loadout(p)
+        got.append((p.get("faction"), tuple(p.get("loadout") or ())))
+    assert len(set(got)) == 1, "老档分宗不稳定：%s" % (got,)
+    assert got[0][0] in fac.FACTIONS, "老档没补上宗门"
+    assert got[0][1], "老档补宗后四槽不能为空"
+
+
 # ---------------------------------------------------------------------------
 # runner
 # ---------------------------------------------------------------------------
