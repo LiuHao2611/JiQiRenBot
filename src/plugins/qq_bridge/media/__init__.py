@@ -21,6 +21,7 @@ import asyncio
 import base64
 import json
 import random
+import time
 
 import httpx
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
@@ -31,27 +32,13 @@ from .. import history
 
 log = get_logger()
 
-# ---- B站小程序卡片配方（2026-11-15 实测，来源 qq-miniapp-ark 的可复现配方）----
-# 关键：get_mini_app_ark 有两条分支——
-#   · 传 type='bili' → NapCat 内置模板，jumpUrl 被当**网页地址**，且指向内测版
-#     （点开会提示「该小程序内测中」）；
-#   · 不传 type、自己给全字段 → **自定义 schema**，jumpUrl 按**页面路径**透传进签名，
-#     点开才能直达对应视频页。
-# 所以这里**绝不传 type**，走自定义 schema。
-_BILI_MINI_APP_ID = "1109937557"                                  # B站小程序 appid
-_BILI_MINI_VERSION_ID = "cfc5f7b05b44b5956502edaecf9d2240"        # 真卡里的 versionId（正式版）
-_BILI_MINI_SDK_ID = "V1_PC_MINISDK_99.99.99_1_APP_A"             # 必填，空则 retcode 1200
-_BILI_MINI_ICON = ("https://miniapp.gtimg.cn/public/appicon/"
-                   "51f90239b78a2e4994c11215f4c4ba15_200.jpg")    # B站小程序图标（取自真卡）
-# 自定义 schema 的其余软字段（服务端不校验，但缺 withShareTicket 会 retcode 1400）。
-_BILI_MINI_EXTRA = {
-    "scene": "1036",
-    "templateType": "1",
-    "businessType": "0",
-    "verType": "3",
-    "shareType": "0",
-    "withShareTicket": "0",
-}
+# 备注（2026-11-15 深挖结论，勿再走弯路）：
+# B站 QQ 小程序（appid 1109937557）当前处于**内测**状态。用 get_mini_app_ark 生成的
+# `com.tencent.miniapp_01` 卡片，无论内置模板支（type=bili）还是自定义 schema 支，
+# 其 `meta.detail_1.url` 都是 `m.q.qq.com/a/s/<hash>`（拉起小程序），且服务端强制
+# `scene=0`、丢弃 `qqdocurl`/`webUrl` → 点开必然提示「该小程序内测中」。
+# 故 B站分享改用 `com.tencent.structmsg` 的 news 卡片（下方 send_bili_share_card），
+# 点开走网页版 B站视频页，是卡片形态、不是裸链接。
 
 
 async def _download_bytes(url: str) -> bytes:
@@ -269,49 +256,47 @@ async def send_card(ctx: dict, seg_type: str, data: str, at_user: bool = False) 
 async def send_bili_share_card(ctx: dict, *, title: str, desc: str = "",
                                pic_url: str = "", bvid: str = "",
                                at_user: bool = False) -> dict:
-    """把 B站视频以「原生小程序分享卡片」发出（像正常账号分享，不是文件/裸链接）。
+    """把 B站视频以「卡片」发出：点开直达 B站视频页（不是裸链接、不是视频文件）。
 
-    走协议端扩展 API `get_mini_app_ark` 建卡（SnowLuma / NapCat 支持），再用 json 段发送。
-    **必须走自定义 schema（不传 `type`）**：传 `type='bili'` 会走 NapCat 内置模板，
-    jumpUrl 被当成网页地址、且指向内测版 → 点开提示「该小程序内测中」。
-    **关键**：jumpUrl 必须是小程序页面路径 `/pages/video/video?bvid=BV...`；
-    填成 http 网址卡片虽能显示，但点开只会落到 B站首页（服务端不校验路径，社区实测坑）。
+    **为什么不用 B站小程序卡（2026-11-15 深挖结论）**：
+      · `get_mini_app_ark`（不论 `type=bili` 模板支还是自定义 schema 支）生成的卡，
+        `meta.detail_1.url` 一律是 `m.q.qq.com/a/s/<hash>` —— 一个**拉起小程序**的落地页；
+        且服务端强制 `scene=0`、丢弃 `qqdocurl`/`webUrl`，无法把点击引到网页；
+      · 而 B站 QQ 小程序（appid `1109937557`）当前处于**内测**状态，点开必提示
+        「该小程序内测中」。这是平台侧状态，参数改不动（模板支/自定义支实测都一样）。
+    所以改用 `com.tencent.structmsg` 的 news 卡片：标题 + 封面 + 简介 + 「哔哩哔哩」标签，
+    `jumpUrl` 直接指向视频网页，点开就是对应 B站 页面。仍是卡片形态，不是裸链接。
 
-    返回建好的 ark 字典（便于调用方记录/排障）。仅 NapCat / OneBot 通道支持。
+    返回卡片字典（便于调用方记录/排障）。仅 NapCat / OneBot 通道支持。
     """
     if _foreign_channel(ctx):
-        raise RuntimeError("B站分享卡片仅支持 NapCat/OneBot 通道（官方通道无小程序卡片）")
+        raise RuntimeError("B站分享卡片仅支持 NapCat/OneBot 通道（官方通道无 json 卡片）")
     bvid = str(bvid or "").strip()
     if not bvid:
         raise ValueError("send_bili_share_card 缺少 bvid")
-    # 自定义 schema（**不传 type**）：jumpUrl 才会按页面路径透传并被签名。
-    params = {
-        "title": str(title or "")[:60],
-        "desc": str(desc or "")[:80],
-        "picUrl": str(pic_url or ""),
-        "jumpUrl": "/pages/video/video?bvid=%s" % bvid,
-        "iconUrl": _BILI_MINI_ICON,
-        "appId": _BILI_MINI_APP_ID,
-        "versionId": _BILI_MINI_VERSION_ID,
-        "sdkId": _BILI_MINI_SDK_ID,
+    url = "https://www.bilibili.com/video/%s" % bvid
+    body_title = str(title or "")[:60]
+    card = {
+        "app": "com.tencent.structmsg",
+        "desc": "新闻",
+        "view": "news",
+        "ver": "0.0.0.1",
+        "prompt": "[分享]%s" % body_title,
+        "meta": {"news": {
+            "title": body_title,
+            "desc": str(desc or "")[:80],
+            "preview": str(pic_url or ""),
+            "jumpUrl": url,
+            "tag": "哔哩哔哩",
+            "layout": "2",
+            "appid": 200002,
+            "app_type": 1,
+        }},
+        "config": {"type": "normal", "ctime": int(time.time()), "forward": 1, "autosize": True},
     }
-    params.update(_BILI_MINI_EXTRA)
-    res = await connector.call_action("get_mini_app_ark", params)
-    # connector.call_action 经 nonebot 适配器，成功时已解出响应外层 data：
-    #   HTTP 原始: {"status":"ok","data":{"data":{ark}}}
-    #   call_action 返回: {"data":{ark}}
-    inner = res.get("data") if isinstance(res, dict) else None
-    if isinstance(inner, dict) and "app" not in inner and isinstance(inner.get("data"), dict):
-        inner = inner["data"]
-    if not isinstance(inner, dict) or not inner.get("app"):
-        raise RuntimeError("get_mini_app_ark 未返回卡片数据: %r" % (str(res)[:200],))
-    # 没有 config.token = 服务端没签名，发出去会显示「发送者版本过低」，宁可不发破卡。
-    if not (inner.get("config") or {}).get("token"):
-        raise RuntimeError("get_mini_app_ark 未返回签名 token（卡片不可用）: %r"
-                           % (str(inner)[:200],))
-    await send_card(ctx, "json", json.dumps(inner, ensure_ascii=False), at_user=at_user)
-    log.info(jlog("bili_share_sent", bvid=bvid, title=str(title or "")[:40]))
-    return inner
+    await send_card(ctx, "json", json.dumps(card, ensure_ascii=False), at_user=at_user)
+    log.info(jlog("bili_share_sent", bvid=bvid, style="structmsg", title=body_title[:40]))
+    return card
 
 
 async def send_video_link(ctx: dict, link: str, cover: str = "", at_user: bool = False) -> None:

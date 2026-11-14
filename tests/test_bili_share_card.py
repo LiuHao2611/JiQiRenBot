@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 """B站视频「分享卡片」（bot → 用户）验收测试（2026-11-15）。
 
+背景：B站 QQ 小程序（appid 1109937557）当前处于内测状态，get_mini_app_ark 生成的
+`com.tencent.miniapp_01` 卡片点开必提示「该小程序内测中」，且无法把点击引到网页。
+因此改用 `com.tencent.structmsg` 的 news 卡片：点开直达 B站视频网页。
+
 验收标准：
-  1) send_bili_share_card 调协议端 get_mini_app_ark，jumpUrl 必须是**小程序页面路径**
-     `/pages/video/video?bvid=BV...`（填成 http 网址点开会落 B站首页）；
-  2) 发出的是 json 段（Message 段数组），ark 完整；
+  1) send_bili_share_card 构造 structmsg news 卡，jumpUrl 指向视频网页，tag=哔哩哔哩；
+  2) 发出的是 json 段（Message 段数组），不是 CQ 字符串；
   3) _share_bili_card 解析后发送并记录历史；
   4) _handle 在 VIDEO_PARSE_ENABLED=False（下载关闭）时仍会发卡片；
   5) 非 B站视频链接不触发。
@@ -18,47 +21,40 @@ import src.plugins.qq_bridge.media as media_mod
 import src.plugins.qq_bridge.video_parse as vp
 from src.plugins.qq_bridge.video_parse.base import VideoParseResult
 
-ARK = {"app": "com.tencent.miniapp_01",
-       "view": "view_8C8E89B49BE609866298ADDFF2DBABA4",
-       "config": {"token": "deadbeefdeadbeefdeadbeefdeadbeef"},
-       "meta": {"detail_1": {"appid": "1109937557", "desc": "标题", "preview": "http://p"}},
-       "prompt": "[QQ小程序]标题", "ver": "1.0.0.19"}
-
 
 def _install_fake_connector(calls):
     async def _fake_call_action(action, params, timeout=30.0):
         calls.append((action, params))
-        if action == "get_mini_app_ark":
-            return {"data": ARK}
         return {"message_id": 7}
     media_mod.connector.call_action = _fake_call_action
     media_mod._delay = lambda: 0.0
     media_mod.history.record_outgoing = lambda *a, **k: None
 
 
-def test_send_bili_share_card_builds_ark_and_sends_json():
+def test_send_bili_share_card_structmsg_news():
     calls = []
     _install_fake_connector(calls)
     asyncio.run(media_mod.send_bili_share_card(
         {"user_id": 1, "group_id": 0}, title="标题", desc="UP",
         pic_url="http://p", bvid="BV1GJ411x7h7"))
 
-    ark_call = next(p for a, p in calls if a == "get_mini_app_ark")
-    # 必须走自定义 schema：不能带 type（带 type 走内置模板 → 内测提示/落首页）
-    assert "type" not in ark_call
-    assert ark_call["appId"] == "1109937557"
-    assert ark_call["sdkId"] == "V1_PC_MINISDK_99.99.99_1_APP_A"
-    assert ark_call["versionId"] == "cfc5f7b05b44b5956502edaecf9d2240"
-    assert ark_call["withShareTicket"] == "0"
-    assert ark_call["jumpUrl"] == "/pages/video/video?bvid=BV1GJ411x7h7"
-    assert ark_call["title"] == "标题" and ark_call["picUrl"] == "http://p"
+    # 小程序卡已证明走不通（内测墙），不应再调 get_mini_app_ark
+    assert not any(a == "get_mini_app_ark" for a, _ in calls)
 
     send_call = next((a, p) for a, p in calls if a in ("send_private_msg", "send_group_msg"))
     msg = send_call[1]["message"]
     assert isinstance(msg, list) and len(msg) == 1  # Message 段数组，不是 CQ 字符串
+
     from nonebot.adapters.onebot.v11.adapter import DataclassEncoder
     ser = json.dumps(send_call[1], cls=DataclassEncoder)
-    assert '"type": "json"' in ser and "com.tencent.miniapp_01" in ser
+    assert '"type": "json"' in ser
+    # 卡片 JSON 在 data.data 里是转义字符串 → 解对象再断言
+    card = json.loads(msg[0].data["data"])
+    news = card["meta"]["news"]
+    assert card["app"] == "com.tencent.structmsg"
+    assert card["view"] == "news"
+    assert news["tag"] == "哔哩哔哩"
+    assert news["jumpUrl"] == "https://www.bilibili.com/video/BV1GJ411x7h7"
 
 
 def test_share_bili_card_parses_then_sends(monkeypatch):
@@ -79,7 +75,7 @@ def test_share_bili_card_parses_then_sends(monkeypatch):
     ev = type("EV", (), {"user_id": 1, "group_id": 0, "message_type": "private"})()
     ok = asyncio.run(vp._share_bili_card(None, ev, "https://www.bilibili.com/video/BV1GJ411x7h7"))
     assert ok is True
-    assert any(a == "get_mini_app_ark" for a, _ in calls)
+    assert any(a in ("send_private_msg", "send_group_msg") for a, _ in calls)
     assert recorded and "BV1GJ411x7h7" in recorded[0]
 
 
