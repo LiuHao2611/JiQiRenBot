@@ -21,6 +21,7 @@ import asyncio
 import base64
 import json
 import random
+from xml.sax.saxutils import escape as _xml_escape, quoteattr as _xml_quoteattr
 
 import httpx
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
@@ -32,13 +33,16 @@ from .. import history
 log = get_logger()
 
 # 备注（2026-11-15 深挖结论，勿再走弯路）：
-# B站分享卡片的三条路，只有第三条能用：
-#   1) get_mini_app_ark（模板支/自定义 schema）→ 只能生成小程序卡，url 是
-#      m.q.qq.com/a/s/<hash>（拉起小程序），且强制 scene=0、丢弃 qqdocurl；
-#      而 B站 QQ 小程序（appid 1109937557）在**内测**→ 点开提示「该小程序内测中」。
-#   2) 手搓 com.tencent.structmsg → 没有腾讯签名 token → 「发送者版本过低」。
-#   3) **协议端 `send_tuwen_ark`（图文 Ark 卡片）** → QQ 侧签名，jump_url 直指视频网页，
-#      卡片能渲染、点开直达 B站 视频页。← 当前实现（见 send_bili_share_card）。
+# B站分享卡片的四条路，只有最后一条实测能真正发出去：
+#   1) get_mini_app_ark（模板支/自定义 schema）→ 小程序卡，url 是 m.q.qq.com/a/s/<hash>
+#      （拉起小程序），且强制 scene=0、丢弃 qqdocurl；B站 QQ 小程序在内测 → 「内测中」。
+#   2) 手搓 com.tencent.structmsg → 无腾讯签名 token → 「发送者版本过低」。
+#   3) 协议端 send_tuwen_ark → **空实现**：日志只收 action，不产生任何消息记录（实测）。
+#   4) **手搓 `xml` 段（老式图文卡，走 action=web + url）** → 走普通 send_private_msg，
+#      实测协议端日志 `发送：[XML消息]`、消息库有 message_sent 记录、无报错。
+#      ← 当前实现（见 send_bili_share_card）。点开按 url 打开 B站视频网页。
+_BILI_ICON = ("https://miniapp.gtimg.cn/public/appicon/"
+               "51f90239b78a2e4994c11215f4c4ba15_200.jpg")
 
 
 async def _download_bytes(url: str) -> bytes:
@@ -253,45 +257,56 @@ async def send_card(ctx: dict, seg_type: str, data: str, at_user: bool = False) 
     log.info(jlog("card_sent", kind=str(seg_type), bytes=len(data)))
 
 
-async def send_bili_share_card(ctx: dict, *, title: str, desc: str = "",
-                               pic_url: str = "", bvid: str = "",
-                               at_user: bool = False) -> dict:
-    """把 B站视频以「卡片」发出：点开直达 B站视频页（不是裸链接、不是视频文件）。
-
-    **为什么最终用 `send_tuwen_ark`（2026-11-15 深挖结论，勿再走弯路）**：
-      1) `get_mini_app_ark`（模板支/自定义 schema 支）只能生成 `com.tencent.miniapp_01`
-         小程序卡；其 `meta.detail_1.url` 是 `m.q.qq.com/a/s/<hash>`（拉起小程序），
-         服务端强制 `scene=0`、丢弃 `qqdocurl`/`webUrl`；而 B站 QQ 小程序
-         （appid `1109937557`）当前**内测**中 → 点开必提示「该小程序内测中」。
-      2) 手搓 `com.tencent.structmsg` 卡没有腾讯签名（`config.token`）→ QQ 显示
-         「发送者版本过低，无法显示内容」。
-      3) 协议端 SnowLuma 自带 **`send_tuwen_ark`**（发送图文 Ark 卡片）：由 QQ 侧签名，
-         参数 `title/desc/summary/preview_url/jump_url`，`jump_url` 直接指向视频网页
-         → 卡片形态、点开直达 B站 视频页。这是唯一既能渲染、又能跳对页的通道。
-
-    返回发出去的参数（便于调用方记录/排障）。仅 NapCat / OneBot 通道支持。
-    """
-    if _foreign_channel(ctx):
-        raise RuntimeError("B站分享卡片仅支持 NapCat/OneBot 通道（官方通道无 Ark 图文卡）")
+def build_bili_share_xml(*, title: str, desc: str = "", pic_url: str = "",
+                         bvid: str = "") -> str:
+    """构造 B站视频的 `xml` 图文卡（action=web，点开走 url）。纯函数，便于单测与真机验证。"""
     bvid = str(bvid or "").strip()
     if not bvid:
-        raise ValueError("send_bili_share_card 缺少 bvid")
+        raise ValueError("build_bili_share_xml 缺少 bvid")
+    url = "https://www.bilibili.com/video/%s" % bvid
     body_title = str(title or "")[:60]
-    params = {
-        "title": body_title,
-        "desc": str(desc or "")[:80],
-        "summary": "[分享]",
-        "preview_url": str(pic_url or ""),
-        "jump_url": "https://www.bilibili.com/video/%s" % bvid,
-    }
-    gid = int(ctx.get("group_id") or 0)
-    if gid:
-        params["group_id"] = gid
-    else:
-        params["user_id"] = int(ctx.get("user_id") or 0)
-    await connector.call_action("send_tuwen_ark", params)
-    log.info(jlog("bili_share_sent", bvid=bvid, style="tuwen_ark", title=body_title[:40]))
-    return params
+    body_desc = str(desc or "")[:80]
+    return (
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        '<msg serviceID="1" templateID="1" action="web" brief=%s sourceMsgId="0" '
+        'url=%s flag="0" adverSign="0" multiMsgFlag="0">'
+        '<item layout="2"><picture cover=%s w="0" h="0"/>'
+        '<title>%s</title><summary>%s</summary></item>'
+        '<source name="哔哩哔哩" icon="%s" action="" appid="0" url=""/>'
+        '</msg>'
+    ) % (
+        _xml_quoteattr("[分享]%s" % body_title),
+        _xml_quoteattr(url),
+        _xml_quoteattr(str(pic_url or "")),
+        _xml_escape(body_title),
+        _xml_escape(body_desc),
+        _BILI_ICON,
+    )
+
+
+async def send_bili_share_card(ctx: dict, *, title: str, desc: str = "",
+                               pic_url: str = "", bvid: str = "",
+                               at_user: bool = False) -> str:
+    """把 B站视频以「卡片」发出：点开直达 B站视频页（不是裸链接、不是视频文件）。
+
+    **为什么最终用手搓 `xml` 段（2026-11-15 逐条实测，勿再走弯路）**：
+      1) `get_mini_app_ark` → 小程序卡；url 是 `m.q.qq.com/a/s/<hash>`（拉起小程序），
+         而 B站 QQ 小程序（appid 1109937557）在**内测** → 点开提示「该小程序内测中」；
+      2) 手搓 `com.tencent.structmsg` → 无腾讯签名 token → 「发送者版本过低」；
+      3) 协议端 `send_tuwen_ark` → **空实现**：日志只收 action，协议端不产生发送记录；
+      4) **手搓 `xml` 富媒体段** → 走普通 send_private_msg/send_group_msg，实测协议端
+         日志 `发送：[XML消息]`、消息库有 message_sent 记录、无报错；`action="web"` +
+         `url` 让点击按 URL 打开 B站视频网页。← 当前实现
+
+    返回 XML 字符串（便于调用方记录/排障）。仅 NapCat / OneBot 通道支持。
+    """
+    if _foreign_channel(ctx):
+        raise RuntimeError("B站分享卡片仅支持 NapCat/OneBot 通道（官方通道无 xml 卡）")
+    xml = build_bili_share_xml(title=title, desc=desc, pic_url=pic_url, bvid=bvid)
+    await send_card(ctx, "xml", xml, at_user=at_user)
+    log.info(jlog("bili_share_sent", bvid=str(bvid).strip(), style="xml",
+                  title=str(title or "")[:40]))
+    return xml
 
 
 async def send_video_link(ctx: dict, link: str, cover: str = "", at_user: bool = False) -> None:

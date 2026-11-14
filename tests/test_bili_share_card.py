@@ -31,32 +31,35 @@ def _install_fake_connector(calls):
     media_mod.history.record_outgoing = lambda *a, **k: None
 
 
-def test_send_bili_share_card_uses_signed_tuwen_ark():
+def test_send_bili_share_card_uses_xml_card():
     calls = []
     _install_fake_connector(calls)
     asyncio.run(media_mod.send_bili_share_card(
         {"user_id": 1, "group_id": 0}, title="标题", desc="UP",
         pic_url="http://p", bvid="BV1GJ411x7h7"))
 
-    # 小程序卡撞内测墙、手搓 structmsg 无签名 → 必须走协议端签名的 send_tuwen_ark
-    assert any(a == "send_tuwen_ark" for a, _ in calls)
+    # 小程序卡撞内测墙、structmsg 无签名、send_tuwen_ark 是空实现 → 走 xml 富媒体卡
     assert not any(a == "get_mini_app_ark" for a, _ in calls)
-    assert not any(a in ("send_private_msg", "send_group_msg") for a, _ in calls)
+    assert not any(a == "send_tuwen_ark" for a, _ in calls)
 
-    ark = next(p for a, p in calls if a == "send_tuwen_ark")
-    assert ark["title"] == "标题"
-    assert "UP" in ark["desc"]
-    assert ark["summary"] == "[分享]"
-    assert ark["preview_url"] == "http://p"
-    assert ark["jump_url"] == "https://www.bilibili.com/video/BV1GJ411x7h7"
-    assert ark["user_id"] == 1 and "group_id" not in ark
+    send_call = next((a, p) for a, p in calls if a in ("send_private_msg", "send_group_msg"))
+    msg = send_call[1]["message"]
+    assert isinstance(msg, list) and len(msg) == 1
+    seg = msg[0]
+    assert str(seg.type) == "xml"
+    xml = seg.data["data"]
+    assert "<msg" in xml and 'action="web"' in xml
+    assert 'url="https://www.bilibili.com/video/BV1GJ411x7h7"' in xml
+    assert "<title>标题</title>" in xml
+    assert "哔哩哔哩" in xml
+    assert send_call[1]["user_id"] == 1
 
     # 群聊 → group_id
     calls.clear()
     asyncio.run(media_mod.send_bili_share_card(
         {"user_id": 1, "group_id": 99}, title="T", bvid="BV1GJ411x7h7"))
-    ark_g = next(p for a, p in calls if a == "send_tuwen_ark")
-    assert ark_g["group_id"] == 99 and "user_id" not in ark_g
+    send_g = next((a, p) for a, p in calls if a in ("send_private_msg", "send_group_msg"))
+    assert send_g[1]["group_id"] == 99
 
 
 def test_share_bili_card_parses_then_sends(monkeypatch):
@@ -77,7 +80,7 @@ def test_share_bili_card_parses_then_sends(monkeypatch):
     ev = type("EV", (), {"user_id": 1, "group_id": 0, "message_type": "private"})()
     ok = asyncio.run(vp._share_bili_card(None, ev, "https://www.bilibili.com/video/BV1GJ411x7h7"))
     assert ok is True
-    assert any(a == "send_tuwen_ark" for a, _ in calls)
+    assert any(a in ("send_private_msg", "send_group_msg") for a, _ in calls)
     assert recorded and "BV1GJ411x7h7" in recorded[0]
 
 
