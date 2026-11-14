@@ -16,6 +16,9 @@ from nonebot.log import logger
 
 from .. import history
 from ..config import Config
+# B站「分享卡片」出口：协议端 get_mini_app_ark 建原生小程序卡 → json 段发送。
+# media 只依赖 config/connector/history，不 import 本包，无循环 import。
+from ..media import send_bili_share_card
 # AI 模式（2026-10-19）：本模块也是独立 matcher，与主流程并行收消息；
 # 会话开着大模型陪聊时视频链接归 AI 回，避免解析卡 + AI 回复双重刷屏
 # （与 game_tools / 主流程 _route 的豁免口径一致）。
@@ -132,9 +135,8 @@ def register():
 
 
 async def _handle(bot: Bot, event: MessageEvent) -> None:
-    if not Config.VIDEO_PARSE_ENABLED:
-        return
-
+    # 注意：下载总开关 VIDEO_PARSE_ENABLED 的检查已下移到「B站分享卡片」分支之后——
+    # 卡片分享与下载是两件事，关掉下载也应当能发卡片（2026-11-15）。
     scene = getattr(event, "message_type", "private")
     if scene == "group":
         if not Config.VIDEO_PARSE_GROUP_AUTO:
@@ -200,6 +202,18 @@ async def _handle(bot: Bot, event: MessageEvent) -> None:
     urls = norm
     # 去重，保持顺序
     urls = list(dict.fromkeys(urls))
+
+    # ---- B站视频 → 原生「分享卡片」（2026-11-15，bot → 用户）----
+    # 用户发 B站链接，机器人回一张小程序卡片（像正常账号分享，点开直达对应视频页），
+    # 不发视频文件、不发裸链接。开关 BILI_SHARE_CARD 独立于下载总开关。
+    if Config.BILI_SHARE_CARD:
+        for u in urls:
+            if _is_bili_video_url(u) and await _share_bili_card(bot, event, u):
+                return
+
+    # 下载总开关：B站卡片分支之后才检查（关下载 ≠ 关卡片）
+    if not Config.VIDEO_PARSE_ENABLED:
+        return
 
     logger.info(f"video_parse_handle scene={scene} user={event.user_id} urls={urls} raw_len={len(raw_text)}")
     if not urls:
@@ -275,6 +289,51 @@ async def _try_parse_one(url: str) -> VideoParseResult | None:
             logger.error("video_parse_failed platform=%s: %s", getattr(cls.platform, "name", "?"), e)
             continue
     return None
+
+
+def _is_bili_video_url(u: str) -> bool:
+    """是否 B站**视频**链接（bv/av 页或 b23.tv 短链）；直播间/番剧不走本分支。"""
+    low = (u or "").lower()
+    return ("bilibili.com/video/" in low) or ("b23.tv/" in low)
+
+
+async def _share_bili_card(bot: Bot, event: MessageEvent, url: str) -> bool:
+    """解析一条 B站视频链接，并以原生小程序「分享卡片」发给用户。成功返回 True。
+
+    卡片由协议端 get_mini_app_ark 生成（app=com.tencent.miniapp_01，
+    jumpUrl=/pages/video/video?bvid=BV...），点开直达对应 B站视频页。
+    """
+    try:
+        result = await _try_parse_one(url)
+    except Exception as e:  # noqa: BLE001 — 显式上报，绝不静默
+        logger.error("bili_share_parse_failed url=%s err=%s", url, e)
+        return False
+    if not result or result.platform != "bilibili":
+        return False
+    bvid = str((result.extra or {}).get("bvid") or "").strip()
+    if not bvid:
+        logger.warning("bili_share_no_bvid url=%s", url)
+        return False
+    ctx = {
+        "user_id": int(getattr(event, "user_id", 0) or 0),
+        "group_id": int(getattr(event, "group_id", 0) or 0),
+    }
+    desc = str(result.author_name or "")
+    if result.stats:
+        _st = " · ".join("%s %s" % (k, v) for k, v in result.stats.items())
+        desc = (desc + " · " + _st).strip(" ·")
+    try:
+        await send_bili_share_card(
+            ctx, title=str(result.title or ""), desc=desc,
+            pic_url=str(result.cover_url or ""), bvid=bvid,
+            at_user=bool(ctx["group_id"]),
+        )
+    except Exception as e:  # noqa: BLE001 — 显式上报，绝不静默
+        logger.error("bili_share_send_failed bvid=%s err=%s", bvid, e)
+        return False
+    await _record_out(event, "[CQ:json B站分享卡片 bvid=%s]" % bvid, None)
+    logger.info("bili_share_card_sent bvid=%s title=%s", bvid, str(result.title or "")[:40])
+    return True
 
 
 def render_card(r: VideoParseResult) -> str:

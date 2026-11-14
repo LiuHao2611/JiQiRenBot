@@ -316,6 +316,10 @@ class Config:
     # 独立于上面的下载总开关 VIDEO_PARSE_ENABLED——卡片回呈与「解析链接+下载视频」是两件事，
     # 用户明确要前者、不要后者。默认开启。
     VIDEO_PARSE_BILI_CARD_ECHO: bool = _as_bool(os.environ.get("VIDEO_PARSE_BILI_CARD_ECHO"), True)
+    # B站视频「分享卡片」（2026-11-15）：用户发 B站链接给机器人 → 机器人用协议端
+    # get_mini_app_ark 建**原生小程序卡片**发回（像正常账号分享，点开直达 B站视频页），
+    # 不发视频文件、不发裸链接。独立于下载总开关 VIDEO_PARSE_ENABLED 与上面的回呈开关。
+    BILI_SHARE_CARD: bool = _as_bool(os.environ.get("BILI_SHARE_CARD"), True)
 
     # ---- QQ 官方机器人通道（docs/qq_official_bot_migration_plan.md §6.2）----
     # 双轨并行：本组配置只影响官方通道，**关掉 OFFICIAL_ENABLE 时 NapCat 零影响**。

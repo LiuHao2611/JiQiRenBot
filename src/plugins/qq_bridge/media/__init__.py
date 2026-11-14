@@ -244,6 +244,42 @@ async def send_card(ctx: dict, seg_type: str, data: str, at_user: bool = False) 
     log.info(jlog("card_sent", kind=str(seg_type), bytes=len(data)))
 
 
+async def send_bili_share_card(ctx: dict, *, title: str, desc: str = "",
+                               pic_url: str = "", bvid: str = "",
+                               at_user: bool = False) -> dict:
+    """把 B站视频以「原生小程序分享卡片」发出（像正常账号分享，不是文件/裸链接）。
+
+    走协议端扩展 API `get_mini_app_ark` 建卡（SnowLuma / NapCat 支持），再用 json 段发送。
+    **关键**：jumpUrl 必须是小程序页面路径 `/pages/video/video?bvid=BV...`；
+    填成 http 网址卡片虽能显示，但点开只会落到 B站首页（服务端不校验路径，社区实测坑）。
+
+    返回建好的 ark 字典（便于调用方记录/排障）。仅 NapCat / OneBot 通道支持。
+    """
+    if _foreign_channel(ctx):
+        raise RuntimeError("B站分享卡片仅支持 NapCat/OneBot 通道（官方通道无小程序卡片）")
+    bvid = str(bvid or "").strip()
+    if not bvid:
+        raise ValueError("send_bili_share_card 缺少 bvid")
+    res = await connector.call_action("get_mini_app_ark", {
+        "type": "bili",
+        "title": str(title or ""),
+        "desc": str(desc or ""),
+        "picUrl": str(pic_url or ""),
+        "jumpUrl": "/pages/video/video?bvid=%s" % bvid,
+    })
+    # connector.call_action 经 nonebot 适配器，成功时已解出响应外层 data：
+    #   HTTP 原始: {"status":"ok","data":{"data":{ark}}}
+    #   call_action 返回: {"data":{ark}}
+    inner = res.get("data") if isinstance(res, dict) else None
+    if isinstance(inner, dict) and "app" not in inner and isinstance(inner.get("data"), dict):
+        inner = inner["data"]
+    if not isinstance(inner, dict) or not inner.get("app"):
+        raise RuntimeError("get_mini_app_ark 未返回卡片数据: %r" % (str(res)[:200],))
+    await send_card(ctx, "json", json.dumps(inner, ensure_ascii=False), at_user=at_user)
+    log.info(jlog("bili_share_sent", bvid=bvid, title=str(title or "")[:40]))
+    return inner
+
+
 async def send_video_link(ctx: dict, link: str, cover: str = "", at_user: bool = False) -> None:
     """§7.3：视频超限（或端点暂不支持直传）时改发下载链接 + 封面。
 

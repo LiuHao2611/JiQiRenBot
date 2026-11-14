@@ -112,7 +112,7 @@ def test_seg_helpers():
 
 
 # ---- 3) _handle_bilibili_card 原样回卡片、不下载 ----
-async def test_handle_bili_card_echo():
+def test_handle_bili_card_echo():
     sent = []
     replies = []
 
@@ -126,14 +126,14 @@ async def test_handle_bili_card_echo():
     m.send_card = fake_send_card
     m._reply = fake_reply
     ev = type("EV", (), {"user_id": 123, "group_id": 0, "is_group": False, "raw_text": ""})()
-    await m._handle_bilibili_card(ev, {"type": "json", "data": json.dumps(BILI_VIDEO_CARD)}, "t1")
+    asyncio.run(m._handle_bilibili_card(ev, {"type": "json", "data": json.dumps(BILI_VIDEO_CARD)}, "t1"))
 
     assert len(sent) == 1 and sent[0][0] == "json"
     assert json.loads(sent[0][1])["meta"]["detail_1"]["appid"] == "100951776"
     assert len(replies) == 1 and "收到 B站分享视频" in replies[0][0]
 
 
-async def test_handle_live_caption():
+def test_handle_live_caption():
     replies = []
 
     async def fake_send_card(ctx, seg_type, data, at_user=False):
@@ -146,12 +146,12 @@ async def test_handle_live_caption():
     m.send_card = fake_send_card
     m._reply = fake_reply
     ev = type("EV", (), {"user_id": 123, "group_id": 0, "is_group": False, "raw_text": ""})()
-    await m._handle_bilibili_card(ev, {"type": "json", "data": json.dumps(BILI_LIVE_CARD)}, "t2")
+    asyncio.run(m._handle_bilibili_card(ev, {"type": "json", "data": json.dumps(BILI_LIVE_CARD)}, "t2"))
     assert replies and "直播" in replies[0][0]
 
 
 # ---- 4) video_parse 对 B站卡片跳过下载 ----
-async def test_video_parse_skips_bili_download(monkeypatch):
+def test_video_parse_skips_bili_download(monkeypatch):
     dl = []
     monkeypatch.setattr(vp.bilibili.BilibiliParser, "download_video", lambda self, r: dl.append(1) or None)
     monkeypatch.setattr(cfg, "VIDEO_PARSE_ENABLED", True)
@@ -175,7 +175,7 @@ async def test_video_parse_skips_bili_download(monkeypatch):
         async def send(self, event, message):
             return {"message_id": 1}
 
-    await vp._handle(FakeBot(), FakeEvent([Seg("json", {"data": json.dumps(BILI_VIDEO_CARD)})]))
+    asyncio.run(vp._handle(FakeBot(), FakeEvent([Seg("json", {"data": json.dumps(BILI_VIDEO_CARD)})])))
     assert dl == [], "B站卡片不应触发下载"
 
 
