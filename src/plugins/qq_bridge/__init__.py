@@ -6548,14 +6548,14 @@ async def _route(ev, trace_id: str) -> None:
     # 若落到 AI 聊天分支会变成「空文本对话」甚至触发生图，毫无意义。
     # 仅私聊 + 主人，群聊文件一律不收（防陌生人往宿主机塞文件）。
     _in_files = getattr(ev, "files", None)
-    if Config.PC_ENABLE and _in_files and not ev.is_group and is_owner(ev.user_id):
+    if Config.PC_ENABLE and _in_files and not ev.is_group and _is_owner(ev.user_id):
         await _pc_receive_files(ev, trace_id)
         return
 
     # ---- 追问式保存：先发文件（已缓存句柄），再单独发「保存到 <路径>」----
     # 必须放在接收闸之后（本闸要求无文件段），且仅私聊主人。QQ 客户端常把文件与文字
     # 拆成两条消息，故支持「发文件 → 再发『保存到 X』」这种更可靠的交互。
-    if (Config.PC_ENABLE and not _in_files and not ev.is_group and is_owner(ev.user_id)
+    if (Config.PC_ENABLE and not _in_files and not ev.is_group and _is_owner(ev.user_id)
             and _extract_save_path(ev.raw_text or "")
             and _pc_last_file_get(ev.user_id)):
         await _pc_save_last_file(ev, trace_id)
