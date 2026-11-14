@@ -319,6 +319,10 @@ async def main():
     p = await store.get_player(A)
     p["hp"] = 1
     core.add_item(p, "回灵丹", 3)
+    # 清空回灵丹所需药材：前面几轮炼制有成有败，余量不确定，
+    # 不清就会偶发"材料居然够"，让这条断言飘（2026-11-15 实测 3 次跑 1 次红）。
+    for k in cfg.RECIPE_BY_NAME["回灵丹"]["need"]:
+        core.add_item(p, k, -core.count_item(p, k))
     await store.put_player(p)
     r = await commands.cmd_craft(store, A, "回灵丹")
     check("炼制 材料不足被挡", "材料不足" in r, r[:60])

@@ -218,6 +218,59 @@ def test_three_tiers_all_present():
 
 
 # ---------------------------------------------------------------------------
+# 4b. 原著引用必须可核验（不是"凭剧情猜的章号"）
+# ---------------------------------------------------------------------------
+NOVEL_ABSENT = "原著无载 · 游戏自设"
+_NOVEL_RE = re.compile(r"^(第[零一两二三四五六七八九十百千]+章)「([^」]+)」 —— (.+)$")
+
+
+def test_novel_field_format():
+    bad = []
+    for r in book.SKILL_BOOK.values():
+        v = str(r.get("novel") or "")
+        if v == NOVEL_ABSENT:
+            continue
+        if not _NOVEL_RE.match(v):
+            bad.append("%s=%r" % (r["name"], v[:40]))
+    assert not bad, ("原著字段格式不对（应为 `第X章「标题」 —— 原句` 或 `%s`）：%s"
+                     % (NOVEL_ABSENT, "；".join(bad)))
+
+
+def test_novel_quotes_exist_in_source_text():
+    """有原著语料时，逐条把引文拿回正文里查 —— 查不到就是编的。
+
+    语料在 C:/Users/L/AppData/Local/Temp/chaps（可用 DOUPO_NOVEL_DIR 覆盖），
+    不在的环境只跑上面的格式校验并跳过本项，避免 CI 卡死。
+    """
+    import _verify_novel as vn  # noqa: E402  同目录工具
+    if not os.path.isdir(vn.CORPUS):
+        print("      （跳过：未找到原著语料 %s）" % vn.CORPUS)
+        return
+    idx = vn.build_index()
+    text = idx["text"]
+    bad = []
+    for r in book.SKILL_BOOK.values():
+        v = str(r.get("novel") or "")
+        if v == NOVEL_ABSENT:
+            continue
+        m = _NOVEL_RE.match(v)
+        if not m:
+            continue
+        quote = m.group(3)
+        if text.find(quote) < 0:
+            bad.append("%s（引文正文查无）" % r["name"])
+    assert not bad, "原著引文在正文里找不到（等于编的）：%s" % "、".join(bad)
+
+
+def test_at_least_half_skills_have_real_citation():
+    """不许整本摆烂成「原著无载」：至少一半要能引到真章。"""
+    real = sum(1 for r in book.SKILL_BOOK.values()
+               if str(r.get("novel") or "") != NOVEL_ABSENT)
+    total = len(book.SKILL_BOOK)
+    assert real >= total // 2, "只有 %d/%d 条有原著引用" % (real, total)
+
+
+# ---------------------------------------------------------------------------
 # 5. 文档同步
 # ---------------------------------------------------------------------------
 def test_doc_is_in_sync_with_book():

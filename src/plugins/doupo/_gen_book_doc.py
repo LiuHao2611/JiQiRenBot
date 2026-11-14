@@ -110,7 +110,8 @@ def build() -> str:
                 L.append("- 数值：斗气 %d%%·mp_max ｜ 冷却 %d 回合 ｜ 基础伤害 %d%% ｜ 解锁 lv%d"
                          % (r["mp"], r["cd"], r["dmg"], r["unlock"]))
                 L.append("- 出处：%s" % r["source"])
-                L.append("- 原著：%s" % (r["novel"] or "原著无载 · 游戏原创"))
+                nv = r["novel"] or ""
+                L.append("- 原著：%s" % ("无载（游戏自设）" if nv.startswith("原著无载") else nv))
                 L.append("")
 
     # ---------------- 自检 ----------------
@@ -122,6 +123,12 @@ def build() -> str:
           "| 说明平均字数 | %d |" % (sum(len(r["desc"]) for r in book.SKILL_BOOK.values())
                                   // len(book.SKILL_BOOK)),
           "| 卡片短释最长字数 | %d |" % max(len(b) for b in book.BRIEFS.values()),
+          "| 原著可核验（章+原句） | %d 条 |" % sum(
+              1 for r in book.SKILL_BOOK.values()
+              if not str(r.get("novel") or "").startswith("原著无载")),
+          "| 原著无载（游戏自设） | %d 条 |" % sum(
+              1 for r in book.SKILL_BOOK.values()
+              if str(r.get("novel") or "").startswith("原著无载")),
           ""]
     return "\n".join(L) + "\n"
 
