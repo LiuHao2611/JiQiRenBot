@@ -154,7 +154,7 @@ def test_community_key_skills_attributed():
         "tianmingzong": ("嗜血化骨手", "大裂风", "天冥掌"),
         "hundian": ("九幽魂手", "碎魂冥掌", "黑色骷髅"),
         "jianan": ("血裂斩", "大裂山", "卸力水镜"),
-        "xuezong": ("血裂斩", "雷蝠天翼"),
+        "xuezong": ("嗜血印", "雷蝠天翼"),
         "taixugulong": ("屠龙剑", "龙皇钟"),
         "jiuyou": ("黄泉大印", "枯叶大毒掌"),
         "guzu": ("龙蛇步法", "万兽枪法"),
@@ -165,6 +165,21 @@ def test_community_key_skills_attributed():
         blob = str(F.FACTIONS[fid])
         for n in needles:
             assert n in blob, "%s 缺少社区归属斗技 %s" % (fid, n)
+
+
+def test_c1_attribution_guard():
+    """C1（张谦方《斗破设定整理·斗技整理》）逐条核对后钉死的归属护栏，
+    防止再次把斗技张冠李戴挂错门派。依据：bilibili opus 959287705904087041。"""
+    # 正确归属（C1 原文）：血裂斩/影血闪=迦南吴昊；血煞掌/嗜血化骨手=天冥宗易尘；
+    # 大寂灭指=古族；化血大法=魂殿四天尊；赤毒掌=神农老人。
+    assert "血裂斩" in str(F.FACTIONS["jianan"]), "血裂斩应属迦南吴昊"
+    assert "血裂斩" not in str(F.FACTIONS["xuezong"]), "血裂斩不是血宗范痨的，误挂血宗"
+    assert "血煞掌" in str(F.FACTIONS["tianmingzong"]), "血煞掌应属天冥宗易尘"
+    assert "血煞掌" not in str(F.FACTIONS["xuezong"]), "血煞掌不是血宗的，误挂血宗"
+    assert "大寂灭指" in str(F.FACTIONS["guzu"]), "大寂灭指应属古族"
+    assert "大寂灭指" not in str(F.FACTIONS["hunzu"]), "大寂灭指不是魂族的，误挂魂族"
+    assert "化血大法" in str(F.FACTIONS["hunzu"]), "化血大法应属魂殿(魂族明面势力)"
+    assert "赤毒掌" in str(F.FACTIONS["tianfu"]), "赤毒掌属神农老人，其为本盟 NPC"
 
 
 def test_every_faction_has_core_combat_skills():
