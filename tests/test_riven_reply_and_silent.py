@@ -19,6 +19,8 @@ from src.plugins.qq_bridge.channel import riven_cache
 from src.plugins.qq_bridge.game_tools import (
     _RIVEN_ANALYZE_RE,
     _extract_reply_id,
+    _riven_cache_put,
+    _riven_full_source_image,
     _riven_reply_cache_get,
     _riven_reply_cache_put,
 )
@@ -113,3 +115,42 @@ def test_reply_image_cache_is_precise_and_repeatable() -> None:
 ])
 def test_analyze_keyword(text, hit) -> None:
     assert bool(_RIVEN_ANALYZE_RE.search(text)) is hit
+
+
+def test_full_analysis_reply_respects_referenced_image() -> None:
+    """复现 2026-11-14 实测 bug：会话缓存是「上一张」托里德，用户回复引用阿利乌双枪
+    那张图写「全面分析」时，必须拿到被引用的阿利乌双枪，而不是会话里最近一张托里德。
+
+    守的是两个缓存的优先级：引用缓存（按被引用消息 id，只读不消费）> 会话级缓存
+    （当前紫卡，消费型——按钮点击本就一次性）。每步独立重建会话缓存，避免消费型
+    命中串扰。
+    """
+    riven_cache.clear()
+    try:
+        def _set_session():
+            sess = _ev([_seg("text", text="紫卡分析")], mid=871389237)
+            _riven_cache_put(sess, b"TORID_SESSION_BYTES")
+
+        # 用户发的纯图：阿利乌双枪（28998 字节占位），按 message_id 进引用缓存
+        alicorn = _ev([_seg("image", url="http://x/alicorn.png")], mid=777001)
+        _riven_reply_cache_put(alicorn, b"ALICORN_REPLY_BYTES")
+
+        # ① 回复阿利乌双枪 + 全面分析 → 必须是阿利乌双枪（引用缓存优先、且不消费会话缓存）
+        _set_session()
+        reply_alicorn = _ev([_seg("reply", id="777001"),
+                             _seg("text", text="全面分析")], mid=999002)
+        assert _riven_full_source_image(reply_alicorn) == b"ALICORN_REPLY_BYTES"
+
+        # ② 裸「全面分析」、无引用段 → 退回到会话缓存（托里德），保持按钮/裸口令语义
+        _set_session()
+        bare = _ev([_seg("text", text="全面分析")], mid=999003)
+        assert _riven_full_source_image(bare) == b"TORID_SESSION_BYTES"
+
+        # ③ 回复一个没有图的消息（引用缓存未命中）→ 仍退回会话缓存
+        _set_session()
+        reply_miss = _ev([_seg("reply", id="555000"),
+                          _seg("text", text="全面分析")], mid=999004)
+        assert _riven_full_source_image(reply_miss) == b"TORID_SESSION_BYTES"
+    finally:
+        riven_cache.clear()
+

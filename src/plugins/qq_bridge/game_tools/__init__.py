@@ -426,6 +426,30 @@ def _riven_cache_get(event: MessageEvent) -> bytes | None:
         return None
 
 
+def _riven_full_source_image(event: MessageEvent) -> bytes | None:
+    """「全面分析」取图优先级：引用缓存（被引用消息里的图）> 会话级缓存（当前紫卡）。
+
+    2026-11-14 修复（用户实测 bug）：用户「回复某条截图 + 全面分析」时，必须尊重
+    被引用的那条图，绝不能拿会话级「最近一张」缓存（那是上一张紫卡）。引用缓存按
+    (会话, 被引用消息 id) 隔离，命中即返回被引用的图；无引用段（点「全面分析」按钮
+    / 裸口令）才退化到会话级缓存，保持原「当前这张」语义。
+    """
+    _reply_id = _extract_reply_id(event)
+    if _reply_id:
+        _cached = _riven_reply_cache_get(event, _reply_id)
+        if _cached:
+            _flog.info(_jlog("gt_riven_full_reply_cache",
+                             user_id=getattr(event, "user_id", 0),
+                             group_id=getattr(event, "group_id", 0),
+                             message_id=_reply_id, bytes=len(_cached)))
+            return _cached
+        _flog.warning(_jlog("gt_riven_full_reply_miss",
+                            user_id=getattr(event, "user_id", 0),
+                            group_id=getattr(event, "group_id", 0),
+                            message_id=_reply_id))
+    return _riven_cache_get(event)
+
+
 # ---------------------------------------------------------------------------
 # 「先发紫卡截图 → 再回复/引用这条截图并写『紫卡分析』」直接触发分析
 # 2026-11-14 用户指令：机器人要识别被引用消息里有没有紫卡截图，且文字带口令。
@@ -1997,7 +2021,10 @@ async def _handle(bot: Bot, event: MessageEvent) -> None:
     # 紫卡**出全面分析卡，不再要求用户重发截图。缓存未命中/过期（用户先手打口令、
     # 或隔太久才点、或发的是 NapCat 无按钮通道）才回退到老「预约 → 再发图」链路。
     if text in _FULL_WAIT_WORDS:
-        _cached = _riven_cache_get(event)
+        # 2026-11-14 修复（用户实测 bug）：用户「回复某条截图 + 全面分析」时，必须
+        # 尊重被引用的那条图，不能拿会话级「最近一张」缓存（那会是上一张紫卡）。
+        # 引用缓存优先、会话级缓存兜底（点「全面分析」按钮 / 裸口令场景）。
+        _cached = _riven_full_source_image(event)
         if _cached:
             # 命中当前紫卡：重新 OCR（与发图链路同一 _parse_ocr，零编造）→ 直接出 655×1920
             # 全面分析卡。_send_riven_full_parsed 自造 ctx 不含哨兵 → 该卡零按钮。
