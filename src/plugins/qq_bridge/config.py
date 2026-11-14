@@ -316,10 +316,14 @@ class Config:
     # 独立于上面的下载总开关 VIDEO_PARSE_ENABLED——卡片回呈与「解析链接+下载视频」是两件事，
     # 用户明确要前者、不要后者。默认开启。
     VIDEO_PARSE_BILI_CARD_ECHO: bool = _as_bool(os.environ.get("VIDEO_PARSE_BILI_CARD_ECHO"), True)
-    # B站视频「分享卡片」（2026-11-15）：用户发 B站链接给机器人 → 机器人用协议端
-    # get_mini_app_ark 建**原生小程序卡片**发回（像正常账号分享，点开直达 B站视频页），
-    # 不发视频文件、不发裸链接。独立于下载总开关 VIDEO_PARSE_ENABLED 与上面的回呈开关。
-    BILI_SHARE_CARD: bool = _as_bool(os.environ.get("BILI_SHARE_CARD"), True)
+    # B站视频「分享卡片」（2026-11-15）。**默认关闭**：读 SnowLuma 源码 + 逐条实测后确认，
+    # 本部署（Linux QQ / SnowLuma）发不出「既能渲染成卡片、又点开直达视频页」的 B站 卡片：
+    #   · getMiniAppArk 的 protobuf body 只有 {appid,title,desc,picUrl,jumpUrl,iconUrl}，
+    #     appid 写死内测版 1109937557，无 scene/qqdocurl 字段 → 点开必「该小程序内测中」；
+    #   · send_tuwen_ark 的 OIDB 0xDC2_34 在本账号被静默拒绝（只收 action、不发消息）；
+    #   · 手搓 xml 卡被 QQ NT 降级成链接；手搓 structmsg 无签名 → 「发送者版本过低」。
+    # 唯一可行的是「手机 QQ 签出的真卡」：拿到真卡后再定方案，先关自动回复避免发错。
+    BILI_SHARE_CARD: bool = _as_bool(os.environ.get("BILI_SHARE_CARD"), False)
 
     # ---- QQ 官方机器人通道（docs/qq_official_bot_migration_plan.md §6.2）----
     # 双轨并行：本组配置只影响官方通道，**关掉 OFFICIAL_ENABLE 时 NapCat 零影响**。
