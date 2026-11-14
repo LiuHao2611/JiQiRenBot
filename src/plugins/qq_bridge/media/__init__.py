@@ -184,16 +184,20 @@ async def send_file(ctx: dict, file: str, at_user: bool = False) -> None:
 
         await _send_via_channel(ctx, Outgoing(file=file, at_user=at_user))
         return
-    import os
-
-    try:
-        size = os.path.getsize(file) if os.path.isfile(file) else 0
-    except Exception:  # noqa: BLE001
-        size = 0
-    if size > 500 * 1024 * 1024:
-        await send_text(ctx, "这文件 %d MB 太大了，本喵不敢往 QQ 塞（怕把通道撑爆）。"
-                        % (size // 1024 // 1024), at_user=at_user)
-        return
+    # 非本地路径（base64:// 或 http(s)://）直接发：跨容器场景下 bridge 与 NapCat
+    # 不共享卷，本地路径 NapCat 读不到，只能走 base64 内嵌或 URL 拉取；这类 URI
+    # 不走本地 stat / 500MB 限制（大小限制由调用方在发前校验，见 _pc_send_file）。
+    is_local = not str(file or "").startswith(("base64://", "http://", "https://"))
+    size = 0
+    if is_local:
+        try:
+            size = os.path.getsize(file) if os.path.isfile(file) else 0
+        except Exception:  # noqa: BLE001
+            size = 0
+        if size > 500 * 1024 * 1024:
+            await send_text(ctx, "这文件 %d MB 太大了，本喵不敢往 QQ 塞（怕把通道撑爆）。"
+                            % (size // 1024 // 1024), at_user=at_user)
+            return
     try:
         await _send(ctx, str(MessageSegment.file(file)), at_user=at_user)
     except Exception as e:  # noqa: BLE001 — CLOSE-02

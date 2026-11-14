@@ -3356,15 +3356,27 @@ def _pc_guard(ev) -> bool:
 
 
 def _pc_disk_allowed(path: str) -> bool:
-    """目录浏览白名单校验（PC_DISK_ROOTS，分号分隔；防遍历整盘）。"""
+    """目录浏览白名单校验（PC_DISK_ROOTS，分号分隔；防遍历整盘）。
+
+    容器部署兜底：bridge 容器只 bind 挂了几个可写目录（/downloads、/app/data、
+    /app/tmp），原生 Windows 部署用 PC_DISK_ROOTS。两者中实际存在的都加入白名单，
+    确保任一种部署下都能传文件，同时保留「只允许白名单根」的防遍历语义。
+    """
     roots = [r.strip() for r in str(getattr(Config, "PC_DISK_ROOTS", "") or "").split(";") if r.strip()]
+    for r in ("/downloads", "/app/data", "/app/tmp"):
+        if os.path.isdir(r):
+            roots.append(r)
     if not roots:
         return False
     try:
         target = Path(path).resolve()
-        return any(str(target).lower().startswith(Path(r).resolve().as_posix().lower())
-                   or Path(r).resolve() in target.parents or target == Path(r).resolve()
-                   for r in roots)
+        norm = target.as_posix().lower()
+        return any(
+            norm == Path(r).resolve().as_posix().lower()
+            or norm.startswith(Path(r).resolve().as_posix().lower() + "/")
+            or Path(r).resolve() in target.parents
+            for r in roots
+        )
     except Exception:  # noqa: BLE001 — 解析失败一律不放行
         return False
 
@@ -3428,6 +3440,162 @@ async def _pc_send_shot(ctx: dict) -> None:
                      at_user=False)
 
 
+# ---------------------------------------------------------------------------
+# M6 文件互传：跨容器传输说明（SnowLuma 拓扑，2026-11-14）
+#   bridge（业务）与 snowluma（NapCat/Linux QQ）是【两个独立容器】，不共享卷。
+#   因此本地路径 NapCat 读不到、bridge 也读不到 NapCat 落盘的文件。
+#   传输只能走「字节内嵌 / URL 拉取」：
+#     - PC→QQ 发送：文件字节在 bridge 读出后 base64 内嵌进消息段（≤10MB 安全，
+#       WS 单帧 ~16MB，base64 膨胀 33%）；>10MB 需共享卷底座（重登 QQ 时部署）。
+#     - QQ→PC 接收：NapCat 把文件放在自己容器里，通过文件服务 HTTP URL 供 bridge
+#       拉取；URL 里的 127.0.0.1/localhost 需改写为协议端容器名才能从 bridge 访问。
+# ---------------------------------------------------------------------------
+_SNOWLUMA_HOST = "qq-bridge-snowluma-protocol"   # 协议端容器名（compose 内网可解析）
+_PC_SEND_BASE64_CAP_MB = 10                       # 直传 base64 上限（WS 帧安全线）
+
+
+def _pc_read_bytes(path: str) -> bytes:
+    """读文件全部字节（bridge 容器内读取，供 base64 内嵌）。"""
+    with open(path, "rb") as fh:
+        return fh.read()
+
+
+def _rewrite_localhost_url(url: str) -> str:
+    """把 NapCat 文件服务 URL 里的回环主机改写为协议端容器名。
+
+    NapCat 生成的文件 URL 常写死 127.0.0.1/localhost；在 bridge 视角下回环指向自己，
+    拉不到 snowluma 上的文件。改写为同 compose 内网可解析的容器名，端口/路径/查询不变。
+    """
+    from urllib.parse import urlparse, urlunparse
+
+    try:
+        p = urlparse(url)
+        if p.hostname in ("127.0.0.1", "localhost", "::1"):
+            netloc = _SNOWLUMA_HOST
+            if p.port:
+                netloc += ":%d" % p.port
+            return urlunparse(p._replace(netloc=netloc))
+    except Exception:  # noqa: BLE001
+        return url
+    return url
+
+
+async def _fetch_file_bytes(url: str, timeout: float = 60.0) -> bytes | None:
+    """从 NapCat 文件服务拉取文件字节；无认证优先，401/403 再带 OneBot token 重试。
+
+    返回 bytes 或 None（不可达/非 200）。NapCat 文件服务默认不鉴权；若被 401/403，
+    用 bridge 自身的 OneBot token 再试一次（部分部署文件服务复用同一 token）。
+    """
+    async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as cli:
+        try:
+            resp = await cli.get(url)
+        except Exception:  # noqa: BLE001 — 网络不可达等
+            return None
+        if resp.status_code == 200 and resp.content:
+            return resp.content
+        token = str(getattr(Config, "ONEBOT_ACCESS_TOKEN", "") or "").strip()
+        if resp.status_code in (401, 403) and token:
+            try:
+                resp2 = await cli.get(url, headers={"Authorization": "Bearer %s" % token})
+                if resp2.status_code == 200 and resp2.content:
+                    return resp2.content
+            except Exception:  # noqa: BLE001
+                return None
+    return None
+
+
+def _extract_save_path(text: str) -> str:
+    """从消息文本提取自定义保存子路径（可含子目录/文件名）。
+
+    支持前缀：「保存到 / 存到 / save to / save」后跟路径；无则返回 ''（落收件箱根）。
+    仅识别显式前缀，避免把普通句子误判成路径。
+    """
+    t = (text or "").strip()
+    if not t:
+        return ""
+    m = re.search(r"(?:保存?\s*到|存\s*到|save\s*(?:to)?)\s*([^\n]{1,260})", t, re.IGNORECASE)
+    if m:
+        return m.group(1).strip().strip("\"'")
+    return ""
+
+
+def _pc_save_target(root: str, rel_text: str, default_name: str) -> tuple:
+    """计算接收文件落盘目标 (dest_dir, name, error)，并做沙箱隔离。
+
+    root：收件箱根（PC_FILE_UPLOAD_DIR 或 data/pc_inbox）。
+    rel_text：用户指定的相对子路径；为空则用默认名落到 root。
+    防 RCE：拒绝绝对路径与 '..' 越界，确保最终目录严格在 root 之内。
+    """
+    root_resolved = Path(root).resolve()
+    rel = (rel_text or "").strip().replace("\\", "/").strip("/").strip()
+    if not rel:
+        return str(root_resolved), pc_mod._safe_name(default_name), ""
+    parts = [p for p in rel.split("/") if p not in ("", ".", "..")]
+    if not parts:
+        return str(root_resolved), pc_mod._safe_name(default_name), ""
+    last = parts[-1]
+    # 末段含扩展名 → 视作文件名；否则视作子目录，文件名沿用原文件名。
+    if "." in last:
+        sub_dirs, name = parts[:-1], last
+    else:
+        sub_dirs, name = parts, pc_mod._safe_name(default_name)
+    dest_dir = root_resolved.joinpath(*sub_dirs) if sub_dirs else root_resolved
+    try:
+        dest_dir_resolved = dest_dir.resolve()
+    except Exception:  # noqa: BLE001
+        return None, "", "路径解析失败"
+    if dest_dir_resolved != root_resolved and root_resolved not in dest_dir_resolved.parents:
+        return None, "", "路径越界（不允许超出收件箱根目录）"
+    return str(dest_dir_resolved), pc_mod._safe_name(name), ""
+
+
+# 最近一次收到的文件句柄缓存（按 user_id）：支持「先发文件、随后单独发『保存到 X』」
+# 这种 QQ 客户端把文件与文字拆成两条消息的场景——先收下并缓存句柄，再用『保存到』
+# 把同一份文件落到自定义位置。TTL 防过期误用（默认 10 分钟）。
+_PC_LAST_FILE_TTL = 600
+_pc_last_file: dict = {}
+
+
+def _pc_last_file_put(user_id: int, fid: str, url: str, name: str, size: int) -> None:
+    _pc_last_file[user_id] = {"fid": fid, "url": url, "name": name,
+                              "size": size, "ts": time.time()}
+
+
+def _pc_last_file_get(user_id: int) -> dict | None:
+    h = _pc_last_file.get(user_id)
+    if not h:
+        return None
+    if time.time() - h.get("ts", 0) > _PC_LAST_FILE_TTL:
+        _pc_last_file.pop(user_id, None)
+        return None
+    return h
+
+
+async def _pc_fetch_file_bytes_by_handle(fid: str, url: str, trace_id: str) -> tuple:
+    """按文件句柄（段内 url 或 get_file 的 file_id）取字节；跨容器改写回环主机。
+
+    返回 (bytes|None, src_desc)。本地路径（ret.file）落在 snowluma 容器，bridge 读不到，
+    本拓扑不使用——只走 URL 拉取。
+    """
+    data = None
+    src_desc = ""
+    if url:
+        src_desc = "segment.url"
+        data = await _fetch_file_bytes(_rewrite_localhost_url(url))
+    if data is None and fid:
+        src_desc = "get_file(%s)" % fid
+        try:
+            ret = await connector.call_action("get_file", {"file_id": fid})
+            if isinstance(ret, dict):
+                gurl = ret.get("url") or ""
+                if gurl:
+                    data = await _fetch_file_bytes(_rewrite_localhost_url(gurl))
+        except Exception as e:  # noqa: BLE001 — CLOSE-02
+            log.warning(jlog("pc_file_get_failed", error=type(e).__name__,
+                             detail=str(e)[:160], trace_id=trace_id))
+    return data, src_desc
+
+
 def _pc_inbox_dir() -> str:
     """QQ→宿主 落盘目录：PC_FILE_UPLOAD_DIR 非空用其值，否则项目 data/pc_inbox。
 
@@ -3440,14 +3608,21 @@ def _pc_inbox_dir() -> str:
 
 
 async def _pc_send_file(ctx: dict, sess, path: str) -> None:
-    """PC→QQ：把宿主机上的文件发到 QQ（受 PC_DISK_ROOTS 白名单 + PC_FILE_MAX_MB 限制）。"""
+    """PC→QQ：把文件发到 QQ（跨容器 base64 内嵌；≤10MB 安全，>10MB 需共享卷底座）。
+
+    受 PC_DISK_ROOTS（原生）/ 容器传输目录（/downloads、/app/data、/app/tmp）白名单
+    + PC_FILE_MAX_MB 限制。bridge 与 NapCat 不共享卷，本地路径 NapCat 读不到，故读出
+    字节后 base64 内嵌进消息段；OneBot WS 单帧 ~16MB，base64 膨胀 33%，≤10MB 安全。
+    """
     if not path:
-        await _reply(ctx, sess, "用法：/pc get <文件完整路径>\n"
-                     "例：/pc get D:\\AI\\notes.txt", title="文件互传")
+        await _reply(ctx, sess, "用法：/dl 发我 <文件完整路径>\n"
+                     "容器部署：/dl 发我 /downloads/a.mkv（或 /app/data、/app/tmp）\n"
+                     "原生部署：/dl 发我 D:\\AI\\notes.txt", title="文件互传")
         return
     if not _pc_disk_allowed(path):
-        await _reply(ctx, sess, "这个路径不在白名单（%s）里，本喵不敢乱读。"
-                     % Config.PC_DISK_ROOTS, title="文件互传")
+        await _reply(ctx, sess, "这个路径不在白名单里，本喵不敢乱读。"
+                     "容器部署可用 /downloads、/app/data、/app/tmp；原生部署用 PC_DISK_ROOTS。",
+                     title="文件互传")
         return
     info = pc_mod.file_read_info(path)
     if not info.get("exists"):
@@ -3456,18 +3631,37 @@ async def _pc_send_file(ctx: dict, sess, path: str) -> None:
     if not info.get("is_file"):
         await _reply(ctx, sess, info.get("error"), title="文件互传")
         return
+    size = info["size"]
     max_mb = max(1, int(getattr(Config, "PC_FILE_MAX_MB", 100)))
-    if info["size"] > max_mb * 1024 * 1024:
+    if size > max_mb * 1024 * 1024:
         await _reply(ctx, sess, "「%s」有 %d MB，超过 %d MB 上限，本喵不传这么大。"
-                     % (info["name"], info["size"] // 1048576, max_mb), title="文件互传")
+                     % (info["name"], size // 1048576, max_mb), title="文件互传")
+        return
+    # 跨容器直传：本地路径 NapCat 读不到 → 只能 base64 内嵌。WS 单帧 ~16MB，
+    # base64 膨胀 33%，故 ≤10MB 内嵌安全；更大需共享卷底座后用路径模式发送。
+    if size > _PC_SEND_BASE64_CAP_MB * 1048576:
+        await _reply(ctx, sess,
+                     "「%s」有 %d MB，超过 %d MB 直传上限（WS 帧 16MB 限制，base64 内嵌易超限）。"
+                     "大文件发送请等共享卷底座就绪（你重登 QQ 时一并部署）后用路径模式。"
+                     % (info["name"], size // 1048576, _PC_SEND_BASE64_CAP_MB), title="文件互传")
+        return
+    try:
+        data = await asyncio.to_thread(_pc_read_bytes, path)
+    except Exception as e:  # noqa: BLE001 — CLOSE-02
+        await _reply(ctx, sess, "读取失败：%s" % type(e).__name__, title="文件互传")
         return
     await _reply(ctx, sess, "正在把「%s」（%d KB）发给你…"
-                 % (info["name"], max(1, info["size"] // 1024)), title="文件互传")
-    await send_file(ctx, path)
+                 % (info["name"], max(1, size // 1024)), title="文件互传")
+    await send_file(ctx, "base64://" + base64.b64encode(data).decode("ascii"))
 
 
 async def _pc_receive_files(ev, trace_id: str) -> None:
-    """QQ→宿主：把 QQ 发来的文件落盘到收件箱（仅私聊主人，防覆盖，超限制拒）。"""
+    """QQ→宿主：把 QQ 发来的文件落盘（仅私聊主人；支持「保存到 <子路径>」自定义位置）。
+
+    跨容器说明：bridge 与 NapCat 不共享卷，故只能从 NapCat 文件服务 HTTP URL 拉取字节，
+    再把字节写进收件箱。URL 里的 127.0.0.1/localhost 会改写为协议端容器名。
+    防 RCE：自定义子路径在收件箱根目录内做沙箱隔离，拒绝 '..' 越界。
+    """
     ctx = _ctx(ev)
     sess = session_store.get(ev.user_id)
     max_mb = max(1, int(getattr(Config, "PC_FILE_MAX_MB", 100)))
@@ -3476,55 +3670,34 @@ async def _pc_receive_files(ev, trace_id: str) -> None:
     if not files:
         await _reply(ctx, sess, "没收到文件段（端可能没以文件段投递）。", title="文件互传")
         return
+    # 解析自定义保存子路径（消息文本里的「保存到 <path> / 存到 <path>」）
+    rel = _extract_save_path(ev.raw_text or "")
     got = 0
     for f in files:
         name = f.get("name") or "unknown"
         size = int(f.get("size") or 0)
+        fid = str(f.get("file") or "")
+        url = str(f.get("url") or "")
+        # 缓存句柄（供随后单独发『保存到 <路径>』追问式落盘）
+        _pc_last_file_put(ev.user_id, fid, url, name, size)
         if size and size > max_mb * 1048576:
             await _reply(ctx, sess, "「%s」有 %d MB 超过 %d MB 上限，跳过。"
                          % (name, size // 1048576, max_mb), title="文件互传")
             continue
-        # 1) 优先用段里自带的 url（NapCat 常给本地 http 直链）下载；
-        # 2) 否则用 get_file API 把文件 id 换成磁盘路径。
-        url = str(f.get("url") or "")
-        src_path = ""
-        if url:
-            try:
-                async with httpx.AsyncClient(timeout=60.0) as cli:
-                    resp = await cli.get(url)
-                if resp.status_code == 200 and resp.content:
-                    res = pc_mod.inbox_write_bytes(resp.content, inbox, name, max_mb * 1048576)
-                    if res.get("ok"):
-                        got += 1
-                        await _reply(ctx, sess, "收到「%s」（%d KB）→ %s"
-                                     % (res.get("name"), max(1, res.get("size", 0) // 1024),
-                                        res.get("path")), title="文件互传")
-                    else:
-                        await _reply(ctx, sess, "「%s」保存失败：%s"
-                                     % (name, res.get("error")), title="文件互传")
-                else:
-                    await _reply(ctx, sess, "「%s」下载失败（HTTP %d）。"
-                                 % (name, resp.status_code), title="文件互传")
-            except Exception as e:  # noqa: BLE001 — CLOSE-02
-                log.warning(jlog("pc_file_url_failed", error=type(e).__name__,
-                                 detail=str(e)[:160], trace_id=trace_id))
-                await _reply(ctx, sess, "「%s」下载异常（%s）。"
-                             % (name, type(e).__name__), title="文件互传")
+        # 取字节：① 段内自带 url（改写回环主机）→ ② get_file 返回的 url。
+        # 本地路径（ret.file）落在 snowluma 容器里，bridge 读不到，本拓扑不使用。
+        data, src_desc = await _pc_fetch_file_bytes_by_handle(fid, url, trace_id)
+        if not data:
+            await _reply(ctx, sess, "「%s」本喵取不到内容（协议端文件服务不可达？），跳过。"
+                         "大文件/异常可等共享卷底座就绪后再试。" % name, title="文件互传")
+            log.warning(jlog("pc_file_no_bytes", name=name, src=src_desc, trace_id=trace_id))
             continue
-        fid = str(f.get("file") or "")
-        if fid:
-            try:
-                ret = await connector.call_action("get_file", {"file_id": fid})
-                if isinstance(ret, dict):
-                    src_path = ret.get("file") or ret.get("url") or ""
-            except Exception as e:  # noqa: BLE001 — CLOSE-02
-                log.warning(jlog("pc_file_get_failed", error=type(e).__name__,
-                                 detail=str(e)[:160], trace_id=trace_id))
-        if not src_path:
-            await _reply(ctx, sess, "「%s」本喵取不到本地路径（端不支持？），跳过。"
-                         % name, title="文件互传")
+        dest_dir, save_name, err = _pc_save_target(inbox, rel, name)
+        if err:
+            await _reply(ctx, sess, "「%s」落盘被拒：%s" % (name, err), title="文件互传")
             continue
-        res = await asyncio.to_thread(pc_mod.inbox_save, src_path, inbox, name, max_mb * 1048576)
+        res = await asyncio.to_thread(pc_mod.inbox_write_bytes, data, dest_dir, save_name,
+                                     max_mb * 1048576)
         if res.get("ok"):
             got += 1
             await _reply(ctx, sess, "收到「%s」（%d KB）→ %s"
@@ -3534,10 +3707,53 @@ async def _pc_receive_files(ev, trace_id: str) -> None:
             await _reply(ctx, sess, "「%s」保存失败：%s" % (name, res.get("error")),
                          title="文件互传")
     if got:
-        log.info(jlog("pc_file_received", count=got, inbox=inbox, user_id=ev.user_id,
-                      trace_id=trace_id))
+        log.info(jlog("pc_file_received", count=got, inbox=inbox, rel=rel,
+                      user_id=ev.user_id, trace_id=trace_id))
     else:
-        await _reply(ctx, sess, "这次没存成任何文件（都超限或取不到）。", title="文件互传")
+        await _reply(ctx, sess, "这次没存成任何文件（都超限、越界或取不到）。", title="文件互传")
+
+
+async def _pc_save_last_file(ev, trace_id: str) -> None:
+    """追问式落盘：用户先发文件（已缓存句柄），再单独发「保存到 <路径>」。
+
+    QQ 客户端常把文件与文字拆成两条消息，导致同条消息带『保存到』不可靠；
+    此函数让『发文件 → 再发『保存到 X』』也能落到自定义位置。一次性消费缓存。
+    """
+    ctx = _ctx(ev)
+    sess = session_store.get(ev.user_id)
+    max_mb = max(1, int(getattr(Config, "PC_FILE_MAX_MB", 100)))
+    inbox = _pc_inbox_dir()
+    h = _pc_last_file_get(ev.user_id)
+    if not h:
+        await _reply(ctx, sess, "本喵这儿没有待保存的文件（先发个文件给我，再『保存到 <路径>』）。",
+                     title="文件互传")
+        return
+    rel = _extract_save_path(ev.raw_text or "")
+    data, src_desc = await _pc_fetch_file_bytes_by_handle(h["fid"], h["url"], trace_id)
+    if not data:
+        await _reply(ctx, sess, "「%s」本喵取不到内容（协议端文件服务不可达？）。"
+                     % h["name"], title="文件互传")
+        log.warning(jlog("pc_file_no_bytes", name=h["name"], src=src_desc, trace_id=trace_id))
+        return
+    if h["size"] and h["size"] > max_mb * 1048576:
+        await _reply(ctx, sess, "「%s」有 %d MB 超过 %d MB 上限，没法存。"
+                     % (h["name"], h["size"] // 1048576, max_mb), title="文件互传")
+        return
+    dest_dir, save_name, err = _pc_save_target(inbox, rel, h["name"])
+    if err:
+        await _reply(ctx, sess, "落盘被拒：%s" % err, title="文件互传")
+        return
+    res = await asyncio.to_thread(pc_mod.inbox_write_bytes, data, dest_dir, save_name,
+                                 max_mb * 1048576)
+    if res.get("ok"):
+        _pc_last_file.pop(ev.user_id, None)  # 一次性消费
+        await _reply(ctx, sess, "收到「%s」（%d KB）→ %s"
+                     % (res.get("name"), max(1, res.get("size", 0) // 1024),
+                        res.get("path")), title="文件互传")
+        log.info(jlog("pc_file_saved_followup", name=h["name"], path=res.get("path"),
+                      rel=rel, user_id=ev.user_id, trace_id=trace_id))
+    else:
+        await _reply(ctx, sess, "保存失败：%s" % res.get("error"), title="文件互传")
 
 
 async def _handle_persona_command(ev, trace_id: str) -> None:
@@ -4604,7 +4820,9 @@ async def _handle_dl_command(ev, trace_id: str) -> None:
         if not rest:
             await _reply(ctx, sess,
                          "用法：/dl 发我 <任务序号/编号> 或 <文件完整路径>\n"
-                         "例：/dl 发我 1 · /dl 发我 D:\\Downloads\\a.mkv",
+                         "例：/dl 发我 1 · /dl 发我 /downloads/a.mkv（容器）\n"
+                         "     /dl 发我 D:\\Downloads\\a.mkv（原生）\n"
+                         "★ 直传上限 10MB（WS 帧限制，base64 内嵌）；更大文件等共享卷底座。",
                          title="文件回传")
             return
         ref = rest.split()[0]
@@ -6277,6 +6495,15 @@ async def _route(ev, trace_id: str) -> None:
     _in_files = getattr(ev, "files", None)
     if Config.PC_ENABLE and _in_files and not ev.is_group and is_owner(ev.user_id):
         await _pc_receive_files(ev, trace_id)
+        return
+
+    # ---- 追问式保存：先发文件（已缓存句柄），再单独发「保存到 <路径>」----
+    # 必须放在接收闸之后（本闸要求无文件段），且仅私聊主人。QQ 客户端常把文件与文字
+    # 拆成两条消息，故支持「发文件 → 再发『保存到 X』」这种更可靠的交互。
+    if (Config.PC_ENABLE and not _in_files and not ev.is_group and is_owner(ev.user_id)
+            and _extract_save_path(ev.raw_text or "")
+            and _pc_last_file_get(ev.user_id)):
+        await _pc_save_last_file(ev, trace_id)
         return
 
     # ---- §新增：生图通道交互式选择 —— 优先处理对 pending 的回答 ----
